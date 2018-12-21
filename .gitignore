@@ -7,3 +7,4 @@
 /cache/
 *.utf8.md
 *.knit.md
+.Rproj.user

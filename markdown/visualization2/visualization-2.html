@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html >
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Class 3</title>
+  <meta name="description" content="Class 3">
+  <meta name="generator" content="bookdown 0.7 and GitBook 2.6.7">
+
+  <meta property="og:title" content="Class 3" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Class 3" />
+  
+  
+  
+
+<meta name="author" content="Tobias Gerstenberg">
+
+
+<meta name="date" content="2018-12-21">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  
+  
+
+
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(title);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li class="chapter" data-level="1" data-path=""><a href="#visualization-2"><i class="fa fa-check"></i><b>1</b> Visualization 2</a><ul>
+<li class="chapter" data-level="1.1" data-path=""><a href="#learning-objectives"><i class="fa fa-check"></i><b>1.1</b> Learning objectives</a></li>
+<li class="chapter" data-level="1.2" data-path=""><a href="#load-packages-and-data"><i class="fa fa-check"></i><b>1.2</b> Load packages and data</a></li>
+<li class="chapter" data-level="1.3" data-path=""><a href="#overview-of-different-plot-types-for-different-things"><i class="fa fa-check"></i><b>1.3</b> Overview of different plot types for different things</a><ul>
+<li class="chapter" data-level="1.3.1" data-path=""><a href="#proportions"><i class="fa fa-check"></i><b>1.3.1</b> Proportions</a><ul>
+<li class="chapter" data-level="1.3.1.1" data-path=""><a href="#stacked-bar-charts"><i class="fa fa-check"></i><b>1.3.1.1</b> Stacked bar charts</a></li>
+<li class="chapter" data-level="1.3.1.2" data-path=""><a href="#pie-charts"><i class="fa fa-check"></i><b>1.3.1.2</b> Pie charts</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3.2" data-path=""><a href="#comparisons"><i class="fa fa-check"></i><b>1.3.2</b> Comparisons</a></li>
+<li class="chapter" data-level="1.3.3" data-path=""><a href="#relationships"><i class="fa fa-check"></i><b>1.3.3</b> Relationships</a><ul>
+<li class="chapter" data-level="1.3.3.1" data-path=""><a href="#scatter-plots"><i class="fa fa-check"></i><b>1.3.3.1</b> Scatter plots</a></li>
+<li class="chapter" data-level="1.3.3.2" data-path=""><a href="#raster-plots"><i class="fa fa-check"></i><b>1.3.3.2</b> Raster plots</a></li>
+</ul></li>
+<li class="chapter" data-level="1.3.4" data-path=""><a href="#temporal-data"><i class="fa fa-check"></i><b>1.3.4</b> Temporal data</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path=""><a href="#customizing-plots"><i class="fa fa-check"></i><b>1.4</b> Customizing plots</a><ul>
+<li class="chapter" data-level="1.4.1" data-path=""><a href="#changing-the-order-of-things"><i class="fa fa-check"></i><b>1.4.1</b> Changing the order of things</a></li>
+<li class="chapter" data-level="1.4.2" data-path=""><a href="#dealing-with-legends"><i class="fa fa-check"></i><b>1.4.2</b> Dealing with legends</a></li>
+<li class="chapter" data-level="1.4.3" data-path=""><a href="#choosing-good-colors"><i class="fa fa-check"></i><b>1.4.3</b> Choosing good colors</a></li>
+<li class="chapter" data-level="1.4.4" data-path=""><a href="#customizing-themes"><i class="fa fa-check"></i><b>1.4.4</b> Customizing themes</a></li>
+</ul></li>
+<li class="chapter" data-level="1.5" data-path=""><a href="#saving-plots"><i class="fa fa-check"></i><b>1.5</b> Saving plots</a></li>
+<li class="chapter" data-level="1.6" data-path=""><a href="#creating-figure-panels"><i class="fa fa-check"></i><b>1.6</b> Creating figure panels</a></li>
+<li class="chapter" data-level="1.7" data-path=""><a href="#peeking-behind-the-scenes"><i class="fa fa-check"></i><b>1.7</b> Peeking behind the scenes</a></li>
+<li class="chapter" data-level="1.8" data-path=""><a href="#defining-snippets"><i class="fa fa-check"></i><b>1.8</b> Defining snippets</a></li>
+<li class="chapter" data-level="1.9" data-path=""><a href="#making-animations"><i class="fa fa-check"></i><b>1.9</b> Making animations</a></li>
+<li class="chapter" data-level="1.10" data-path=""><a href="#shiny-apps"><i class="fa fa-check"></i><b>1.10</b> Shiny apps</a></li>
+<li class="chapter" data-level="1.11" data-path=""><a href="#additional-resources"><i class="fa fa-check"></i><b>1.11</b> Additional resources</a><ul>
+<li class="chapter" data-level="1.11.1" data-path=""><a href="#cheatsheets"><i class="fa fa-check"></i><b>1.11.1</b> Cheatsheets</a></li>
+<li class="chapter" data-level="1.11.2" data-path=""><a href="#data-camp-tutorials"><i class="fa fa-check"></i><b>1.11.2</b> Data camp tutorials</a></li>
+<li class="chapter" data-level="1.11.3" data-path=""><a href="#books-and-chapters"><i class="fa fa-check"></i><b>1.11.3</b> Books and Chapters</a></li>
+<li class="chapter" data-level="1.11.4" data-path=""><a href="#misc"><i class="fa fa-check"></i><b>1.11.4</b> Misc</a></li>
+</ul></li>
+<li class="chapter" data-level="1.12" data-path=""><a href="#session-info"><i class="fa fa-check"></i><b>1.12</b> Session info</a></li>
+</ul></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Class 3</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="header">
+<h1 class="title">Class 3</h1>
+<h4 class="author"><em>Tobias Gerstenberg</em></h4>
+<h4 class="date"><em>2018-12-21</em></h4>
+</div>
+<div id="visualization-2" class="section level1">
+<h1><span class="header-section-number">1</span> Visualization 2</h1>
+<p>In this lecture, we will lift our ggplot2 skills to the next level!</p>
+<div id="learning-objectives" class="section level2">
+<h2><span class="header-section-number">1.1</span> Learning objectives</h2>
+<ul>
+<li>Decide what plot is appropriate for what kind of data.<br />
+</li>
+<li>Take a sad plot and make it better.</li>
+<li>Make figure panels.</li>
+<li>Fix legends,</li>
+</ul>
+</div>
+<div id="load-packages-and-data" class="section level2">
+<h2><span class="header-section-number">1.2</span> Load packages and data</h2>
+<p>Let’s first load the packages that we need for this chapter.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for plotting (and many more cool things we&#39;ll discover later)</span></a></code></pre></div>
+<p>And let’s load the diamonds data again.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">df.diamonds =<span class="st"> </span>diamonds</a></code></pre></div>
+<p>Let’s also set the default theme for the plots again.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="kw">theme_set</span>(</a>
+<a class="sourceLine" id="cb3-2" title="2">  <span class="kw">theme_classic</span>()<span class="op">+</span><span class="st"> </span><span class="co">#set the theme </span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="st">    </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">20</span>)) <span class="co">#set the default text size</span></a>
+<a class="sourceLine" id="cb3-4" title="4">)</a></code></pre></div>
+</div>
+<div id="overview-of-different-plot-types-for-different-things" class="section level2">
+<h2><span class="header-section-number">1.3</span> Overview of different plot types for different things</h2>
+<p>Different plots works best for different kinds of data. Let’s take a look at some.</p>
+<div id="proportions" class="section level3">
+<h3><span class="header-section-number">1.3.1</span> Proportions</h3>
+<div id="stacked-bar-charts" class="section level4">
+<h4><span class="header-section-number">1.3.1.1</span> Stacked bar charts</h4>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> <span class="kw">stat</span>(count), <span class="dt">fill =</span> color))<span class="op">+</span></a>
+<a class="sourceLine" id="cb4-2" title="2"><span class="st">  </span><span class="kw">geom_bar</span>(<span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>This bar chart shows for the differnet cuts (x-axis), the number of diamonds of different color. To get these counts, I’ve used the <code>stat(count)</code> construction.</p>
+<p>Stacked bar charts give a good general impression of the data. However, it’s difficult to precisely compare different proportions.</p>
+</div>
+<div id="pie-charts" class="section level4">
+<h4><span class="header-section-number">1.3.1.2</span> Pie charts</h4>
+<div class="figure"><span id="fig:bad-plot2"></span>
+<img src="figures/pie_chart.jpg" alt="Finally a pie chart that makes sense." width="397" />
+<p class="caption">
+Figure 1.1: Finally a pie chart that makes sense.
+</p>
+</div>
+<p>Pie charts have a bad reputation. And there are indeed a number of problems with pie charts:</p>
+<ul>
+<li>proportions are difficult to compare</li>
+<li>don’t look good when there are many categories</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">&quot;cut&quot;</span>, <span class="dt">y =</span> <span class="kw">stat</span>(count <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(count)), <span class="dt">fill =</span> cut))<span class="op">+</span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="st">  </span><span class="kw">geom_bar</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="st">  </span><span class="kw">coord_polar</span>(<span class="st">&quot;y&quot;</span>, <span class="dt">start=</span><span class="dv">0</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb5-4" title="4"><span class="st">  </span><span class="kw">theme_void</span>()</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>We can create a pie chart with <code>ggplot2</code> by changing the coordinate system using <code>coord_polar()</code>. To get the frequency of the different categories, I used the <code>stat()</code> function.</p>
+<p>If we are interested in comparing proportions and we don’t have too many data points, then tables are a good alternative to showing figures.</p>
+</div>
+</div>
+<div id="comparisons" class="section level3">
+<h3><span class="header-section-number">1.3.2</span> Comparisons</h3>
+<p>Often we want to compare the data from many different conditions. And sometimes, it’s also useful to get a sense for what the individual participant data look like. Here is a plot that achieves both.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds[<span class="dv">1</span><span class="op">:</span><span class="dv">150</span>,], <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">alpha =</span> <span class="fl">0.2</span>, <span class="dt">position =</span> <span class="kw">position_jitter</span>(<span class="dt">width =</span> <span class="fl">0.1</span>, <span class="dt">height =</span> <span class="dv">0</span>), <span class="dt">size =</span> <span class="dv">2</span>)<span class="op">+</span><span class="st"> </span><span class="co"># individual data points (jittered horizontally)</span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">size =</span> <span class="dv">1</span>)<span class="op">+</span><span class="st"> </span><span class="co"># error bars </span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>, <span class="dt">shape =</span> <span class="dv">21</span>, <span class="dt">fill =</span> <span class="st">&quot;red&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">size =</span> <span class="dv">4</span>) <span class="co"># means</span></a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>This plot shows means, bootstrapped confidence intervals, and individual data points. I’ve used two tricks to make the individual data points easier to see.
+1. I’ve set the <code>alpha</code> attribute to make the points somewhat transparent.
+2. I’ve used the <code>position_jitter()</code> function to jitter the points horizontally.
+3. I’ve used <code>shape = 21</code> for displaying the mean. For this circle shape, we can set a <code>color</code> and <code>fill</code> (see Figure <a href="#fig:shapes">1.2</a>)</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="co"># plot showing the different shapes </span></a>
+<a class="sourceLine" id="cb7-2" title="2"></a>
+<a class="sourceLine" id="cb7-3" title="3">df.plot =<span class="st"> </span><span class="kw">data_frame</span>(</a>
+<a class="sourceLine" id="cb7-4" title="4">  <span class="dt">x =</span> <span class="kw">rep</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb7-5" title="5">  <span class="dt">y =</span> <span class="kw">rep</span>(<span class="kw">seq</span>(<span class="dv">5</span>, <span class="dv">1</span>, <span class="dv">-1</span>), <span class="dt">each =</span> <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb7-6" title="6">  <span class="dt">shape =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">25</span></a>
+<a class="sourceLine" id="cb7-7" title="7">) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">shape =</span> <span class="kw">as.factor</span>(shape))</a>
+<a class="sourceLine" id="cb7-9" title="9"></a>
+<a class="sourceLine" id="cb7-10" title="10"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.plot, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y, <span class="dt">shape =</span> shape))<span class="op">+</span></a>
+<a class="sourceLine" id="cb7-11" title="11"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">fill =</span> <span class="st">&quot;red&quot;</span>, <span class="dt">size =</span> <span class="dv">5</span>, <span class="dt">show.legend =</span> F)<span class="op">+</span></a>
+<a class="sourceLine" id="cb7-12" title="12"><span class="st">  </span><span class="kw">geom_text</span>(<span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">label =</span> shape), <span class="dt">vjust =</span> <span class="fl">-1.3</span>, <span class="dt">size =</span> <span class="dv">5</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb7-13" title="13"><span class="st">  </span><span class="kw">scale_shape_manual</span>(<span class="dt">values =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">25</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb7-14" title="14"><span class="st">  </span><span class="kw">theme_void</span>()</a></code></pre></div>
+<div class="figure"><span id="fig:shapes"></span>
+<img src="visualization2_files/figure-html/shapes-1.png" alt="Different shapes that can be used for plotting." width="672" />
+<p class="caption">
+Figure 1.2: Different shapes that can be used for plotting.
+</p>
+</div>
+<p>Note that I’m only plotting the first 150 entries of the data here by setting <code>data = df.diamonds[1:150,]</code> in <code>gpplot()</code>.</p>
+<p>Another way to get a sense for the distribution of the data is to use box plots.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds[<span class="dv">1</span><span class="op">:</span><span class="dv">500</span>,], <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="st">  </span><span class="kw">geom_boxplot</span>()</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>What do boxplots show? Here adapted from <code>help(geom_boxplot())</code>:</p>
+<blockquote>
+<p>The boxplots show the median as a horizontal black line. The lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles) of the data. The whiskers (= black vertical lines) extend from the top or bottom of the hinge by at most 1.5 * IQR (where IQR is the inter-quartile range, or distance between the first and third quartiles). Data beyond the end of the whiskers are called “outlying” points and are plotted individually.</p>
+</blockquote>
+<p>Personally, I’m not a big fan of boxplots. Many data sets are consistent with the same boxplot.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/boxplots.gif&quot;</span>)</a></code></pre></div>
+<div class="figure"><span id="fig:boxplots"></span>
+<img src="figures/boxplots.gif" alt="Box plot distributions. Source: https://www.autodeskresearch.com/publications/samestats"  />
+<p class="caption">
+Figure 1.3: Box plot distributions. Source: <a href="https://www.autodeskresearch.com/publications/samestats" class="uri">https://www.autodeskresearch.com/publications/samestats</a>
+</p>
+</div>
+<p>Figure <a href="#fig:boxplots">1.3</a> shows three different distributions that each correspond to the same boxplot.</p>
+<p>If there is not too much data, I recommend to plot jittered individual data points instead. If you do have a lot of data points, then violin plots can be helpful.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/box_violin.gif&quot;</span>)</a></code></pre></div>
+<div class="figure"><span id="fig:boxplot-violin"></span>
+<img src="figures/box_violin.gif" alt="Boxplot distributions. Source: https://www.autodeskresearch.com/publications/samestats"  />
+<p class="caption">
+Figure 1.4: Boxplot distributions. Source: <a href="https://www.autodeskresearch.com/publications/samestats" class="uri">https://www.autodeskresearch.com/publications/samestats</a>
+</p>
+</div>
+<p>Figure <a href="#fig:boxplot-violin">1.4</a> shows the same raw data represented as jittered dots, boxplots, and violin plots.</p>
+<p>The <code>ggpol</code> packages has a <code>geom_boxjitter()</code> function which displays a boxplot and the jittered data right next to each other.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">library</span>(ggpol)</a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb11-3" title="3"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">sample_n</span>(<span class="dv">1000</span>), <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="st">  </span><span class="kw">geom_boxjitter</span>(<span class="dt">jitter.shape =</span> <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb11-5" title="5">                 <span class="dt">jitter.color =</span> <span class="st">&quot;black&quot;</span>, </a>
+<a class="sourceLine" id="cb11-6" title="6">                 <span class="dt">jitter.alpha =</span> <span class="fl">0.2</span>,</a>
+<a class="sourceLine" id="cb11-7" title="7">                 <span class="dt">jitter.height =</span> <span class="dv">0</span>, </a>
+<a class="sourceLine" id="cb11-8" title="8">                 <span class="dt">jitter.width =</span> <span class="fl">0.04</span>,</a>
+<a class="sourceLine" id="cb11-9" title="9">                 <span class="dt">outlier.color =</span> <span class="ot">NA</span>, </a>
+<a class="sourceLine" id="cb11-10" title="10">                 <span class="dt">errorbar.draw =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>We make violin plots like so:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb12-2" title="2"><span class="st">  </span><span class="kw">geom_violin</span>()</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p>Violin plots are good for detecting bimodal distributions. They work well when:</p>
+<ol style="list-style-type: decimal">
+<li>You have many data points.</li>
+<li>The data is continuous.</li>
+</ol>
+<p>Violin plots don’t work well for Likert-scale data (e.g. ratings on a discrete scale from 1 to 7). Here is a simple example:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb13-2" title="2">data =<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">rating =</span> <span class="kw">sample</span>(<span class="dt">x =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">7</span>, <span class="dt">prob =</span> <span class="kw">c</span>(<span class="fl">0.1</span>, <span class="fl">0.4</span>, <span class="fl">0.1</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="dv">0</span>, <span class="fl">0.1</span>), <span class="dt">size =</span> <span class="dv">300</span>, <span class="dt">replace =</span> T))</a>
+<a class="sourceLine" id="cb13-3" title="3"><span class="kw">ggplot</span>(<span class="dt">data =</span> data, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">&#39;Likert&#39;</span>, <span class="dt">y =</span> rating))<span class="op">+</span></a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="st">  </span><span class="kw">geom_violin</span>()</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>This represents a vase much better than it represents the data.</p>
+<p>We can also show the distributions along the x-axis using the <code>geom_density_ridges()</code> function form the <code>ggridges</code> package.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">library</span>(ggridges)</a>
+<a class="sourceLine" id="cb14-2" title="2"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="co">#&gt; Attaching package: &#39;ggridges&#39;</span></a>
+<a class="sourceLine" id="cb14-4" title="4"><span class="co">#&gt; The following object is masked from &#39;package:ggplot2&#39;:</span></a>
+<a class="sourceLine" id="cb14-5" title="5"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb14-6" title="6"><span class="co">#&gt;     scale_discrete_manual</span></a>
+<a class="sourceLine" id="cb14-7" title="7"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> price, <span class="dt">y =</span> color))<span class="op">+</span></a>
+<a class="sourceLine" id="cb14-8" title="8"><span class="st">  </span><span class="kw">geom_density_ridges</span>(<span class="dt">scale =</span> <span class="fl">1.5</span>)</a>
+<a class="sourceLine" id="cb14-9" title="9"><span class="co">#&gt; Picking joint bandwidth of 535</span></a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+<div id="relationships" class="section level3">
+<h3><span class="header-section-number">1.3.3</span> Relationships</h3>
+<div id="scatter-plots" class="section level4">
+<h4><span class="header-section-number">1.3.3.1</span> Scatter plots</h4>
+<p>Scatter plots are great for looking at the relationship between two continuous variables.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> carat, <span class="dt">y =</span> price, <span class="dt">color =</span> color))<span class="op">+</span></a>
+<a class="sourceLine" id="cb15-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>()</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="raster-plots" class="section level4">
+<h4><span class="header-section-number">1.3.3.2</span> Raster plots</h4>
+<p>These are useful for looking how a variable of interest varies as a function of two other variables. For example, when we are trying to fit a model with two parameters, we might be interested to see how well the model does for different combinations of these two parameters. Here, we’ll plot what <code>carat</code> values diamonds of different <code>color</code> and <code>clarity</code> have.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> clarity, <span class="dt">z =</span> carat))<span class="op">+</span></a>
+<a class="sourceLine" id="cb16-2" title="2"><span class="st">  </span><span class="kw">stat_summary_2d</span>(<span class="dt">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;tile&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>Not too bad. Let’s add a few tweaks to make it look nicer.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> clarity, <span class="dt">z =</span> carat))<span class="op">+</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="st">  </span><span class="kw">stat_summary_2d</span>(<span class="dt">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;tile&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="st">  </span><span class="kw">scale_fill_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;white&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;black&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>I’ve added some outlines to the tiles by specifying <code>color = "black"</code> in <code>geom_tile()</code> and I’ve changed the scale for the fill gradient. I’ve defined the color for the low value to be “white”, and for the high value to be “black.” Finally, I’ve changed the lower and upper limit of the scale via the <code>limits</code> argument. Looks much better now! We see that diamonds with clarity <code>I1</code> and color <code>J</code> tend to have the highest <code>carat</code> values on average.</p>
+</div>
+</div>
+<div id="temporal-data" class="section level3">
+<h3><span class="header-section-number">1.3.4</span> Temporal data</h3>
+<p>Line plots are a good choice for temporal data. For that, I’ve used the <code>txhousing</code> data that comes with the <code>ggplot2</code> package. The dataset contains information about housing sales in Texas.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1">df.plot =<span class="st"> </span>txhousing <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-2" title="2"><span class="st">  </span><span class="kw">filter</span>(city <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Dallas&quot;</span>, <span class="st">&quot;Fort Worth&quot;</span>, <span class="st">&quot;San Antonio&quot;</span>, <span class="st">&quot;Houston&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">city =</span> <span class="kw">factor</span>(city, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;Dallas&quot;</span>, <span class="st">&quot;Houston&quot;</span>, <span class="st">&quot;San Antonio&quot;</span>, <span class="st">&quot;Fort Worth&quot;</span>)))</a>
+<a class="sourceLine" id="cb18-4" title="4"></a>
+<a class="sourceLine" id="cb18-5" title="5"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.plot, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> median, <span class="dt">color =</span> city, <span class="dt">fill =</span> city))<span class="op">+</span></a>
+<a class="sourceLine" id="cb18-6" title="6"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> mean_cl_boot, <span class="dt">geom =</span> <span class="st">&quot;ribbon&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.2</span>, <span class="dt">linetype =</span> <span class="dv">0</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb18-7" title="7"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> mean, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb18-8" title="8"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> mean, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>Ignore the top part where I’m defining <code>df.plot</code> for now (we’ll look into this in the next class). The other part is fairly straightforward. I’ve used <code>stat_summary()</code> three times: First, to define the confidence interval as a <code>geom = "ribbon"</code>. Second, to show the points, and third to show the lines.</p>
+<p>Let’s tweak the figure some more to make it look good.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" title="1">df.plot =<span class="st"> </span>txhousing <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-2" title="2"><span class="st">  </span><span class="kw">filter</span>(city <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Dallas&quot;</span>, <span class="st">&quot;Fort Worth&quot;</span>, <span class="st">&quot;San Antonio&quot;</span>, <span class="st">&quot;Houston&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">city =</span> <span class="kw">factor</span>(city, <span class="dt">levels =</span> <span class="kw">c</span>(<span class="st">&quot;Dallas&quot;</span>, <span class="st">&quot;Houston&quot;</span>, <span class="st">&quot;San Antonio&quot;</span>, <span class="st">&quot;Fort Worth&quot;</span>)))</a>
+<a class="sourceLine" id="cb19-4" title="4"></a>
+<a class="sourceLine" id="cb19-5" title="5">df.text =<span class="st"> </span>df.plot <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-6" title="6"><span class="st">  </span><span class="kw">filter</span>(year <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(year)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-7" title="7"><span class="st">  </span><span class="kw">group_by</span>(city) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-8" title="8"><span class="st">  </span><span class="kw">summarize</span>(<span class="dt">year =</span> <span class="kw">mean</span>(year) <span class="op">+</span><span class="st"> </span><span class="fl">0.2</span>, </a>
+<a class="sourceLine" id="cb19-9" title="9">            <span class="dt">median =</span> <span class="kw">mean</span>(median))</a>
+<a class="sourceLine" id="cb19-10" title="10"></a>
+<a class="sourceLine" id="cb19-11" title="11"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.plot, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> median, <span class="dt">color =</span> city, <span class="dt">fill =</span> city))<span class="op">+</span></a>
+<a class="sourceLine" id="cb19-12" title="12"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">100000</span>, <span class="dt">to =</span> <span class="dv">250000</span>, <span class="dt">by =</span> <span class="dv">50000</span>), <span class="dt">linetype =</span> <span class="dv">2</span>, <span class="dt">alpha =</span> <span class="fl">0.2</span>)<span class="op">+</span><span class="st"> </span><span class="co"># draw dashed horizontal lines in the background</span></a>
+<a class="sourceLine" id="cb19-13" title="13"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> mean_cl_boot, <span class="dt">geom =</span> <span class="st">&quot;ribbon&quot;</span>, <span class="dt">alpha =</span> <span class="fl">0.2</span>, <span class="dt">linetype =</span> <span class="dv">0</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb19-14" title="14"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb19-15" title="15"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb19-16" title="16"><span class="st">  </span><span class="kw">geom_text</span>(<span class="dt">data =</span> df.text, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">label =</span> city), <span class="dt">hjust =</span> <span class="dv">0</span>, <span class="dt">size =</span> <span class="dv">5</span>)<span class="op">+</span><span class="st"> </span><span class="co">#add the city names </span></a>
+<a class="sourceLine" id="cb19-17" title="17"><span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">100000</span>, <span class="dt">to =</span> <span class="dv">250000</span>, <span class="dt">by =</span> <span class="dv">50000</span>), </a>
+<a class="sourceLine" id="cb19-18" title="18">                     <span class="dt">labels =</span> <span class="kw">str_c</span>(<span class="st">&quot;$&quot;</span>, <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">100</span>, <span class="dt">to =</span> <span class="dv">250</span>, <span class="dt">by =</span> <span class="dv">50</span>), <span class="st">&quot;K&quot;</span>))<span class="op">+</span><span class="st"> </span><span class="co">#set the y-axis labels </span></a>
+<a class="sourceLine" id="cb19-19" title="19"><span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">2000</span>, <span class="dt">to =</span> <span class="dv">2015</span>, <span class="dt">by =</span> <span class="dv">5</span>))<span class="op">+</span><span class="st"> </span><span class="co">#set the x-axis labels </span></a>
+<a class="sourceLine" id="cb19-20" title="20"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">1999</span>, <span class="dv">2015</span>), <span class="dt">clip =</span> <span class="st">&quot;off&quot;</span>, <span class="dt">expand =</span> F)<span class="op">+</span><span class="st"> </span><span class="co">#set the limits for the coordinates </span></a>
+<a class="sourceLine" id="cb19-21" title="21"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Change of median house sale price in Texas&quot;</span>,</a>
+<a class="sourceLine" id="cb19-22" title="22">       <span class="dt">x =</span> <span class="st">&quot;Year&quot;</span>, </a>
+<a class="sourceLine" id="cb19-23" title="23">       <span class="dt">y =</span> <span class="st">&quot;Median house sale price&quot;</span>, </a>
+<a class="sourceLine" id="cb19-24" title="24">       <span class="dt">fill =</span> <span class="st">&quot;&quot;</span>, </a>
+<a class="sourceLine" id="cb19-25" title="25">       <span class="dt">color =</span> <span class="st">&quot;&quot;</span>)<span class="op">+</span><span class="st"> </span><span class="co">#set the plot title and axis titles</span></a>
+<a class="sourceLine" id="cb19-26" title="26"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">title =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">16</span>),</a>
+<a class="sourceLine" id="cb19-27" title="27">        <span class="dt">legend.position =</span> <span class="st">&quot;none&quot;</span>,</a>
+<a class="sourceLine" id="cb19-28" title="28">        <span class="dt">plot.margin =</span> <span class="kw">margin</span>(<span class="dt">r =</span> <span class="dv">1</span>, <span class="dt">unit =</span> <span class="st">&quot;in&quot;</span>) </a>
+<a class="sourceLine" id="cb19-29" title="29">  )</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+</div>
+</div>
+<div id="customizing-plots" class="section level2">
+<h2><span class="header-section-number">1.4</span> Customizing plots</h2>
+<p>So far, we’ve seen a number of different ways of plotting data. Now, let’s look into how to customize the plots. For example, we may wanta to change the axis labels, add a title, increase the font size. <code>ggplot2</code> let’s you customize almost anything.</p>
+<p>Let’s start simple.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb20-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb20-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>This plot shows the average price for diamonds with a different quality of the cut, as well as the bootstrapped confidence intervals. Here are some things we can do to make it look nicer.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb21-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;lightblue&quot;</span>, <span class="dt">width =</span> <span class="fl">0.85</span>)<span class="op">+</span><span class="st"> </span><span class="co">#change color of the fill, make a little more space between bars by setting their width</span></a>
+<a class="sourceLine" id="cb21-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">size =</span> <span class="fl">1.5</span>)<span class="op">+</span><span class="st"> </span><span class="co">#make error bars thicker</span></a>
+<a class="sourceLine" id="cb21-4" title="4"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb21-5" title="5">    <span class="dt">title =</span> <span class="st">&quot;Price as a function of quality of cut&quot;</span>, </a>
+<a class="sourceLine" id="cb21-6" title="6">    <span class="dt">subtitle =</span> <span class="st">&quot;Note: The price is in US dollars&quot;</span>,</a>
+<a class="sourceLine" id="cb21-7" title="7">    <span class="dt">tag =</span> <span class="st">&quot;A&quot;</span>,</a>
+<a class="sourceLine" id="cb21-8" title="8">    <span class="dt">x =</span> <span class="st">&quot;Quality of the cut&quot;</span>, </a>
+<a class="sourceLine" id="cb21-9" title="9">    <span class="dt">y =</span> <span class="st">&quot;Price&quot;</span>)<span class="op">+</span><span class="st"> </span><span class="co">#added a title, subtitle, and changed axis labels </span></a>
+<a class="sourceLine" id="cb21-10" title="10"><span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>, <span class="dt">to =</span> <span class="dv">4000</span>, <span class="dt">by =</span> <span class="dv">2000</span>),</a>
+<a class="sourceLine" id="cb21-11" title="11">                     <span class="dt">labels =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>, <span class="dt">to =</span> <span class="dv">4000</span>, <span class="dt">by =</span> <span class="dv">2000</span>))<span class="op">+</span><span class="st"> </span><span class="co">#adjusted what to show on the y-axis</span></a>
+<a class="sourceLine" id="cb21-12" title="12"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">xlim =</span> <span class="kw">c</span>(<span class="fl">0.25</span>, <span class="fl">5.75</span>), <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">5000</span>), <span class="dt">expand =</span> F)<span class="op">+</span><span class="st"> </span><span class="co">#adjusted the range of both axes</span></a>
+<a class="sourceLine" id="cb21-13" title="13"><span class="st">  </span><span class="kw">theme</span>(</a>
+<a class="sourceLine" id="cb21-14" title="14">    <span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">20</span>), <span class="co">#adjust the text size </span></a>
+<a class="sourceLine" id="cb21-15" title="15">    <span class="dt">axis.title.x =</span> <span class="kw">element_text</span>(<span class="dt">margin =</span> <span class="kw">margin</span>(<span class="dt">t =</span> <span class="fl">0.2</span>, <span class="dt">unit =</span> <span class="st">&quot;inch&quot;</span>)), <span class="co">#added some space at top of x-title </span></a>
+<a class="sourceLine" id="cb21-16" title="16">    <span class="dt">axis.title.y =</span> <span class="kw">element_text</span>(<span class="dt">margin =</span> <span class="kw">margin</span>(<span class="dt">r =</span> <span class="fl">0.1</span>, <span class="dt">unit =</span> <span class="st">&quot;inch&quot;</span>)), <span class="co">#added some space t the right of y-title</span></a>
+<a class="sourceLine" id="cb21-17" title="17">    <span class="dt">plot.subtitle =</span> <span class="kw">element_text</span>(<span class="dt">margin =</span> <span class="kw">margin</span>(<span class="dt">b =</span> <span class="fl">0.3</span>, <span class="dt">unit =</span> <span class="st">&quot;inch&quot;</span>),</a>
+<a class="sourceLine" id="cb21-18" title="18">                                 <span class="dt">color =</span> <span class="st">&quot;gray70&quot;</span>), <span class="co">#added some space underneath the subtitle, and made it gray,</span></a>
+<a class="sourceLine" id="cb21-19" title="19">    <span class="dt">plot.tag =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>), <span class="co">#make the plot tag bold </span></a>
+<a class="sourceLine" id="cb21-20" title="20">    <span class="dt">plot.tag.position =</span> <span class="kw">c</span>(<span class="fl">0.05</span>, <span class="fl">0.99</span>) <span class="co">#move it a little</span></a>
+<a class="sourceLine" id="cb21-21" title="21">  )</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>I’ve tweaked quite a few things here (and I’ve added comments to explain what’s happening). Take a quick look at the <code>theme()</code> function to see all the things you can change.</p>
+<div id="changing-the-order-of-things" class="section level3">
+<h3><span class="header-section-number">1.4.1</span> Changing the order of things</h3>
+<p>Sometimes we don’t have a natural ordering of our independent variable. In that case, it’s nice to show the data in order.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">reorder</span>(cut, price), <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb22-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;lightblue&quot;</span>, <span class="dt">width =</span> <span class="fl">0.85</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">size =</span> <span class="fl">1.5</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb22-4" title="4"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;cut&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>The <code>reorder()</code> function helps us to do just that. Now, the results are ordered according to price. To show the results in descending order, I would simply need to write <code>reorder(cut, -price)</code> instead.</p>
+</div>
+<div id="dealing-with-legends" class="section level3">
+<h3><span class="header-section-number">1.4.2</span> Dealing with legends</h3>
+<ul>
+<li>re-ordering legend entries using guide(); see tutorial <a href="https://aosmith.rbind.io/2018/01/19/reversing-the-order-of-a-ggplot2-legend/">here</a></li>
+<li>don’t show legends for certain elements …</li>
+<li>rearrange where the legend is shown</li>
+<li>always ask yourself: do i need a legend?</li>
+<li>consider labeling data directly (e.g. using the <code>directlabel</code> package)</li>
+</ul>
+</div>
+<div id="choosing-good-colors" class="section level3">
+<h3><span class="header-section-number">1.4.3</span> Choosing good colors</h3>
+<p><a href="http://colorbrewer2.org/">Color brewer</a> helps with finding colors that are colorblind safe and printfriendly.</p>
+</div>
+<div id="customizing-themes" class="section level3">
+<h3><span class="header-section-number">1.4.4</span> Customizing themes</h3>
+<p>For a given project, I often want all of my plots to share certain visual features such as the font type, font size, how the axes are displayed, etc. Instead of defining these for each individual plot, I can set a theme at the beginning of my project so that it applies to all the plots in this file. To do so, I use the <code>theme_set()</code> command:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">theme_set</span>(</a>
+<a class="sourceLine" id="cb23-2" title="2">  <span class="kw">theme_classic</span>()<span class="op">+</span><span class="st"> </span><span class="co">#classic theme</span></a>
+<a class="sourceLine" id="cb23-3" title="3"><span class="st">    </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">20</span>)) <span class="co">#text size </span></a>
+<a class="sourceLine" id="cb23-4" title="4">)</a></code></pre></div>
+<p>Here, I’ve just defined that I want to use <code>theme_classic()</code> for all my plots, and that the text size should be 20. For any individual plot, I can still overwrite any of these defaults.</p>
+</div>
+</div>
+<div id="saving-plots" class="section level2">
+<h2><span class="header-section-number">1.5</span> Saving plots</h2>
+<p>To save plots, use the <code>ggsave()</code> command. Personally, I prefer to save my plots as pdf files. This way, the plot looks good no matter what size you need it to be. This means it’ll look good both in presentations as well as in a paper. You can save the plot in any format that you like.</p>
+<p>I strongly recommend to use a relative path to specify where the figure should be saved. This way, if you are sharing the project with someone else via Stanford Box, Dropbox, or Github, they will be able to run the code without errors.</p>
+<p>Here is an example for how to save one of the plots that we’ve created above.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb24-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;lightblue&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb24-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">size =</span> <span class="dv">1</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1"></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="kw">ggsave</span>(<span class="dt">filename =</span> <span class="st">&#39;figures/diamond_plot.pdf&#39;</span>, <span class="dt">width =</span> <span class="dv">8</span>, <span class="dt">height =</span> <span class="dv">6</span>)</a></code></pre></div>
+<p>Here, I’m saving the plot in the <code>figures</code> folder and it’s name is <code>diamond_plot.pdf</code>. I also specify the width and height as the plot in inches (which is the default unit).</p>
+</div>
+<div id="creating-figure-panels" class="section level2">
+<h2><span class="header-section-number">1.6</span> Creating figure panels</h2>
+<p>Sometimes, we want to create a figure with several subfigures, each of which is labeled with a), b), etc. We have already learned how to make separate panels using <code>facet_wrap()</code> or <code>facet_grid()</code>. The R package <code>patchwork</code> makes it very easy to combine multiple plots.</p>
+<p>Let’s first install the package. It’s not on <a href="https://cran.r-project.org/">CRAN</a> yet (where most of the R packages live), but we can install it directly from the <a href="https://github.com/thomasp85/patchwork">github repository</a>.</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1">devtools<span class="op">::</span><span class="kw">install_github</span>(<span class="st">&quot;thomasp85/patchwork&quot;</span>)</a></code></pre></div>
+<p>Then we load the package and use it. First, I’m just combining a few plots that we’ve made above into one.</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">library</span>(<span class="st">&quot;patchwork&quot;</span>)</a>
+<a class="sourceLine" id="cb27-2" title="2"></a>
+<a class="sourceLine" id="cb27-3" title="3"><span class="co"># first plot</span></a>
+<a class="sourceLine" id="cb27-4" title="4">p1 =<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> y, <span class="dt">fill =</span> color))<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-5" title="5"><span class="st">  </span><span class="kw">geom_density</span>(<span class="dt">bw =</span> <span class="fl">0.2</span>, <span class="dt">show.legend =</span> F)<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-6" title="6"><span class="st">  </span><span class="kw">facet_grid</span>(<span class="dt">cols =</span> <span class="kw">vars</span>(color))<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-7" title="7"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">3</span>, <span class="dv">10</span>), <span class="dt">expand =</span> F)<span class="op">+</span><span class="st"> </span><span class="co">#setting expand to FALSE removes any padding on x and y axes</span></a>
+<a class="sourceLine" id="cb27-8" title="8"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Width of differently colored diamonds&quot;</span>,</a>
+<a class="sourceLine" id="cb27-9" title="9">    <span class="dt">tag =</span> <span class="st">&quot;A&quot;</span>)</a>
+<a class="sourceLine" id="cb27-10" title="10"></a>
+<a class="sourceLine" id="cb27-11" title="11"><span class="co"># second plot</span></a>
+<a class="sourceLine" id="cb27-12" title="12">p2 =<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> clarity, <span class="dt">z =</span> carat))<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-13" title="13"><span class="st">  </span><span class="kw">stat_summary_2d</span>(<span class="dt">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;tile&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-14" title="14"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Carat values&quot;</span>,</a>
+<a class="sourceLine" id="cb27-15" title="15">       <span class="dt">subtitle =</span> <span class="st">&quot;For different color and clarity&quot;</span>,</a>
+<a class="sourceLine" id="cb27-16" title="16">       <span class="dt">x =</span> <span class="st">&#39;width in mm&#39;</span>,</a>
+<a class="sourceLine" id="cb27-17" title="17">       <span class="dt">tag =</span> <span class="st">&quot;B&quot;</span>)</a>
+<a class="sourceLine" id="cb27-18" title="18"></a>
+<a class="sourceLine" id="cb27-19" title="19"><span class="co"># third plot</span></a>
+<a class="sourceLine" id="cb27-20" title="20">p3 =<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> price))<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-21" title="21"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;lightblue&quot;</span>, <span class="dt">width =</span> <span class="fl">0.85</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-22" title="22"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">size =</span> <span class="fl">1.5</span>)<span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-23" title="23"><span class="st">  </span><span class="kw">scale_x_discrete</span>(<span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&#39;fair&#39;</span>, <span class="st">&#39;good&#39;</span>, <span class="st">&#39;very</span><span class="ch">\n</span><span class="st">good&#39;</span>, <span class="st">&#39;premium&#39;</span>, <span class="st">&#39;ideal&#39;</span>))<span class="op">+</span></a>
+<a class="sourceLine" id="cb27-24" title="24"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb27-25" title="25">    <span class="dt">title =</span> <span class="st">&quot;Price as a function of cut&quot;</span>, </a>
+<a class="sourceLine" id="cb27-26" title="26">    <span class="dt">subtitle =</span> <span class="st">&quot;Note: The price is in US dollars&quot;</span>,</a>
+<a class="sourceLine" id="cb27-27" title="27">    <span class="dt">tag =</span> <span class="st">&quot;C&quot;</span>,</a>
+<a class="sourceLine" id="cb27-28" title="28">    <span class="dt">x =</span> <span class="st">&quot;Quality of the cut&quot;</span>, </a>
+<a class="sourceLine" id="cb27-29" title="29">    <span class="dt">y =</span> <span class="st">&quot;Price&quot;</span>)<span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-30" title="30"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">xlim =</span> <span class="kw">c</span>(<span class="fl">0.25</span>, <span class="fl">5.75</span>), <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">5000</span>), <span class="dt">expand =</span> F)</a>
+<a class="sourceLine" id="cb27-31" title="31"></a>
+<a class="sourceLine" id="cb27-32" title="32"><span class="co"># combine the plots</span></a>
+<a class="sourceLine" id="cb27-33" title="33">p1 <span class="op">+</span><span class="st"> </span>(p2 <span class="op">+</span><span class="st"> </span>p3) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-34" title="34"><span class="st">  </span><span class="kw">plot_layout</span>(<span class="dt">ncol =</span> <span class="dv">1</span>) <span class="op">&amp;</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-35" title="35"><span class="st">  </span><span class="kw">theme_classic</span>() <span class="op">&amp;</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb27-36" title="36"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">plot.tag =</span> <span class="kw">element_text</span>(<span class="dt">face =</span> <span class="st">&quot;bold&quot;</span>, <span class="dt">size =</span> <span class="dv">20</span>))</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" title="1"></a>
+<a class="sourceLine" id="cb28-2" title="2"><span class="co"># ggsave(&quot;figures/combined_plot.pdf&quot;, width = 10, height = 6)</span></a></code></pre></div>
+<p>Not a perfect plot yet, but you get the idea. To combine the plots, we defined that we would like p2 and p3 to be displayed in the same row using the <code>()</code> syntax. And we specified that we only want one column via the <code>plot_layout()</code> function. We also applied the same <code>theme_classic()</code> to all the plots using the <code>&amp;</code> operator, and formatted how the plot tags should be displayed. For more info on how to use <code>patchwork</code>, take a look at the <a href="https://github.com/thomasp85/patchwork">readme</a> on the github page.</p>
+<p>Other packages that provide additional functionality for combining multiple plots into one are</p>
+<ul>
+<li><a href="https://cran.r-project.org/web/packages/gridExtra/index.html"><code>gridExtra</code></a> and</li>
+<li><a href="https://cran.r-project.org/web/packages/cowplot/index.html"><code>cowplot</code></a>. You can find more information on how to lay out multiple plots <a href="https://cran.r-project.org/web/packages/egg/vignettes/Ecosystem.html">here</a>.</li>
+</ul>
+<p>An alternative way for making these plots is to use Adobe Illustrator, Powerpoint, or Keynote. However, you want to make changing plots as easy as possible. Adobe Illustrator has a feature that allows you to link to files. This way, if you change the plot, the plot within the illustrator file gets updated automatically as well.</p>
+<p>If possible, it’s <strong>much</strong> better to do everything in R though so that your plot can easily be reproduced by someone else.</p>
+</div>
+<div id="peeking-behind-the-scenes" class="section level2">
+<h2><span class="header-section-number">1.7</span> Peeking behind the scenes</h2>
+<p>Sometimes it can be helpful for debugging to take a look behind the scenes. Silently, <code>ggplot2</code> computes a data frame based on the information you pass to it. We can take a look at the data frame that’s underlying the plot.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" title="1">p =<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> clarity, <span class="dt">z =</span> carat))<span class="op">+</span></a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="st">  </span><span class="kw">stat_summary_2d</span>(<span class="dt">fun =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;tile&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb29-3" title="3"><span class="st">  </span><span class="kw">scale_fill_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;white&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;black&quot;</span>)</a>
+<a class="sourceLine" id="cb29-4" title="4"><span class="kw">print</span>(p)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" title="1"></a>
+<a class="sourceLine" id="cb30-2" title="2">info =<span class="st"> </span><span class="kw">ggplot_build</span>(p)<span class="op">$</span>data[[<span class="dv">1</span>]]</a>
+<a class="sourceLine" id="cb30-3" title="3"><span class="kw">print</span>(<span class="kw">head</span>(info))</a>
+<a class="sourceLine" id="cb30-4" title="4"><span class="co">#&gt;      fill xbin ybin     value x y PANEL group xmin xmax ymin ymax colour</span></a>
+<a class="sourceLine" id="cb30-5" title="5"><span class="co">#&gt; 1 #717171    1    1 1.1171429 1 1     1     1  0.5  1.5  0.5  1.5  black</span></a>
+<a class="sourceLine" id="cb30-6" title="6"><span class="co">#&gt; 2 #A1A1A1    1    2 0.8721679 1 2     1     2  0.5  1.5  1.5  2.5  black</span></a>
+<a class="sourceLine" id="cb30-7" title="7"><span class="co">#&gt; 3 #CBCBCB    1    3 0.6684013 1 3     1     3  0.5  1.5  2.5  3.5  black</span></a>
+<a class="sourceLine" id="cb30-8" title="8"><span class="co">#&gt; 4 #E2E2E2    1    4 0.5583206 1 4     1     4  0.5  1.5  3.5  4.5  black</span></a>
+<a class="sourceLine" id="cb30-9" title="9"><span class="co">#&gt; 5 #DDDDDD    1    5 0.5830213 1 5     1     5  0.5  1.5  4.5  5.5  black</span></a>
+<a class="sourceLine" id="cb30-10" title="10"><span class="co">#&gt; 6 #E9E9E9    1    6 0.5285895 1 6     1     6  0.5  1.5  5.5  6.5  black</span></a>
+<a class="sourceLine" id="cb30-11" title="11"><span class="co">#&gt;   size linetype alpha width height</span></a>
+<a class="sourceLine" id="cb30-12" title="12"><span class="co">#&gt; 1  0.1        1    NA    NA     NA</span></a>
+<a class="sourceLine" id="cb30-13" title="13"><span class="co">#&gt; 2  0.1        1    NA    NA     NA</span></a>
+<a class="sourceLine" id="cb30-14" title="14"><span class="co">#&gt; 3  0.1        1    NA    NA     NA</span></a>
+<a class="sourceLine" id="cb30-15" title="15"><span class="co">#&gt; 4  0.1        1    NA    NA     NA</span></a>
+<a class="sourceLine" id="cb30-16" title="16"><span class="co">#&gt; 5  0.1        1    NA    NA     NA</span></a>
+<a class="sourceLine" id="cb30-17" title="17"><span class="co">#&gt; 6  0.1        1    NA    NA     NA</span></a></code></pre></div>
+<p>I’ve called the <code>ggplot_build()</code> function on the ggplot2 object that we saved as <code>p</code>. I’ve then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, 56. That’s good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the <code>fill</code>, the <code>value</code> associated with each row, where each row is being displayed (<code>x</code> and <code>y</code>), etc.</p>
+<p>If a plot looks weird, it’s worth taking a look behind the scenes. For example, one thing we thing we could have tried is the following (in fact, this is what I tried first):</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" title="1">p =<span class="st"> </span><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> clarity, <span class="dt">fill =</span> carat))<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="st">  </span><span class="kw">geom_tile</span>(<span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-3" title="3"><span class="st">  </span><span class="kw">scale_fill_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;white&quot;</span>, <span class="dt">high =</span> <span class="st">&quot;black&quot;</span>)</a>
+<a class="sourceLine" id="cb31-4" title="4"></a>
+<a class="sourceLine" id="cb31-5" title="5"><span class="kw">print</span>(p)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb32-1" title="1">info =<span class="st"> </span><span class="kw">ggplot_build</span>(p)<span class="op">$</span>data[[<span class="dv">1</span>]]</a></code></pre></div>
+<p>Why does this plot look different from the one before? What went wrong here? Notice that the data frame associated with the ggplot2 object has 53940 rows. So instead of plotting means here, we plotted all the individual data points. So what we are seeing here is just the top layer of many, many layers.</p>
+</div>
+<div id="defining-snippets" class="section level2">
+<h2><span class="header-section-number">1.8</span> Defining snippets</h2>
+<p>Often, we want to create similar plots over and over again. One way to achieve this is by finding the original plot, copy and pasting it, and changing the bits that need changing. Another more flexible and faster way to do this is by using snippets. Snippets are short pieces of code that</p>
+<p>Here are some snippets I use:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" title="1">snippet snbar</a>
+<a class="sourceLine" id="cb33-2" title="2">    <span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="op">$</span>{<span class="dv">1</span><span class="op">:</span>data}, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> <span class="op">$</span>{<span class="dv">2</span><span class="op">:</span>x}, <span class="dt">y =</span> <span class="op">$</span>{<span class="dv">3</span><span class="op">:</span>y}))<span class="op">+</span></a>
+<a class="sourceLine" id="cb33-3" title="3"><span class="st">        </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb33-4" title="4"><span class="st">        </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>)</a>
+<a class="sourceLine" id="cb33-5" title="5">        </a>
+<a class="sourceLine" id="cb33-6" title="6">snippet sngg</a>
+<a class="sourceLine" id="cb33-7" title="7">    <span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="op">$</span>{<span class="dv">1</span><span class="op">:</span>data}, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="op">$</span>{<span class="dv">2</span><span class="op">:</span>aes}))<span class="op">+</span></a>
+<a class="sourceLine" id="cb33-8" title="8"><span class="st">        </span><span class="er">$</span>{<span class="dv">0</span>}</a>
+<a class="sourceLine" id="cb33-9" title="9"></a>
+<a class="sourceLine" id="cb33-10" title="10">snippet sndf</a>
+<a class="sourceLine" id="cb33-11" title="11">    <span class="op">$</span>{<span class="dv">1</span><span class="op">:</span>data} =<span class="st"> </span><span class="er">$</span>{<span class="dv">1</span><span class="op">:</span>data} <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb33-12" title="12"><span class="st">        </span><span class="er">$</span>{<span class="dv">0</span>}</a></code></pre></div>
+<p>To make a bar plot, I now only need to type <code>snbar</code> and then hit TAB to activate the snippet. I can then cycle through the bits in the code that are marked with <code>${Number:word}</code> by hitting TAB again.</p>
+<p>In RStudio, you can change and add snippets by going to Tools –&gt; Global Options… –&gt; Code –&gt; Edit Snippets. Make sure to set the tick mark in front of Enable Code Snippets (see Figure <a href="#fig:code-snippets">1.5</a>).
+).</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/snippets.png&quot;</span>)</a></code></pre></div>
+<div class="figure"><span id="fig:code-snippets"></span>
+<img src="figures/snippets.png" alt="Enable code snippets." width="591" />
+<p class="caption">
+Figure 1.5: Enable code snippets.
+</p>
+</div>
+<p>To edit code snippets faster, run this command from the <code>usethis</code> package. Make sure to install the package first if you don’t have it yet.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" title="1"><span class="co"># install.packages(&quot;usethis&quot;)</span></a>
+<a class="sourceLine" id="cb35-2" title="2">usethis<span class="op">::</span><span class="kw">edit_rstudio_snippets</span>()</a></code></pre></div>
+<p>This command opens up a separate tab in RStudio called <code>r.snippets</code> so that you can make new snippets and adapt old ones more quickly. Take a look at the snippets that RStudio already comes with. And then, make some new ones! By using snippets you will be able to avoid typing the same code over and over again, and you won’t have to memorize as much, too.</p>
+</div>
+<div id="making-animations" class="section level2">
+<h2><span class="header-section-number">1.9</span> Making animations</h2>
+<p>Animated plots can be a great way to illustrate your data in presentations. The R package <code>gganimate</code> lets you do just that.</p>
+<p>Again, we install the package <code>gganimate</code> directly from the <a href="https://github.com/thomasp85/gganimate/">github repository</a>.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" title="1"><span class="co"># devtools::install_github(&#39;thomasp85/gganimate&#39;)</span></a></code></pre></div>
+<p>Here is an example showing how to use it.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" title="1"><span class="kw">library</span>(gapminder)</a>
+<a class="sourceLine" id="cb37-2" title="2"><span class="kw">library</span>(gganimate)</a>
+<a class="sourceLine" id="cb37-3" title="3"></a>
+<a class="sourceLine" id="cb37-4" title="4"><span class="kw">ggplot</span>(gapminder, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> gdpPercap, <span class="dt">y =</span> lifeExp, <span class="dt">size =</span> pop, <span class="dt">colour =</span> country)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-5" title="5"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">alpha =</span> <span class="fl">0.7</span>, <span class="dt">show.legend =</span> <span class="ot">FALSE</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-6" title="6"><span class="st">  </span><span class="kw">geom_text</span>(<span class="dt">data =</span> gapminder <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(country <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;United States&quot;</span>, <span class="st">&quot;China&quot;</span>, <span class="st">&quot;India&quot;</span>)), <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">label =</span> country), <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>, <span class="dt">vjust =</span> <span class="fl">-0.75</span>, <span class="dt">show.legend =</span> <span class="ot">FALSE</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb37-7" title="7"><span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">values =</span> country_colors) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-8" title="8"><span class="st">  </span><span class="kw">scale_size</span>(<span class="dt">range =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">12</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-9" title="9"><span class="st">  </span><span class="kw">scale_x_log10</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-10" title="10"><span class="st">  </span><span class="kw">theme_classic</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb37-11" title="11"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">24</span>))<span class="op">+</span></a>
+<a class="sourceLine" id="cb37-12" title="12"><span class="st">  </span><span class="co"># Here come the gganimate specific bits</span></a>
+<a class="sourceLine" id="cb37-13" title="13"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&quot;Year: {frame_time}&quot;</span>, <span class="dt">x =</span> <span class="st">&quot;GDP per capita&quot;</span>, <span class="dt">y =</span> <span class="st">&quot;life expectancy&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-14" title="14"><span class="st">  </span><span class="kw">transition_time</span>(year) <span class="op">+</span></a>
+<a class="sourceLine" id="cb37-15" title="15"><span class="st">  </span><span class="kw">ease_aes</span>(<span class="st">&quot;linear&quot;</span>)</a>
+<a class="sourceLine" id="cb37-16" title="16"><span class="kw">anim_save</span>(<span class="dt">filename =</span> <span class="st">&quot;figures/life_gdp_animation.gif&quot;</span>)</a></code></pre></div>
+<p><img src="visualization2_files/figure-html/unnamed-chunk-29-1.gif" /><!-- --></p>
+<p>This takes a while to run but it’s worth the wait. The plot shows the relationship between GDP per capita (on the x-axis) and life expectancy (on the y-axis) changes across different years for the countries of different continents. The size of each dot represents the population size of the respective country. And different countries are shown in different colors. This animation is not super useful yet in that we don’t know which continents and countries the different dots represent. I’ve added a label to the United States, China, and India.</p>
+<p>Note how little is required to define the <code>gganimate</code>-specific information! The <code>{frame_time}</code> variable changes the title for each frame. The <code>transition_time()</code> variable is set to <code>year</code>, and the kind of transition is set as ‘linear’ in <code>ease_aes()</code>. I’ve saved the animation as a gif in the figures folder.</p>
+<p>We won’t have time to go into more detail here but I encourage you to play around with <code>gganimate</code>. It’s fun, looks cool, and (if done well) makes for a great slide in your next presentation!</p>
+</div>
+<div id="shiny-apps" class="section level2">
+<h2><span class="header-section-number">1.10</span> Shiny apps</h2>
+<p>The package <a href="https://shiny.rstudio.com/"><code>shiny</code></a> makes it relatively easy to create interactive plots that can be hosted online. Here is a <a href="https://shiny.rstudio.com/gallery/">gallery</a> with some examples.</p>
+</div>
+<div id="additional-resources" class="section level2">
+<h2><span class="header-section-number">1.11</span> Additional resources</h2>
+<div id="cheatsheets" class="section level3">
+<h3><span class="header-section-number">1.11.1</span> Cheatsheets</h3>
+<ul>
+<li><a href="figures/cheatsheets/visualization-principles.pdf">Data visualization</a> –&gt; general principles of effective graphic design</li>
+<li><a href="figures/cheatsheets/data-visualization.pdf">ggplot2</a> –&gt; specific information about ggplot</li>
+</ul>
+</div>
+<div id="data-camp-tutorials" class="section level3">
+<h3><span class="header-section-number">1.11.2</span> Data camp tutorials</h3>
+<ul>
+<li><a href="https://www.datacamp.com/courses/data-visualization-with-ggplot2-1">ggplot2 course 1</a></li>
+<li><a href="https://www.datacamp.com/courses/data-visualization-with-ggplot2-2">ggplot2 course 2</a></li>
+</ul>
+</div>
+<div id="books-and-chapters" class="section level3">
+<h3><span class="header-section-number">1.11.3</span> Books and Chapters</h3>
+<ul>
+<li><a href="http://www.cookbook-r.com/Graphs/">R graphics cookbook</a> –&gt; quick intro to the the most common graphs</li>
+<li><a href="http://r4ds.had.co.nz/">R for Data Science book</a>
+<ul>
+<li><a href="http://r4ds.had.co.nz/data-visualisation.html">Data visualization</a></li>
+<li><a href="http://r4ds.had.co.nz/graphics-for-communication.html">Graphics for communication</a></li>
+</ul></li>
+<li><a href="http://socviz.co/">Data Visualization – A practical introduction (by Kieran Healy)</a>
+<ul>
+<li><a href="http://socviz.co/lookatdata.html#lookatdata">Look at data</a></li>
+<li><a href="http://socviz.co/makeplot.html#makeplot">Make a plot</a></li>
+<li><a href="http://socviz.co/groupfacettx.html#groupfacettx">Show the right numbers</a></li>
+<li><a href="http://socviz.co/refineplots.html#refineplots">Refine your plots</a></li>
+</ul></li>
+<li><a href="https://serialmentor.com/dataviz/">Fundamentals of Data Visualization</a> –&gt; very nice resource that goes beyond basic functionality of <code>ggplot</code> and focuses on how to make good figures (e.g. how to choose colors, axes, …)</li>
+</ul>
+</div>
+<div id="misc" class="section level3">
+<h3><span class="header-section-number">1.11.4</span> Misc</h3>
+<ul>
+<li><a href="http://www.ggplot2-exts.org/gallery/">ggplot2 extensions</a> –&gt; gallery of ggplot2 extension packages</li>
+<li><a href="https://github.com/dreamRs/esquisse">ggplot2 gui</a> –&gt; ggplot2 extension package</li>
+<li><a href="http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html">ggplot2 visualizations with code</a> –&gt; gallery of plots with code</li>
+</ul>
+</div>
+</div>
+<div id="session-info" class="section level2">
+<h2><span class="header-section-number">1.12</span> Session info</h2>
+<p>Information about this R session including which version of R was used, and what packages were loaded.</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">sessionInfo</span>()</a>
+<a class="sourceLine" id="cb38-2" title="2"><span class="co">#&gt; R version 3.5.1 (2018-07-02)</span></a>
+<a class="sourceLine" id="cb38-3" title="3"><span class="co">#&gt; Platform: x86_64-apple-darwin15.6.0 (64-bit)</span></a>
+<a class="sourceLine" id="cb38-4" title="4"><span class="co">#&gt; Running under: macOS  10.14.2</span></a>
+<a class="sourceLine" id="cb38-5" title="5"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb38-6" title="6"><span class="co">#&gt; Matrix products: default</span></a>
+<a class="sourceLine" id="cb38-7" title="7"><span class="co">#&gt; BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib</span></a>
+<a class="sourceLine" id="cb38-8" title="8"><span class="co">#&gt; LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib</span></a>
+<a class="sourceLine" id="cb38-9" title="9"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb38-10" title="10"><span class="co">#&gt; locale:</span></a>
+<a class="sourceLine" id="cb38-11" title="11"><span class="co">#&gt; [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8</span></a>
+<a class="sourceLine" id="cb38-12" title="12"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb38-13" title="13"><span class="co">#&gt; attached base packages:</span></a>
+<a class="sourceLine" id="cb38-14" title="14"><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></a>
+<a class="sourceLine" id="cb38-15" title="15"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb38-16" title="16"><span class="co">#&gt; other attached packages:</span></a>
+<a class="sourceLine" id="cb38-17" title="17"><span class="co">#&gt;  [1] gganimate_0.9.9.9999 gapminder_0.3.0      patchwork_0.0.1     </span></a>
+<a class="sourceLine" id="cb38-18" title="18"><span class="co">#&gt;  [4] ggridges_0.5.1       ggpol_0.0.4          bindrcpp_0.2.2      </span></a>
+<a class="sourceLine" id="cb38-19" title="19"><span class="co">#&gt;  [7] forcats_0.3.0        stringr_1.3.1        dplyr_0.7.8         </span></a>
+<a class="sourceLine" id="cb38-20" title="20"><span class="co">#&gt; [10] purrr_0.2.5          readr_1.3.0          tidyr_0.8.2         </span></a>
+<a class="sourceLine" id="cb38-21" title="21"><span class="co">#&gt; [13] tibble_1.4.2         ggplot2_3.1.0        tidyverse_1.2.1     </span></a>
+<a class="sourceLine" id="cb38-22" title="22"><span class="co">#&gt; [16] knitr_1.20          </span></a>
+<a class="sourceLine" id="cb38-23" title="23"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb38-24" title="24"><span class="co">#&gt; loaded via a namespace (and not attached):</span></a>
+<a class="sourceLine" id="cb38-25" title="25"><span class="co">#&gt;  [1] httr_1.3.1            jsonlite_1.6          viridisLite_0.3.0    </span></a>
+<a class="sourceLine" id="cb38-26" title="26"><span class="co">#&gt;  [4] splines_3.5.1         modelr_0.1.2          Formula_1.2-3        </span></a>
+<a class="sourceLine" id="cb38-27" title="27"><span class="co">#&gt;  [7] assertthat_0.2.0      highr_0.7             latticeExtra_0.6-28  </span></a>
+<a class="sourceLine" id="cb38-28" title="28"><span class="co">#&gt; [10] cellranger_1.1.0      progress_1.2.0.9000   yaml_2.2.0           </span></a>
+<a class="sourceLine" id="cb38-29" title="29"><span class="co">#&gt; [13] pillar_1.3.1          backports_1.1.2       lattice_0.20-38      </span></a>
+<a class="sourceLine" id="cb38-30" title="30"><span class="co">#&gt; [16] glue_1.3.0            digest_0.6.18         RColorBrewer_1.1-2   </span></a>
+<a class="sourceLine" id="cb38-31" title="31"><span class="co">#&gt; [19] checkmate_1.8.5       rvest_0.3.2           colorspace_1.3-2     </span></a>
+<a class="sourceLine" id="cb38-32" title="32"><span class="co">#&gt; [22] htmltools_0.3.6       Matrix_1.2-15         plyr_1.8.4           </span></a>
+<a class="sourceLine" id="cb38-33" title="33"><span class="co">#&gt; [25] pkgconfig_2.0.2       broom_0.5.0           gifski_0.8.6         </span></a>
+<a class="sourceLine" id="cb38-34" title="34"><span class="co">#&gt; [28] haven_2.0.0           bookdown_0.7          scales_1.0.0         </span></a>
+<a class="sourceLine" id="cb38-35" title="35"><span class="co">#&gt; [31] tweenr_1.0.0          jpeg_0.1-8            htmlTable_1.12       </span></a>
+<a class="sourceLine" id="cb38-36" title="36"><span class="co">#&gt; [34] farver_1.1.0          withr_2.1.2           nnet_7.3-12          </span></a>
+<a class="sourceLine" id="cb38-37" title="37"><span class="co">#&gt; [37] lazyeval_0.2.1        cli_1.0.1             survival_2.43-3      </span></a>
+<a class="sourceLine" id="cb38-38" title="38"><span class="co">#&gt; [40] magrittr_1.5          crayon_1.3.4          readxl_1.1.0         </span></a>
+<a class="sourceLine" id="cb38-39" title="39"><span class="co">#&gt; [43] evaluate_0.12         nlme_3.1-137          xml2_1.2.0           </span></a>
+<a class="sourceLine" id="cb38-40" title="40"><span class="co">#&gt; [46] foreign_0.8-71        prettyunits_1.0.2     tools_3.5.1          </span></a>
+<a class="sourceLine" id="cb38-41" title="41"><span class="co">#&gt; [49] data.table_1.11.8     hms_0.4.2             munsell_0.5.0        </span></a>
+<a class="sourceLine" id="cb38-42" title="42"><span class="co">#&gt; [52] cluster_2.0.7-1       compiler_3.5.1        rlang_0.3.0.1        </span></a>
+<a class="sourceLine" id="cb38-43" title="43"><span class="co">#&gt; [55] grid_3.5.1            rstudioapi_0.8.0.9000 htmlwidgets_1.3      </span></a>
+<a class="sourceLine" id="cb38-44" title="44"><span class="co">#&gt; [58] base64enc_0.1-3       labeling_0.3          rmarkdown_1.10       </span></a>
+<a class="sourceLine" id="cb38-45" title="45"><span class="co">#&gt; [61] gtable_0.2.0          reshape2_1.4.3        R6_2.3.0             </span></a>
+<a class="sourceLine" id="cb38-46" title="46"><span class="co">#&gt; [64] gridExtra_2.3         lubridate_1.7.4       bindr_0.1.1          </span></a>
+<a class="sourceLine" id="cb38-47" title="47"><span class="co">#&gt; [67] Hmisc_4.1-1           rprojroot_1.3-2       stringi_1.2.4        </span></a>
+<a class="sourceLine" id="cb38-48" title="48"><span class="co">#&gt; [70] Rcpp_1.0.0            rpart_4.1-13          acepack_1.4.1        </span></a>
+<a class="sourceLine" id="cb38-49" title="49"><span class="co">#&gt; [73] png_0.1-7             tidyselect_0.2.5      xfun_0.4</span></a></code></pre></div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": false,
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": null,
+"download": null,
+"toc": {
+"collapse": "subsection",
+"scroll_highlight": true
+},
+"toolbar": {
+"position": "fixed"
+},
+"search": false
+});
+});
+</script>
+
+</body>
+
+</html>
