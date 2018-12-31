@@ -1,0 +1,600 @@
+---
+title: "Class 5"
+author: "Tobias Gerstenberg"
+date: "January 16th, 2019"
+output:
+  # html_document
+  bookdown::gitbook:
+    config:
+      toc:
+        collapse: none
+        scroll_highlight: yes
+        before: null
+        after: null
+      toolbar:
+        position: fixed
+      edit : null
+      search: yes
+      fontsettings:
+        theme: white
+        family: sans
+        size: 2
+      sharing: no
+    toc_depth: 3
+bibliography: ../references.bib
+biblio-style: apalike
+css: ../style.css
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+```
+
+# Data wrangling 2 
+
+In this session, we will continue to learn about wrangling data. Some of the functions that I'll introduce in this session are a little tricky to master. Like learning a new language, it takes some time to get fluent. However, it's worth investing the time. 
+
+<P style="page-break-before: always">
+
+## Learning objectives 
+
+- Learn how to group and summarize data using `group_by()` and `summarize()`. 
+- Learn how to deal with missing data. 
+- Get familiar with how to reshape data using `gather()`, `spread()`, `separate()` and `unite()`.
+- Learn the basics of how to join multiple data frames with a focus on `join_left()`. 
+- Master how to _read_ and _save_ data. 
+
+## Load packages 
+
+Let's first load the packages that we need for this chapter. 
+
+```{r, message=FALSE}
+library("knitr") # for rendering the RMarkdown file
+library("tidyverse") # for data wrangling 
+```
+
+## Wrangling data (continued)
+
+### Summarizing data 
+
+Let's first load the `starwars` data set again: 
+
+```{r}
+df.starwars = starwars
+```
+
+A particularly powerful way of interating with data is by grouping and summarizing it. `summarize()` returns a single value for each summary that we ask for: 
+
+```{r}
+df.starwars %>% 
+  summarize(height_mean = mean(height, na.rm = T),
+            height_max = max(height, na.rm = T),
+            n = n())
+```
+
+Here, I computed the mean height, the maximum height, and the total number of observations (using the function `n()`). 
+Let's say we wanted to get a quick sense for how tall starwars characters from different species are. To do that, we combine grouping with summarizing: 
+
+```{r}
+df.starwars %>% 
+  group_by(species) %>% 
+  summarize(height_mean = mean(height, na.rm = T))
+```
+
+I've first used `group_by()` to group our data frame by the different species, and then used `summarize()` to calculate the mean height of each species.
+
+It would also be useful to know how many observations there are in each group. 
+
+```{r}
+df.starwars %>% 
+  group_by(species) %>% # group by species
+  summarize(height_mean = mean(height, na.rm = T), # calculate mean height
+            group_size = n()) %>% # number of observations in each group
+  arrange(desc(group_size)) # arrange by group size in descending order 
+```
+
+Here, I've used the `n()` function to get the number of observations in each group, and then I've arranged the data frame according to group size in descending order. 
+
+Note that `n()` always yields the number of observations in each group. If we don't group the data, then we get the overall number of observations in our data frame (i.e. the number of rows). 
+
+So, Humans are the largest group in our data frame, followed by Droids (who are considerably smaller) and Gungans (who would make for good Basketball players). 
+
+Sometimes `group_by()` is also useful without summarising the data. For example, we often want to z-score (i.e. normalize) data on the level of individual participants. To do so, we first group the data on the level of participants, and then use `mutate()` to scale the data. Here is an example: 
+
+```{r}
+# first let's generate some random data 
+df.data = data_frame(
+  participant = rep(1:3, each = 5),
+  judgment = sample(0:100, size = 15, replace = TRUE)
+)
+head(df.data, n = 10)
+```
+
+```{r}
+tmp = df.data %>%   
+  group_by(participant) %>% # group by participants
+  mutate(judgment_zscored = scale(judgment)) %>% # z-score data on individual participant level 
+  ungroup() %>% # ungroup the data frame
+  head(n = 10) # print the top 10 rows 
+```
+
+First, I've generated some random data using the repeat function `rep()` for making a `participant` column, and the `sample()` function to randomly choose values from a range between 0 and 100 with replacement. (We will learn more about these functions later when we look into how to simulate data.) I've then grouped the data by participant, and used the scale function to z-score the data. 
+
+Sometimes, I want to run operations on each row, rather than per column. For example, let's say that I wanted each character's average combined height and mass. 
+
+Let's see first what doesn't work: 
+
+```{r}
+df.starwars %>% 
+  mutate(mean_height_mass = mean(c(height, mass), na.rm = T)) %>% 
+  select(name, height, mass, mean_height_mass) %>% 
+  head()
+```
+
+Note that all the values are the same. The value shown here is just the mean of all the values in `height` and `mass`.
+
+```{r}
+df.starwars %>% 
+  select(height, mass) %>% 
+  unlist() %>% # turns the data frame into a vector
+  mean(na.rm = T) 
+```
+
+To get the mean by row, we can either spell out the arithmetic
+
+```{r}
+df.starwars %>% 
+  mutate(mean_height_mass = (height + mass) / 2) %>% # here, I've replaced the mean() function  
+  select(name, height, mass, mean_height_mass) %>% 
+  head()
+```
+
+of use the `rowwise()` helper function which is like `group_by()` but treats each row like a group: 
+
+```{r}
+df.starwars %>% 
+  rowwise() %>% # now, each row is treated like a separate group 
+  mutate(mean_height_mass = mean(c(height, mass), na.rm = T)) %>% 
+  ungroup() %>% 
+  select(name, height, mass, mean_height_mass) %>% 
+  head()
+```
+
+### Reshaping data 
+
+We want our data frames to be tidy. What's tidy? 
+
+1. Each variable must have its own column.
+2. Each observation must have its own row.
+3. Each value must have its own cell.
+
+For more information on tidy data frames see the [Tidy data](http://r4ds.had.co.nz/tidy-data.html) chapter in Hadley Wickham's R for Data Science book. 
+
+Let's first generate a data set that is _not_ tidy. 
+
+```{r}
+# construct data frame 
+df.data1 = data_frame(
+  participant = c(1, 2),
+  observation_1 = c(10, 25),
+  observation_2 = c(100, 63),
+  observation_3 = c(24, 45)
+)
+
+df.data1 %>% print()
+```
+
+Here, I've generated data from two participants with three observations. This data frame is not tidy since each row contains more than a single observation. Data frames that have one row per participant but many observations are called _wide_ data frames. 
+
+We can make it tidy using the `gather()` function. 
+
+```{r}
+df.tidy = df.data1 %>% 
+  gather(key = "index", value = "rating", -participant) %>% 
+  arrange(participant) %>% 
+  print()
+```
+
+`df.tidy` now contains one observation in each row. Data frames with one row per observation are called _long_ data frames. 
+
+The `gather()` function takes four arguments: 
+
+1. the data which I've passed to it via the pipe `%>%` 
+2. a name for the `key` column which will contain the column names of the original data frame
+3. a name for the `value` column which will contain the values that were spread across different columns in the original data frame
+4. a specification for which columns we want to gather -- here I've specified that we want to gather the values from all columns except the `participant` column
+
+`spread()` is the counterpart of `gather()`. We can use it to go from a data frame that is in _long_ format, to a data frame that's in _wide_ format, like so: 
+
+```{r}
+df.wide = df.tidy %>% 
+  spread(index, rating) %>% 
+  print()
+```
+
+For my data, I often have a wide data frame that contains demographic information about participants, and a long data frame that contains participants' responses in the experiment. In Section \@ref(joining-multiple-data-frames), we will learn how to combine information from multiple data frames (with potentially different formats).
+
+Here is a slightly more advanced example that involves reshaping a data frame. Let's consider we have the following data frame to start with: 
+
+```{r}
+# construct data frame 
+df.data2 = data_frame(
+  participant = c(1, 2),
+  stimulus_1 = c("flower", "car"),
+  observation_1 = c(10, 25),
+  stimulus_2 = c("house", "flower"),
+  observation_2 = c(100, 63),
+  stimulus_3 = c("car", "house"),
+  observation_3 = c(24, 45)
+)
+
+df.data2 %>% print()
+```
+
+Now, the data frame contains in each row, which stimuli a participant saw, and what rating she gave. Each of the two participants saw a picture of a flower, car, and house, and rated how much they liked the picture on a scale from 0 to 100. The order at which the pictures were presented was randomized between participants. I will use a combination of `gather()`, `separate()`, and `spread()` to turn this into a data frame in long format. 
+
+```{r}
+df.tidy2 = df.data2 %>% 
+  gather(key = "index", value = "value", -participant) %>% 
+  separate(col = index, into = c("index", "order"), sep = "_") %>% 
+  spread(index, value) %>% 
+  mutate(observation = as.numeric(observation)) %>% 
+  select(participant, order, stimulus, rating = observation) %>% 
+  arrange(participant) %>% 
+  print()
+```
+
+Voilà! Getting the desired data frame involved a few new tricks. Let's take it step by step. 
+
+First, I use `gather()` to make a long table. 
+
+```{r}
+df.data2 %>% 
+  gather(key = "index", value = "value", -participant)
+  
+```
+
+However, I want to have the information about the stimulus and the observation in the same row. That is, I want to see what rating a participant gave to the flower stimulus, for example. To get there, I separate the `index` column into two separate columns using the `separate()` function. 
+
+```{r}
+df.data2 %>% 
+  gather(key = "index", value = "value", -participant) %>%
+  separate(col = index, into = c('index', 'order'), sep = "_")
+```
+
+The `separate()` function takes four arguments: 
+
+1. the data which I've passed to it via the pipe `%>%` 
+2. the name of the column `col` which we want to separate
+3. the names of the columns `into` into which we want to separate the original column 
+4. the separator `sep` that we want to use to split the columns. 
+
+Note, like `gather()` and `spread()`, there is a partner for `separate()`, too. It's called `unite()` and it allows you to combine several columns into one. 
+
+Now, I can use the `spread()` function to make a separate column for each entry in `index` that contains the values in `value`. 
+
+```{r}
+df.data2 %>% 
+  gather(key = "index", value = "value", -participant) %>% 
+  separate(index, into = c('index', 'order'), sep = "_") %>% 
+  spread(index, value)
+```
+
+That's pretty much it. Now, each row contains information about the order in which a stimulus was presented, what the stimulus was, and the judgment that a participant made in this trial. 
+
+```{r}
+df.data2 %>% 
+  gather(key = "index", value = "value", -participant) %>% 
+  separate(index, into = c("index", "order"), sep = "_") %>% 
+  spread(index,value) %>% 
+  mutate_at(vars(order, observation), funs(as.numeric)) %>% 
+  select(participant, order, stimulus, rating = observation) %>% 
+  arrange(participant, order)
+```
+
+The rest is familiar. I've used `mutate_at()` to turn `order` and `observation` into numeric columns, `select()` to change the order of the columns (and renamed the `observation` column to `rating` along the way), and `arrange()` to sort the data frame by `participant` and `order`. 
+
+Sometimes, we may have a data frame where data is recorded in a long string. 
+
+```{r}
+df = data_frame(
+  participant = 1:2,
+  judgments = c("10, 4, 12, 15", "3, 4")
+)
+
+print(df)
+```
+
+Here, I've created a data frame with data from two participants. For whatever reason, we have four judgments from participant 1 and only two judgments from participant 2 (data is often messy in real life, too!). 
+
+We can use the `separate_rows()` function to turn this into a tidy data frame in long format. 
+
+```{r}
+df %>% 
+  separate_rows(judgments)
+```
+
+Getting familiar with `gather()` and `spread()` takes some time plus trial and error. So don't be discouraged if you don't get what you want straight away. Once you've mastered these functions, they will make easier to beat data frames into the desired shape. 
+
+After having done some transformations like this, it's worth checking that nothing went wrong. I often compare a few values in the transformed and original data frame to make sure everything is legit. 
+
+### Joining multiple data frames 
+
+It's nice to have all the information we need in a single, tidy data frame. We have learned above how to go from a single untidy data frame to a tidy one. However, often our situation to start off with is even worse. The information we need sits in several, messy data frames. 
+
+For example, we may have one data frame `df.stimuli` with information about each stimulus, and then have another data frame with participants' responses `df.responses` that only contains a stimulus index but no other infromation about the stimuli. 
+
+```{r}
+set.seed(1) # setting random seed to make this example reproducible
+
+# data frame with stimulus information
+df.stimuli = data_frame(
+  index = 1:5,
+  height = c(2, 3, 1, 4, 5),
+  width = c(4, 5, 2, 3, 1),
+  n_dots = c(12, 15, 5, 13, 7),
+  color = c("green", "blue", "white", "red", "black")
+) %>% 
+  print()
+
+# data frame with participants' responses 
+df.responses = data_frame(
+  participant = rep(1:3, each = 5),
+  index = rep(1:5, 3), 
+  response = sample(0:100, size = 15, replace = TRUE) # randomly sample 15 values from 0 to 100
+) %>% 
+  print()
+
+```
+
+The `df.stimuli` data frame contains an `index`, information about the `height`, and `width`, as well as the number of `dots`, and their `color`. Let's imagine that participants had to judge how much they liked each image from a scale of 0 ("not liking this dot pattern at all") to 100 ("super thrilled about this dot pattern"). 
+
+Let's say that I now wanted to know what participants' average response for the differently colored dot patterns are. Here is how I would do this: 
+
+```{r}
+df.responses %>% 
+  left_join(df.stimuli %>%
+              select(index, color),
+            by = "index") %>% 
+  group_by(color) %>% 
+  summarise(response_mean = mean(response))
+```
+
+Let's take it step by step. The key here is to add the information from the `df.stimuli` data frame to the `df.responses` data frame. 
+
+```{r}
+df.responses %>% 
+  left_join(df.stimuli %>% 
+              select(index, color),
+            by = "index")
+```
+
+I've joined the `df.stimuli` table in which I've only selected the `index` and `color` column, with the `df.responses` table, and specified the `index` column as the one by which the tables should be joined. This is the only column that both of the data frames have in common. 
+
+To specify multiple columns by which we would like to join tables, we specify the `by` argument as follows: `by = c("one_column", "another_column")`. 
+
+Sometimes, the tables I want to join don't have any column names in common. In that case, we can tell the `left_join()` function which column pair(s) should be used for joining. 
+
+```{r}
+df.responses %>% 
+  rename(stimuli = index) %>% # I've renamed the index column to stimuli
+  left_join(df.stimuli %>% 
+              select(index, color),
+            by = c("stimuli" = "index")) 
+```
+
+Here, I've first renamed the index column (to create the problem) and then used the `by = c("stimuli" = "index")` construction (to solve the problem). 
+
+In my experience, it often takes a little bit of playing around to make sure that the data frames were joined as intended. One very good indicator is the row number of the initial data frame, and the joined one. For a `left_join()`, most of the time, we want the row number of the original data frame ("the one on the left") and the joined data frame to be the same. If the row number changed, something probably went wrong. 
+
+Take a look at the `join` help file to see other operations for combining two or more data frames into one (make sure to look at the one from the `dplyr` package). 
+
+### Dealing with missing data 
+
+There are two ways for data to be missing. 
+
+- __implicit__: data is not present in the table 
+- __explicit__: data is flagged with `NA`
+
+We can check for explicit missing values using the `is.na()` function like so: 
+
+```{r}
+tmp.na = c(1, 2, NA, 3)
+is.na(tmp.na)
+```
+
+I've first created a vector `tmp.na` with a missing value at index 3. Calling the `is.na()` function on this vector yields a logical vector with `FALSE` for each value that is not missing, and `TRUE` for each missing value.
+
+Let's say that we have a data frame with missing values and that we want to replace those missing values with something else. Let's first create a data frame with missing values. 
+
+```{r}
+df.data = data_frame(x = c(1, 2, NA),
+                     y = c("a", NA, "b"))
+head(df.data)
+```
+
+We can use the `replace_na()` function to replace the missing values with something else. 
+
+```{r}
+df.data %>% 
+  mutate(x = replace_na(x, replace = 0),
+         y = replace_na(y, replace = "unknown"))
+```
+
+We can also remove rows with missing values using the `drop_na()` function. 
+
+```{r}
+df.data %>% 
+  drop_na()
+```
+
+If we only want to drop values from specific columns, we can specify these columns within the `drop_na()` function call. So, if we only want to drop rows that have missing values in the `x` column, we can write: 
+
+```{r}
+df.data %>% 
+  drop_na(x)
+```
+
+To make the distinction between implicit and explicit missing values more concrete, let's consider the following example (taken from [here](https://r4ds.had.co.nz/tidy-data.html#missing-values-3)): 
+
+```{r}
+df.stocks = data_frame(
+  year   = c(2015, 2015, 2015, 2015, 2016, 2016, 2016),
+  qtr    = c(   1,    2,    3,    4,    2,    3,    4),
+  return = c(1.88, 0.59, 0.35,   NA, 0.92, 0.17, 2.66)
+)
+```
+
+There are two missing values in this dataset:
+
+- The return for the fourth quarter of 2015 is explicitly missing, because the cell where its value should be instead contains `NA`.
+
+- The return for the first quarter of 2016 is implicitly missing, because it simply does not appear in the dataset.
+
+We can use the `complete()` function to turn implicit missing values explicit: 
+
+```{r}
+df.stocks %>% 
+  complete(year, qtr)
+```
+
+Note how now, the data frame contains an additional row in which `year = 2016`, `qtr = 1` and `return = NA` even though we didn't originally specify this. 
+
+We can also directly tell the `complete()` function to replace the `NA` values via passing a list to its `fill` argument like so: 
+
+```{r}
+df.stocks %>% 
+  complete(year, qtr, fill = list(return = 0))
+```
+
+This specifies that we would like to replace any `NA` in the `return` column with `0`. Again, if we had multiple columns with `NA`s, we could speficy for each column separately how to replace it. 
+
+## Reading in data 
+
+So far, we've used data sets that already came with the packages we've loaded. In the visualization chapters, we used the `diamonds` data set from the `ggplot2` package, and in the data wrangling chapters, we used the `starwars` data set from the `dplyr` package. 
+
+```{r echo=FALSE}
+file_type = c("`csv`", "`RData`", "`xls`", "`json`", "`feather`")
+platform = c(
+  "general",
+  "R",
+  "excel",
+  "general",
+  "python & R"
+)
+description = c(
+  "medium-size data frames",
+  "saving the results of intensive computations",
+  "people who use excel",
+  "more complex data structures",
+  "fast interaction between R and python"
+)
+
+kable(data_frame(`file type` = file_type,
+                 platform = platform,
+                 description = description),
+      align = c("r", "l", "l"))
+```
+
+
+The `foreign` [package](https://cran.r-project.org/web/packages/foreign/index.html) helps with importing data that was saved in SPSS, Stata, or Minitab. 
+
+For data in a json format, I highly recommend the `tidyjson` [package](https://github.com/sailthru/tidyjson).  
+
+### csv
+
+I've stored some data files in the `data/` subfolder. Let's first read a csv (= **c**omma-**s**eparated-**v**alue) file. 
+
+```{r}
+df.csv = read_csv("data/movies.csv")
+```
+
+The `read_csv()` function gives us information about how each column was parsed. Here, we have some columns that are characters (such as `title` and `genre`), and some columns that are numeric (such as `year` and `duration`). Note that it says `double()` in the specification but double and numeric are identical.  
+
+And let's take a quick peek at the data: 
+
+```{r}
+df.csv %>% glimpse()
+```
+
+The data frame contains a bunch of movies with information about their genre, director, rating, etc. 
+
+The `readr` package (which contains the `read_csv()` function) has a number of other functions for reading data. Just type `read_` in the console below and take a look at the suggestions that autocomplete offers. 
+
+### RData 
+
+RData is a data format native to R. Since this format can only be read by R, it's not a good format for sharing data. However, it's a useful format that allows us to flexibly save and load R objects. For example, consider that we always start our script by reading in and structuring data, and that this takes quite a while. One thing we can do is to save the output of intermediate steps as an RData object, and then simply load this object (instead of re-running the whole routine every time). 
+
+We read (or load) an RData file in the following way:
+
+```{r}
+load("data/test.RData", verbose = TRUE)
+```
+
+I've set the `verbose = ` argument to `TRUE` here so that the `load()` function tells me what objects it added to the environment. This is useful for checking whether existing objects were overwritten. 
+
+## Saving data 
+
+### csv 
+
+To save a data frame as a csv file, we simply write: 
+
+```{r}
+df.test = data_frame(
+  x = 1:3,
+  y = c("test1", "test2", "test3")
+)
+
+write_csv(df.test, path = "data/test.csv")
+```
+
+Just like for reading in data, the `readr` package has a number of other functions for saving data. Just type `write_` in the console below and take a look at the autocomplete suggestions.
+
+### RData 
+
+To save objects as an RData file, we write: 
+
+```{r}
+save(df.test, file = "data/test.RData")
+```
+
+We can add multiple objects simply by adding them at the beginning, like so: 
+
+```{r}
+save(df.test, df.starwars, file = "data/test_starwars.RData")
+```
+
+## Additional resources 
+
+### Cheatsheets 
+
+- [wrangling data](figures/data-wrangling.pdf) --> wrangling data using `dplyr` and `tidyr`
+- [importing data & ](figures/data-import.pdf) --> importing and saving data with `readr`
+
+### Data camp courses 
+
+- [Joining tables](https://www.datacamp.com/courses/joining-data-in-r-with-dplyr)
+
+### Books and chapters
+
+- [Chapters 17-21 in R for Data Science](https://r4ds.had.co.nz/program-intro.html)
+- [writing functions](https://www.datacamp.com/courses/writing-functions-in-r)
+- [importing data 1](https://www.datacamp.com/courses/importing-data-in-r-part-1)
+- [importing data 2](https://www.datacamp.com/courses/importing-data-in-r-part-2)
+
+### Tutorials 
+
+- __Joining data__:
+  - [Two-table verbs](https://dplyr.tidyverse.org/articles/two-table.html)
+  - [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
+  
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r}
+sessionInfo()
+```

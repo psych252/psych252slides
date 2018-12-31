@@ -1,12 +1,12 @@
 ---
 title: "Class 2"
 author: "Tobias Gerstenberg"
-date: "`r Sys.Date()`"
-output: 
+date: "January 9th, 2019"
+output:
   bookdown::gitbook:
     config:
       toc:
-        collapse: subsection
+        collapse: none
         scroll_highlight: yes
         before: null
         after: null
@@ -20,9 +20,9 @@ output:
         size: 2
       sharing: no
     toc_depth: 4
-bibliography: references.bib
+bibliography: ../references.bib
 biblio-style: apalike
-css: style.css
+css: ../style.css
 ---
 
 ```{r setup, include=FALSE}
@@ -43,10 +43,6 @@ In this lecture, we will take a look at how to visualize data using the powerful
 - Understand the general philosophy behind ggplot -- a grammar of graphics. 
 - Create informative figures using grouping and facets. 
 - Understand the mapping from data to geoms in ggplot.
-
-## Setting up RStudio 
-
-Before we get started, let's make a few changes to RStudio's default settings. 
 
 ## Load packages 
 
@@ -91,7 +87,7 @@ Always plot the data first!
 
 [Here](https://www.autodeskresearch.com/publications/samestats) is the paper from which I took Figure \@ref(fig:anscombe) and \@ref(fig:datasaurus). It explains how the figures were generated and shows more examples for how summary statistics and some kinds of plots are insufficient to get a good sense for what's going on in the data.
 
-## How _not_ to visualize data 
+### How _not_ to visualize data 
 
 Below are some examples of visualizations that could be improved. How would you make them better? 
 
@@ -119,12 +115,114 @@ Below are some examples of visualizations that could be improved. How would you 
   include_graphics("figures/bad_plot6.png")
 ```
 
-## How to make it better 
+### How to make it better 
 
 In this class, we you will learn how to use ggplot2 to make nice figures. The `ggplot2` library provides a unified framework for making plots -- it defines a grammar of graphics according to which we construct figures step by step.
 
 Instead of learning rigid rules for what makes for a good figure, you will learn how to make figures yourself, play around with things, and get a feeling for what works best. 
 
+## Setting up RStudio 
+
+```{r pref-general, echo=FALSE, fig.cap="General preferences."}
+  include_graphics("figures/screenshots/r_preferences_general.png")
+```
+
+__Make sure that__: 
+
+- Restore .RData into workspace at startup is _unselected_ 
+- Save workspace to .RData on exit is set to _Never_
+
+```{r pref-code, echo=FALSE, fig.cap="Code window preferences."}
+  include_graphics("figures/screenshots/r_preferences_code.png")
+```
+
+__Make sure that__: 
+
+- Soft-wrap R source files is _selected_
+
+This way you don't have to scroll horizontally. At the same time, avoid writing long single lines of code. For example, instead of writing code like so: 
+```{r, eval=FALSE}
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) + 
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) + 
+  labs(title = "Price as a function of quality of cut", subtitle = "Note: The price is in US dollars", tag = "A", x = "Quality of the cut", y = "Price")
+```
+
+You may want to write it this way instead: 
+
+```{r, eval=FALSE}
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+  # display the means
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               fill = "lightblue",
+               width = 0.85) + 
+  # display the error bars
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange", 
+               size = 1.5) + 
+  # change labels 
+  labs(
+    title = "Price as a function of quality of cut", 
+    subtitle = "Note: The price is in US dollars", # we might want to change this later
+    tag = "A",
+    x = "Quality of the cut", 
+    y = "Price")
+```
+
+This makes it much easier to see what's going on, and you can easily add comments to individual lines of code. 
+
+RStudio makes it easy to write nice code. It figures out where to put the next line of code when you press `ENTER`. And if things ever get messy, just select the code of interest and hit `cmd+I` to re-indent the code. 
+
+Here are some more resources with tips for how to write nice code in R: 
+
+- [Advanced R style guide](http://adv-r.had.co.nz/Style.html)
+
+## Getting help 
+
+There are three simple ways to get help in R. You can either put a `?` in front of the function you'd like to learn more about, or use the `help()` function.
+
+```{r, echo=FALSE}
+?print 
+help("print")
+```
+
+```{block, type='info'}
+__Tip__: 
+  
+To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press `F1`.
+```
+
+I recommend using `F1` to get to help files -- it's the fastest way! 
+
+R help files can sometimes look a little cryptic. Most R help files have the following sections (copied from [here](https://www.dummies.com/programming/r/r-for-dummies-cheat-sheet/)): 
+
+---
+
+__Title__: A one-sentence overview of the function.
+
+__Description__: An introduction to the high-level objectives of the function, typically about one paragraph long.
+
+__Usage__: A description of the syntax of the function (in other words, how the function is called). This is where you find all the arguments that you can supply to the function, as well as any default values of these arguments.
+
+__Arguments__: A description of each argument. Usually this includes a specification of the class (for example, character, numeric, list, and so on). This section is an important one to understand, because arguments are frequently a cause of errors in R.
+
+__Details__: Extended details about how the function works, provides longer descriptions of the various ways to call the function (if applicable), and a longer discussion of the arguments.
+
+__Value__: A description of the class of the value returned by the function.
+
+__See also__: Links to other relevant functions. In most of the R editors, you can click these links to read the Help files for these functions.
+
+__Examples__: Worked examples of real R code that you can paste into your console and run.
+
+---
+
+Here is the help file for the `print()` function: 
+
+```{r print-function, echo=FALSE, fig.cap="Help file for the print() function."}
+  include_graphics("figures/screenshots/help_print.png")
+```
 
 ## Data visualization using `ggplot2` 
 
@@ -148,12 +246,6 @@ The `diamonds` dataset comes with the ggplot2 package. We can get a description 
 
 ```{r}
 ?diamonds
-```
-
-```{block, type='info'}
-__Tip__: 
-  
-To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press `F1`.
 ```
 
 Above, we assigned the `diamonds` dataset to the variable `df.diamonds` so that we can see it in the data explorer. 
@@ -189,7 +281,7 @@ Here, we specified that we want to plot color on the x-axis, and the average pri
 
 ```{r}
 ggplot(data = df.diamonds, 
-       mapping = aes(x = color, y = price))+
+       mapping = aes(x = color, y = price)) +
   stat_summary(fun.y = "mean", geom = "bar")
 ```
 
@@ -210,14 +302,14 @@ Not the the easiest help file ... We supplied two arguments to the function, `fu
 Instead of showing the "mean", we could also show the "median" instead. 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price))+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price)) +
   stat_summary(fun.y = "median", geom = "bar")
 ```
 
 And instead of making a bar plot, we could plot some points. 
 
 ```{r}
-ggplot(df.diamonds, aes(x = color, y = price))+
+ggplot(df.diamonds, aes(x = color, y = price)) +
   stat_summary(fun.y = "mean", geom = "point")
 ```
 
@@ -232,14 +324,14 @@ Somewhat surprisingly, diamonds with the best color (D) are not the most expensi
 Note that in the last plot, I removed the `data = ` and `mapping = ` specifiers. These keywords are optional, and as long as we provide the arguments to the function in the correct order, we are ok. So, the following doesn't work: 
 
 ```{r, eval=F}
-ggplot(aes(x = color, y = price), df.diamonds)+
+ggplot(aes(x = color, y = price), df.diamonds) +
   stat_summary(fun.y = "mean", geom = "point")
 ```
 
 While this works: 
 
 ```{r}
-ggplot(mapping = aes(x = color, y = price), data = df.diamonds)+
+ggplot(mapping = aes(x = color, y = price), data = df.diamonds) +
   stat_summary(fun.y = "mean", geom = "point")
 ```
 
@@ -251,7 +343,7 @@ Before moving one, let's set a different default theme for our plots. Personally
 
 ```{r}
 theme_set(
-  theme_classic()+ #set the theme 
+  theme_classic() + #set the theme 
     theme(text = element_text(size = 20)) #set the default text size
 )
 ```
@@ -263,7 +355,7 @@ From now onwards, all our plots will use what specified in `theme_classic()`, an
 I don't know much about diamonds, but I do know that diamonds with a higher `carat` value are better. `color` was a discrete variable with seven different values. `carat`, however, is a continuous variable. We want to see how the price of diamonds differs as a function of the `carat` value. Since we are interested in the relationship between two continuous variables, plotting a bar graph won't work. Instead, let's make a __scatter plot__. Let's put the `carat` value on the x-axis, and the `price` on the y-axis. 
 
 ```{r scatterplot, fig.cap="Scatterplot."}
-ggplot(data = df.diamonds, mapping = aes(x = carat, y = price))+
+ggplot(data = df.diamonds, mapping = aes(x = carat, y = price)) +
   geom_point()
 ```
 
@@ -273,7 +365,7 @@ Cool! That looks sensible. Diamonds with a higher `carat` value tend to have a h
 Let's make some progress on trying to figure out why the diamonds with the better color weren't the most expensive ones on average. We'll add some color to the scatter plot in Figure \@ref(fig:scatterplot). We color each of the points based on the diamond's color. To do so, we pass another argument to the aesthetics of the plot via `aes()`. 
 
 ```{r scatterplot-color, fig.cap="Scatterplot with color."}
-ggplot(data = df.diamonds, mapping = aes(x = carat, y = price, color = color))+
+ggplot(data = df.diamonds, mapping = aes(x = carat, y = price, color = color)) +
   geom_point()
 ```
 
@@ -290,14 +382,14 @@ vignette("ggplot2-specs")
 What else do we know about the diamonds? We actually know the quality of how they were cut. The `cut` variable ranges from "Fair" to "Ideal". First, let's take a look at the relationship between `cut` and `price`. This time, we'll make a line plot instead of a bar plot (just because we can). 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = cut, y = price))+
+ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun.y = "mean", geom = "line")
 ```
 
 Oops! All we did is that we replaced `x = color` with `x = cut`, and `geom = "bar"` with `geom = "line"`. However, the plot doesn't look like expected (i.e. there is no real plot). What happened here? The reason is that the line plot needs to know what points to connect. The error message tells us that each group consists of only one observation. Let's adjust the group asthetic to fix this. 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = cut, y = price, group = 1))+
+ggplot(data = df.diamonds, mapping = aes(x = cut, y = price, group = 1)) +
   stat_summary(fun.y = "mean", geom = "line")
 ```
 
@@ -310,8 +402,8 @@ Interestingly, there is no simple relationship between the quality of the cut an
 We often don't just want to show the means but also give a sense for how much the data varies. `ggplot2` has some convenient ways of specifying error bars. Let's take a look at how much `price` varies as a function of `clarity` (another variable in our `diamonds` data frame). 
 
 ```{r errorbars, fig.cap="Relationship between diamond clarity and price. Error bars indicate 95% bootstrapped confidence intervals."}
-ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price))+
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange")+ # plot bootstrapped error bars first
+ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange") + # plot bootstrapped error bars first
   stat_summary(fun.y = "mean", geom = "point") #add points with means
 ```
 
@@ -324,8 +416,8 @@ help(mean_cl_boot)
 Remember that you can just select the text (or merely put the cursor over the word) and press `F1` to see the help. The help file tell us about the function `smean.cl.boot` in the `Hmisc` package. The `mean_cl_boot()` function is a version that works well with `ggplot2`. We see that this function takes as inputs, the confidence interval `conf.int`, the number of bootstrap samples `B`, and some other ones that we don't care about for now. So let's make the same plot again with 99.9% confidence intervals, and 2000 bootstrap samples. 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price))+
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", fun.args = list(conf.int = .999, B = 2000))+ # plot bootstrapped error bars first
+ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", fun.args = list(conf.int = .999, B = 2000)) + # plot bootstrapped error bars first
   stat_summary(fun.y = "mean", geom = "point") #add points with means
 ```
 
@@ -345,14 +437,14 @@ Grouping in `ggplot2` is a very powerful idea. It allows us to plot subsets of t
 Let's make a plot that shows the relationship between `price` and `color` separately for the different qualities of `cut`.
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut))+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut)) +
   stat_summary(fun.y = "mean", geom = "line")
 ```
 
 Well, we got some separate lines here but we don't know which line corresponds to which cut. Let's add some color!
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, color = cut))+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, color = cut)) +
   stat_summary(fun.y = "mean", geom = "line", size = 2)
 ```
 
@@ -361,22 +453,22 @@ Nice! In addition to adding color, I've made the lines a little thicker here by 
 Grouping is very useful for bar plots. Let's take a look at how the average price of diamonds looks like taking into account both `cut` and `color` (I know -- exciting times!). Let's put the `color` on the x-axis and then group by the `cut`. 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, color = cut))+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, color = cut)) +
   stat_summary(fun.y = "mean", geom = "bar")
 ```
 
 That's a fail! Several things went wrong here. First, all the bars are gray and only their outline is colored differently. Instead we want the bars to have a different color. For that we need to specify the `fill` argument rather than the `color` argument. But things are worse. The bars currently are shown on top of each other. Instead, we'd like to put them next to each other. Here is how to do that: 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, fill = cut))+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, fill = cut)) +
   stat_summary(fun.y = "mean", geom = "bar", position = position_dodge())
 ```
 
 Neato! We've changed the `color` argument to `fill`, and have added the `position = position_dodge()` argument to the `stat_summary()` call. This argument makes it such that the bars are nicely dodged next to each other. Let's add some error bars just for kicks. 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, fill = cut))+
-  stat_summary(fun.y = "mean", geom = "bar", position = position_dodge(width = 0.9), color = "black")+
+ggplot(data = df.diamonds, mapping = aes(x = color, y = price, group = cut, fill = cut)) +
+  stat_summary(fun.y = "mean", geom = "bar", position = position_dodge(width = 0.9), color = "black") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", position = position_dodge(width = 0.9))
 ```
 
@@ -391,22 +483,22 @@ Having too much information in a single plot can be overwhelming. The previous p
 Let's take a look at how wide these diamonds tend to be. The width in mm is given in the `y` column of the diamonds data frame. We'll make a histogram first. To make a histogram, the only aesthetic we needed to specify is `x`. 
 
 ```{r histogram1}
-ggplot(data = df.diamonds, mapping = aes(x = y))+
+ggplot(data = df.diamonds, mapping = aes(x = y)) +
   geom_histogram()
 ```
 
 That looks bad! Let's pick a different value for the width of the bins in the histogram. 
 
 ```{r histogram2}
-ggplot(data = df.diamonds, mapping = aes(x = y))+
+ggplot(data = df.diamonds, mapping = aes(x = y)) +
   geom_histogram(binwidth = 0.1)
 ```
 
 Still bad. There seems to be an outlier diamond that happens to be almost 60 mm wide, while most of the rest is much narrower. One option would be to remove the outlier from the data before plotting it. But generally, we don't want to make new data frames. Instead, let's just limit what data we want to show in the plot. 
 
 ```{r histogram3}
-ggplot(data = df.diamonds, mapping = aes(x = y))+
-  geom_histogram(binwidth = 0.1)+
+ggplot(data = df.diamonds, mapping = aes(x = y)) +
+  geom_histogram(binwidth = 0.1) +
   coord_cartesian(xlim = c(3, 10))
 ```
 
@@ -415,16 +507,16 @@ I've used the `coord_cartesian()` function to restrict the range of data to show
 Instead of histograms, we can also plot a density fitted to the distribution. 
 
 ```{r density1}
-ggplot(data = df.diamonds, mapping = aes(x = y))+
-  geom_density()+
+ggplot(data = df.diamonds, mapping = aes(x = y)) +
+  geom_density() +
   coord_cartesian(xlim = c(3, 10))
 ```
 
 Looks pretty similar to our histogram above! Just like we can play around with the binwidth of the histogram, we can change the smoothing bandwidth of the kernel that is used to create the histogram. Here is a histogram with a much wider bandwidth: 
 
 ```{r density2}
-ggplot(data = df.diamonds, mapping = aes(x = y))+
-  geom_density(bw = 0.5)+
+ggplot(data = df.diamonds, mapping = aes(x = y)) +
+  geom_density(bw = 0.5) +
   coord_cartesian(xlim = c(3, 10))
 ```
 
@@ -433,17 +525,17 @@ We'll learn more about how these densities are determined later in class.
 I promised that this section was about making facets, right? We're getting there! Let's first take a look at how wide diamonds of different color are. We can use grouping to make this happen. 
 
 ```{r density3}
-ggplot(data = df.diamonds, mapping = aes(x = y, group = color, fill = color))+
-  geom_density(bw = 0.2, alpha = 0.2)+
+ggplot(data = df.diamonds, mapping = aes(x = y, group = color, fill = color)) +
+  geom_density(bw = 0.2, alpha = 0.2) +
   coord_cartesian(xlim = c(3, 10))
 ```
 
 OK! That's a little tricky to tell apart. Notice that I've specified the `alpha` argument in the `geom_density()` function so that the densities in the front don't completely hide the densities in the back. But this plot still looks too busy. Instead of grouping, let's put the densities for the different colors, in separate panels. That's what facetting allows you to do. 
 
 ```{r density4}
-ggplot(data = df.diamonds, mapping = aes(x = y, fill = color))+
-  geom_density(bw = 0.2)+
-  facet_grid(cols = vars(color))+
+ggplot(data = df.diamonds, mapping = aes(x = y, fill = color)) +
+  geom_density(bw = 0.2) +
+  facet_grid(cols = vars(color)) +
   coord_cartesian(xlim = c(3, 10))
 ```
 
@@ -452,9 +544,9 @@ Now we have the densities next to each other in separate panels. I've removed th
 To show the facets in different rows instead of columns we simply replace `cols = vars(color)` with `rows = vars(color)`. 
 
 ```{r density5}
-ggplot(data = df.diamonds, mapping = aes(x = y, fill = color))+
-  geom_density(bw = 0.2)+
-  facet_grid(rows = vars(color))+
+ggplot(data = df.diamonds, mapping = aes(x = y, fill = color)) +
+  geom_density(bw = 0.2) +
+  facet_grid(rows = vars(color)) +
   coord_cartesian(xlim = c(3, 10))
 ```
 
@@ -469,13 +561,47 @@ So, what does this plot actually show us? Well, J-colored diamonds tend to be wi
 Of course, we could go completely overboard with facets and groups. So let's do it! Let's look at how the average `price` (somewhat more interesting) varies as a function of `color`, `cut`, and `clarity`. We'll put color on the x-axis, and make separate rows for `cut` and columns for `clarity`. 
 
 ```{r stretching-it, fig.cap="A figure that is stretching it in terms of information."}
-ggplot(data = df.diamonds, mapping = aes(y = price, x = color, fill = color))+
-  stat_summary(fun.y = "mean", geom = "bar", color = "black")+
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange")+
+ggplot(data = df.diamonds, mapping = aes(y = price, x = color, fill = color)) +
+  stat_summary(fun.y = "mean", geom = "bar", color = "black") +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange") +
   facet_grid(rows = vars(cut), cols = vars(clarity))
 ```
 
 Figure \@ref(fig:stretching-it) is stretching it in terms of how much information it presents. But it gives you a sense for how to combine the differnet bits and pieces we've learned so far. 
+
+### More on aesthetics 
+
+- explain distinction between global mapping, local mapping, and setting 
+
+`ggplot2` allows you to specify the plot aesthetics in different ways. 
+
+```{r}
+ggplot(data = df.diamonds, mapping = aes(x = carat, y = price, color = color)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F)
+```
+
+Here, I've drawn a scatter plot of the relationship between `carat` and `price`, and I have added the best-fitting regression lines via the `geom_smooth(method = "lm")` call. (We will learn much more about what these regression lines mean later in class.)
+
+Because I have defined all the aesthetics at the top level (i.e. directly within the `ggplot()` function), the aesthetics apply to all the functions afterwards. In this case, the `geom_point()` and the `geom_smooth()` functions. The `geom_smooth()` function produces separate best-fit regression lines for each different color. 
+
+But what if we only wanted to show one regression line instead that applies to all the data? Here is one way of doing so: 
+
+```{r}
+ggplot(data = df.diamonds, mapping = aes(x = carat, y = price)) +
+  geom_point(mapping = aes(color = color)) +
+  geom_smooth(method = "lm")
+```
+
+Here, I've moved the color aesthetic into the `geom_point()` function call. Now, the `x` and `y` aesthetics still apply to both the `geom_point()` and the `geom_smooth()` function call, but the `color` aesthetic applies only to `geom_point()`. Alternatively, we can simply overwrite global aesthetics within local function calls. 
+
+```{r}
+ggplot(data = df.diamonds, aes(x = carat, y = price, color = color)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = 'black')
+```
+
+Here, I've set `color = 'black'` within the `geom_smooth()` function, and now only one global regression line is displayed since the global color aesthetic was overwritten in the local function call. 
 
 ### Exercises 
 
@@ -533,55 +659,26 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 include_graphics("figures/practice_plot4.png")
 ```
 
-
-### More on aesthetics 
-
-- explain distinction between global mapping, local mapping, and setting 
-
-`ggplot2` allows you to specify the plot aesthetics in different ways. 
-
-```{r}
-ggplot(data = df.diamonds, mapping = aes(x = carat, y = price, color = color))+
-  geom_point()+
-  geom_smooth(method = "lm", se = F)
-```
-
-Here, I've drawn a scatter plot of the relationship between `carat` and `price`, and I have added the best-fitting regression lines via the `geom_smooth(method = "lm")` call. (We will learn much more about what these regression lines mean later in class.)
-
-Because I have defined all the aesthetics at the top level (i.e. directly within the `ggplot()` function), the aesthetics apply to all the functions afterwards. In this case, the `geom_point()` and the `geom_smooth()` functions. The `geom_smooth()` function produces separate best-fit regression lines for each different color. 
-
-But what if we only wanted to show one regression line instead that applies to all the data? Here is one way of doing so: 
-
-```{r}
-ggplot(data = df.diamonds, mapping = aes(x = carat, y = price))+
-  geom_point(mapping = aes(color = color))+
-  geom_smooth(method = "lm")
-```
-
-Here, I've moved the color aesthetic into the `geom_point()` function call. Now, the `x` and `y` aesthetics still apply to both the `geom_point()` and the `geom_smooth()` function call, but the `color` aesthetic applies only to `geom_point()`. Alternatively, we can simply overwrite global aesthetics within local function calls. 
-
-```{r}
-ggplot(data = df.diamonds, aes(x = carat, y = price, color = color))+
-  geom_point()+
-  geom_smooth(method = "lm", color = 'black')
-```
-
-Here, I've set `color = 'black'` within the `geom_smooth()` function, and now only one global regression line is displayed since the global color aesthetic was overwritten in the local function call. 
-
-
 ## Additional resources 
 
 ### Cheatsheets 
 
+- [RStudio IDE](figures/rstudio-ide.pdf) --> information about RStudio
+- [RMarkdown](figures/rmarkdown.pdf) --> information about writing in RMarkdown
+- [RMarkdown reference](figures/rmarkdown-reference.pdf) --> RMarkdown reference sheet
 - [Data visualization](figures/visualization-principles.pdf) --> general principles of effective graphic design 
 - [ggplot2](figures/data-visualization.pdf) --> specific information about ggplot
 
-### Data camp tutorials 
+### Data camp courses 
 
+- [Introduction to R](https://www.datacamp.com/courses/free-introduction-to-r)
+- [RStudio IDE 1](https://www.datacamp.com/courses/working-with-the-rstudio-ide-part-1)
+- [RStudio IDE 2](https://www.datacamp.com/courses/working-with-the-rstudio-ide-part-2)
+- [Communicating with data](https://www.datacamp.com/courses/communicating-with-data-in-the-tidyverse)
 - [ggplot2 course 1](https://www.datacamp.com/courses/data-visualization-with-ggplot2-1)
 - [ggplot2 course 2](https://www.datacamp.com/courses/data-visualization-with-ggplot2-2)
 
-### Books and Chapters
+### Books and chapters
 
 - [R graphics cookbook](http://www.cookbook-r.com/Graphs/) --> quick intro to the the most common graphs
 - [R for Data Science book](http://r4ds.had.co.nz/)
@@ -591,7 +688,6 @@ Here, I've set `color = 'black'` within the `geom_smooth()` function, and now on
   + [Look at data](http://socviz.co/lookatdata.html#lookatdata)
   + [Make a plot](http://socviz.co/makeplot.html#makeplot)
   + [Show the right numbers](http://socviz.co/groupfacettx.html#groupfacettx)
-  + [Refine your plots](http://socviz.co/refineplots.html#refineplots)
 - [Fundamentals of Data Visualization](https://serialmentor.com/dataviz/) --> very nice resource that goes beyond basic functionality of `ggplot` and focuses on how to make good figures (e.g. how to choose colors, axes, ...)
 
 ### Misc
@@ -599,6 +695,8 @@ Here, I've set `color = 'black'` within the `geom_smooth()` function, and now on
 - [ggplot2 extensions](http://www.ggplot2-exts.org/gallery/) --> gallery of ggplot2 extension packages 
 - [ggplot2 gui](https://github.com/dreamRs/esquisse) --> ggplot2 extension package 
 - [ggplot2 visualizations with code](http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html) --> gallery of plots with code
+- [R Markdown in RStudio introduction](https://rmarkdown.rstudio.com/lesson-1.html)
+- [R Markdown for class reports](http://www.stat.cmu.edu/~cshalizi/rmarkdown/)
 
 ## Session info 
 
