@@ -1,0 +1,97 @@
+---
+title: "Class 6"
+author: "Tobias Gerstenberg"
+date: "January 16th, 2019"
+output:
+  # html_document
+  bookdown::gitbook:
+    config:
+      toc:
+        collapse: none
+        scroll_highlight: yes
+        before: null
+        after: null
+      toolbar:
+        position: fixed
+      edit : null
+      search: yes
+      fontsettings:
+        theme: white
+        family: sans
+        size: 2
+      sharing: no
+    toc_depth: 3
+bibliography: ../references.bib
+biblio-style: apalike
+css: ../style.css
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>")
+```
+
+# Probability
+
+## Learning objectives 
+
+- 
+
+## Load packages 
+
+Let's first load the packages that we need for this chapter. 
+
+```{r, message=FALSE}
+library("knitr") # for rendering the RMarkdown file
+library("tidyverse") # for data wrangling 
+```
+
+## Concepts to teach 
+
+- Counting 
+  - naive definition of probability 
+  - formal definition of probability 
+
+- Thinking conditionally 
+  - Simpson's paradox 
+  - law of total probability 
+  - Bayes' rule 
+
+- Law of large numbers 
+  - Central limit theorem
+
+- Probability distributions 
+  - continuous 
+  - discrete
+  
+
+## Additional resources 
+
+### Cheatsheets 
+
+- [Probability cheatsheet](figures/probability.pdf)
+
+### Data camp courses 
+
+- [Foundations of probability in R](https://www.datacamp.com/courses/foundations-of-probability-in-r)
+
+### Books and chapters
+
+- [Probability and Statistics with examples using R](http://www.isibang.ac.in/~athreya/psweur/)
+- [Learning statistics with R: Chapter 9 Introduction to probability](https://learningstatisticswithr-bookdown.netlify.com/probability.html#probstats)
+
+### Tutorials 
+
+### Misc 
+
+- [Statistics 110: Probability; course at Harvard](https://projects.iq.harvard.edu/stat110)  
+  
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r}
+sessionInfo()
+```
