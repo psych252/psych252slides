@@ -58,9 +58,9 @@ To test your knowledge of the R basics, I recommend taking the free interactive 
 
 ### Modes 
 
-Variables in R can have different modes. Table shows the most common ones. 
+Variables in R can have different modes. Table \@ref(tab:modes) shows the most common ones. 
 
-```{r}
+```{r modes, echo=FALSE}
 name = c("numeric", "character", "logical", 'not available')
 example = c(
   "`1`, `3`, `48`",
@@ -68,7 +68,7 @@ example = c(
   "`TRUE`, `FALSE`",
   "`NA`")
 kable(x = tibble(name, example), 
-      caption = "Most commonly used variable modes in R.", 
+      caption = "Most commonly used variable modes in R.",
       align = c("r", "l"),
       booktabs = TRUE)
 ```
@@ -109,8 +109,8 @@ description = c(
   "flexible type that can contain different other variable types"
   )
 kable(x = tibble(name, description), 
-      caption = "Most commonly used variable types in R.", 
       align = c("r", "l"),
+      caption = "Most commonly used data types in R.",
       booktabs = TRUE)
 ```
 
@@ -163,10 +163,9 @@ df$participant_name[2] # name of the second participant
 df[["participant_name"]][2] # same as above
 ```
 
-We'll use data frames a lot. Data frames are like a matrix with column names. Data frames are also more general than matrices in that different columns can have different modes. For example, one column might be a character, another one numeric, and another one a factor. You may sometimes also see a `tibble` instead of a data frame. A `tibble` is almost the same asa  data frame but it has better defaults for formatting output in the console (more information on tibbles is [here](http://r4ds.had.co.nz/tibbles.html)). 
+We'll use data frames a lot. Data frames are like a matrix with column names. Data frames are also more general than matrices in that different columns can have different modes. For example, one column might be a character, another one numeric, and another one a factor. 
 
-
-<!-- Mention that one can have lists inside data frames here? -->
+You may sometimes also see a `tibble` instead of a data frame. A `tibble` is almost the same asa  data frame but it has better defaults for formatting output in the console (more information on tibbles is [here](http://r4ds.had.co.nz/tibbles.html)). 
 
 #### Lists 
 
@@ -181,9 +180,8 @@ l.mixed$character
 l.mixed[['character']]
 l.mixed[[2]] # three different ways of accessing a list
 ```
-Lists are a very flexible data format. You can put almost anything in a list. You can then access the elements of a list either using 
 
-tibble; same as data frame with better defaults for formatting output in the console; more information on [tibbles](http://r4ds.had.co.nz/tibbles.html)
+Lists are a very flexible data format. You can put almost anything in a list.
 
 ### Operators
 
@@ -239,18 +237,16 @@ while(number <= 10){
 ### Functions 
 
 ```{r}
-fun_addition = function(a, b){
+fun.addition = function(a, b){
   x = a + b
   return(str_c("The result is ", x))
 }
 
-fun_addition(1,2)
+fun.addition(1,2)
 
 ```
 
-<!-- maybe introduce `str_c()` directly instead of `paste0()`? -->
-
-I've used the `paste0()` function here to concatenate the string with the number. (R converts the number `x` into a string for us.) Note, R functions can only return a single object. However, this object can be a list (which can contain anything). 
+I've used the `str_c()` function here to concatenate the string with the number. (R converts the number `x` into a string for us.) Note, R functions can only return a single object. However, this object can be a list (which can contain anything). 
 
 #### Some often used functions 
 
@@ -295,9 +291,12 @@ kable(x = tibble(name, description),
 
 ### The pipe operator `%>%` 
 
-
-```{r pipe, out.width = "90%", echo=FALSE, fig.cap="Inspiration for the `magrittr` package name."}
+```{r pipe, out.width = "80%", echo=FALSE, fig.cap="Inspiration for the `magrittr` package name."}
   include_graphics("figures/pipe.jpg")
+```
+
+```{r magrittr, out.width = '40%', echo=FALSE, fig.cap="The `magrittr` package logo."}
+include_graphics("figures/magrittr.png")
 ```
 
 The pipe operator `%>%` is a special operator introduced in the `magrittr` package. It is used heavily in the tidyverse. The basic idea is simple: this operator allows us to "pipe" several functions into one long chain. 
@@ -311,7 +310,7 @@ sum(a, b) # standard way
 a %>% sum(b) # the pipe way 
 ```
 
-The pipe operator inserts the result of one computation as a first element into the next computation. So, `a %>% sum(b)` is equivalent to `sum(a, b)`. We can also specify to insert the result at a different position via the `.` operator. For example:  
+The pipe operator inserts the result of the previous computation as a first element into the next computation. So, `a %>% sum(b)` is equivalent to `sum(a, b)`. We can also specify to insert the result at a different position via the `.` operator. For example:  
 
 ```{r}
 a = 1
@@ -319,7 +318,9 @@ b = 10
 b %>% seq(from = a, to = .)
 ```
 
-Here, I used the `.` operator to specify that I woud like to insert the result of `b` where I've put the `.` in the `seq()` function. So far, the pipe operator may not seem particularly useful. One of the great features of the operator though is that it allows us to write code in an intuitive way that fits the order in which we would like to do stuff. 
+Here, I used the `.` operator to specify that I woud like to insert the result of `b` where I've put the `.` in the `seq()` function. 
+
+So far, the pipe operator may not seem particularly useful. One of the great features of the operator though is that it allows us to write code in an intuitive way that fits the order in which we would like to do stuff. 
 
 For example, consider that we want to calculate the root mean squared error between prediction and data. In base R, we would do the following. 
 
@@ -362,6 +363,7 @@ df.starwars = starwars
 Before visualizing the data, it's often useful to take a quick direct look at the data. 
 
 There are several ways of taking a look at data in R. Personally, I like to look at the data within RStudio's data viewer. To do so, you can: 
+
 - click on the `df.starwars` variable in the "Environment" tab  
 - type `View(df.starwars)` in the console 
 - move your mouse over (or select) the variable in the editor (or console) and hit `F2` 
@@ -372,32 +374,39 @@ Sometimes it's also helpful to look at data in the console instead of the data v
 
 Here are some useful functions: 
 
+### `head()`
+
+Without any extra arguments specified, `head()` shows the top six rows of the data. 
+
 ```{r}
 head(df.starwars)
 ```
 
-Without any extra arguments specified, `head()` shows the top six rows of the data. 
+### `glimpse()`
+
+`glimpse()` is helpful when the data frame has many columns. The data is shown in a transposed way with columns as rows. 
 
 ```{r}
 glimpse(df.starwars)
 ```
 
-`glimpse()` is helpful when the data frame has many columns. The data is shown in a transposed way with columns as rows. 
-
-```{r}
-df.starwars %>% 
-  distinct(name) %>% 
-  head()
-```
+### `distinct()`
 
 `distinct()` shows all the distinct values for a character or factor column. 
 
 ```{r}
 df.starwars %>% 
-  count(gender)
+  distinct(name)
 ```
 
+### `count()`
+
 `count()` shows a count of all the different distinct values in a column. 
+
+```{r}
+df.starwars %>% 
+  count(gender)
+```
 
 It's possible to do grouped counts by combining several variables.
 
@@ -407,26 +416,26 @@ df.starwars %>%
   head(n = 10)
 ```
 
-<!-- TODO: maybe remove the following two sectionss -->
+<!-- By default, `count()` results in a data frame that only lists combinations that actually exist. If you'd like to have all the values, the following code will do:  -->
 
-By default, `count()` results in a data frame that only lists combinations that actually exist. If you'd like to have all the values, the following code will do: 
+<!-- ```{r} -->
+<!-- df.starwars %>%  -->
+<!--   count(species, gender) %>% -->
+<!--   complete(species, gender, fill = list(n = 0)) %>%  -->
+<!--   head(n = 10) -->
+<!-- ``` -->
 
-```{r}
-df.starwars %>% 
-  count(species, gender) %>%
-  complete(species, gender, fill = list(n = 0)) %>% 
-  head(n = 10)
-```
+<!-- Here, I've used the `complete()` function to generate all the combinations of `species` and `gender`, and told the function to fill in the value 0 for those combinations that don't exist.   -->
 
-Here, I've used the `complete()` function to generate all the combinations of `species` and `gender`, and told the function to fill in the value 0 for those combinations that don't exist.  
+<!-- You can also add counts to a data frame.  -->
 
-You can also add counts to a data frame. 
+<!-- ```{r} -->
+<!-- df.starwars %>%  -->
+<!--   add_count(species) %>%  -->
+<!--   head() -->
+<!-- ``` -->
 
-```{r}
-df.starwars %>% 
-  add_count(species) %>% 
-  head()
-```
+### `datatable()`
 
 For RMardkown files specifically, we can use the `datatable()` function from the `DT` package to get an interactive table widget.
 
@@ -437,15 +446,16 @@ df.starwars %>%
   datatable()
 ```
 
-
 ### Other tools for taking a quick look at data 
+
+#### `vis_dat()`
+
+The `vis_dat()` function from the `visdat` package, gives a visual summary that makes it easy to see the variable types and whether there are missing values in the data. 
 
 ```{r}
 # install.packages("visdat")
 visdat::vis_dat(df.starwars)
 ```
-
-The `vis_dat()` function from the `visdat` package, gives a visuall summary that makes it easy to see the variable types and whether there are missing values in the data. 
 
 ```{block, type='info'}
 When R loads packages, functions loaded in earlier packages are overwritten by functions of the same name from later packages. This means that the order in which packages are loaded matters. To make sure that a function from the correct package is used, you can use the `package_name::function_name()` construction. This way, the `function_name()` from the `package_name` is used, rather than the same function from a different package. 
@@ -453,12 +463,18 @@ When R loads packages, functions loaded in earlier packages are overwritten by f
 This is why, in general, I recommend to load the tidyverse package last (since it contains a large number of functions that we use a lot).
 ```
 
+#### `skim()`
+
+The `skim()` function from the `skimr` package provides a nice overview of the data, separated by variable types. 
+
 ```{r}
 # install.packages("skimr")
 skimr::skim(df.starwars)
 ```
 
-The `skim()` function from the `skimr` package provides a nice overview of the data, separated by variable types. 
+#### `dfSummary()`
+
+The `summarytools` package is another great package for taking a look at the data. It renders a nice html output for the data frame including a lot of helpful information. You can find out more about this package [here](https://cran.r-project.org/web/packages/summarytools/vignettes/Introduction.html).
 
 ```{r eval=FALSE}
 # install.packages("summarytools")
@@ -467,8 +483,6 @@ df.starwars %>%
   summarytools::dfSummary() %>% 
   summarytools::view()
 ```
-
-The `summarytools` package is another great package for taking a look at the data. It renders a nice html output for the data frame including a lot of helpful information. You can find out more about this package [here](https://cran.r-project.org/web/packages/summarytools/vignettes/Introduction.html).
 
 Once we've taken a look at the data, the next step would be to visualize relationships between variables of interest. 
 
@@ -501,36 +515,32 @@ We use the functions in the package `dplyr` to manipulate our data.
 
 ### filter() 
 
+`filter()` lets us apply logical (and other) operators (see Table \@ref(tab:operators)) to subset the data. Here, I've filtered out the male characters. 
 
 ```{r}
 df.starwars %>% 
-  filter(gender == 'male') %>% 
-  head()
+  filter(gender == 'male')
 ```
 
-`filter()` lets us apply logical operators (see Table \@ref(tab:operators)) to subset the data. Here, I've filtered out the male characters. 
-
+We can combine multiple conditions in the same call. Here, I've filtered out male characters, whose height is greater than the median height (i.e. they are in the top 50 percentile), and whose mass was not `NA`. 
 
 ```{r}
 df.starwars %>% 
   filter(gender == 'male',
-    height > median(height, na.rm = T),
-    !is.na(mass)) %>% 
-  head()
+         height > median(height, na.rm = T),
+         !is.na(mass))
 ```
-
-We can combine multiple conditions in the same call. Here, I've filtered out male characters, whose height is greater than the median height (i.e. in the top 50 percentile), and whose mass was not `NA`. 
 
 Many functions like `mean()`, `median()`, `var()`, `sd()`, `sum()` have the argument `na.rm` which is set to `FALSE` by default. I set the argument to `TRUE` here (or `T` for short), which means that the `NA` values are ignored, and the `median()` is calculated based on the remaning values.
 
-You can use `,` and `&` interchangeably in `filter()`. Make sure to use parentheses when using several logical operators to indicate which logical operation should be performed first: 
+You can use `,` and `&` interchangeably in `filter()`. Make sure to use parentheses when combining several logical operators to indicate which logical operation should be performed first: 
 
 ```{r}
 df.starwars %>% 
   filter((skin_color %in% c("dark", "pale") | gender == "hermaphrodite") & height > 170)
 ```
 
-The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or whose gender is `"hermaphrodite"`, and whose height is at least `170` cm. The `%in%` operator is useful when there are multiple options. Instead of `skin_color %in% c("dark", "pale")`, I could have also written `skin_color == "dark" | skin_color == "pale"` but this gets cumbersome as the options increase. 
+The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or whose gender is `"hermaphrodite"`, and whose height is at least `170` cm. The `%in%` operator is useful when there are multiple options. Instead of `skin_color %in% c("dark", "pale")`, I could have also written `skin_color == "dark" | skin_color == "pale"` but this gets cumbersome as the number of options increases. 
 
 ### rename() 
 
@@ -539,18 +549,16 @@ The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or 
 ```{r}
 df.starwars %>% 
   rename(person = name,
-         mass_kg = mass) %>% 
-  head()
+         mass_kg = mass)
 ```
 
-To rename many variables at the same time use `set_names()`: 
+To rename all variables at the same time use `set_names()`: 
 
 ```{r}
-df.starwars %>% 
+df.starwars %>%
   set_names(letters[1:ncol(.)]) %>% #renamed all variables to letters: a, b, ...
   head()
 ```
-
 
 ### select() 
 
@@ -558,8 +566,7 @@ df.starwars %>%
 
 ```{r}
 df.starwars %>% 
-  select(name, height, mass) %>% 
-  head()
+  select(name, height, mass)
 ```
 
 We can select multiple columns using the `(from:to)` syntax: 
@@ -583,12 +590,10 @@ We can also _deselect_ (multiple) columns:
 
 ```{r}
 df.starwars %>% 
-  select(-name, -(birth_year:vehicles)) %>% 
-  head()
+  select(-name, -(birth_year:vehicles))
 ```
 
 And select columns by partially matching the column name:
-
 
 ```{r}
 df.starwars %>% 
@@ -604,7 +609,7 @@ We can also use `select()` to reorder the columns:
 
 ```{r}
 df.starwars %>% 
-  select(eye_color, everything()) %>% # useful trick for changing the column order, now eye_color and birth_year are at the beginning
+  select(eye_color, everything()) %>% # useful trick for changing the column order, now eye_color is at the beginning
   head()
 ```
 
@@ -617,7 +622,6 @@ df.starwars %>%
 ```
 
 Here, I've moved `eye_color` to the end. Note that I had to deselect it first. 
-
 
 We can select columns based on their data type using `select_if()`. 
 
@@ -641,29 +645,15 @@ It's also possible to select columns based on logical criteria. For example, thi
 
 ```{r}
 df.starwars %>% 
-  select_if(funs(is.numeric(.) & mean(., na.rm = T) > 90)) %>% 
-  head()
+  select_if(funs(is.numeric(.) & mean(., na.rm = T) > 90))
 ```
-
 
 We can rename some of the columns using select like so: 
 
 ```{r}
 df.starwars %>% 
-  select(person = name, height, mass_kg = mass) %>% 
-  head()
+  select(person = name, height, mass_kg = mass)
 ```
-
-<!-- Or rename all of the columns:  -->
-
-<!-- ```{r} -->
-<!-- df.starwars %>%  -->
-<!--   select_all(toupper) %>% #change to capital letters -->
-<!--   head() -->
-<!-- ``` -->
-
-
-When you have a data frame with row names, you can convert the row names to a separate column using the `rownames_to_column()` function. 
 
 For more details, take a look at the help file for `select()`, and this [this great tutorial](https://suzan.rbind.io/2018/01/dplyr-tutorial-1/) in which I learned about some of the more advanced ways of using `select()`. 
 
@@ -674,9 +664,8 @@ For more details, take a look at the help file for `select()`, and this [this gr
 ```{r}
 df.starwars %>% 
   mutate(height = height / 100, # to get height in meters
-    bmi = mass/(height^2)) %>% #bmi = kg/(m^2)
-  select(name, height, mass, bmi) %>% 
-  head()
+    bmi = mass / (height^2)) %>% # bmi = kg / (m^2)
+  select(name, height, mass, bmi)
 ```
 
 Here, I've calculated the bmi for the different starwars characters. I first mutated the height variable by going from cm to m, and then created the new column "bmi".
@@ -692,7 +681,6 @@ df.starwars %>%
 `ifelse()` works in the following way: we first specify the condition, then what should be returned if the condition is true, and finally what should be returned otherwise. The more verbose version of the statement above would be: `ifelse(test = height > median(height, na.rm = T), yes = 'tall', no = 'short')` 
 
 There are a number of variants of the `mutate()` function. Let's take a look at them. 
-
 #### mutate_at()
 
 With `mutate_at()`, we can mutate several columns at the same time. 
@@ -766,8 +754,7 @@ Or we can round all the numeric columns:
 
 ```{r}
 df.starwars %>% 
-  mutate_if(is.numeric, round) %>% 
-  head()
+  mutate_if(is.numeric, round)
 ```
 
 ### arrange() 
@@ -776,10 +763,10 @@ df.starwars %>%
 
 ```{r}
 df.starwars %>% 
-  arrange(gender, desc(height))
+  arrange(hair_color, desc(height))
 ```
 
-Here, I've sorted the data frame first by gender, and then by height. I've used the `desc()` function to sort height in descending order. The first entry in the output is now the tallest female starwars character. 
+Here, I've sorted the data frame first by `hair_color`, and then by `height`. I've used the `desc()` function to sort `height` in descending order. Bail Prestor Organa is the tallest black character in starwars. 
 
 ## Additional resources 
 

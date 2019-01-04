@@ -1,0 +1,38 @@
+digraph dot{
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 24,
+    fillcolor = lightblue
+    ]
+  
+  # edges between nodes
+  edge [color = black]
+  0 -> {1 2 3}
+  1 -> {11 12 13}
+  2 -> {21 22 23}
+  3 -> {31 32 33}
+  
+  # labels for each node
+  0 [fillcolor = 'black', width = 0.1]
+  1 [label = '1']
+  2 [label = '2']
+  3 [label = '3']
+  11 [label = '1']
+  12 [label = '2']
+  13 [label = '3']
+  21 [label = '1']
+  22 [label = '2']
+  23 [label = '3']
+  31 [label = '1']
+  32 [label = '2']
+  33 [label = '3']
+    
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
