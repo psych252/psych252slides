@@ -20,9 +20,6 @@ output:
         size: 2
       sharing: no
     toc_depth: 4
-bibliography: ../references.bib
-biblio-style: apalike
-css: ../style.css
 ---
 
 ```{r setup, include=FALSE}
