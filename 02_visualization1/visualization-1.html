@@ -188,10 +188,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2><span class="header-section-number">1.1</span> Learning objectives</h2>
 <ul>
 <li>Get familiar with the RStudio interface.</li>
-<li>Take a look at some bad plot, and think about how to make them better.</li>
+<li>Take a look at some suboptimal plots, and think about how to make them better.</li>
 <li>Understand the general philosophy behind ggplot – a grammar of graphics.</li>
-<li>Create informative figures using grouping and facets.</li>
 <li>Understand the mapping from data to geoms in ggplot.</li>
+<li>Create informative figures using grouping and facets.</li>
 </ul>
 </div>
 <div id="load-packages" class="section level2">
@@ -230,52 +230,53 @@ Figure 1.3: <strong>The Datasaurus Dozen</strong>. While different in appearance
 </p>
 </div>
 <p>The data sets in Figure <a href="#fig:datasaurus">1.3</a> all share the same summary statistics. Clearly, the data sets are not the same though.</p>
-<div class="info">
-<p>
-<strong>Tip</strong>:
-</p>
-<p>
-Always plot the data first!
+<blockquote>
+<p><strong>Tip</strong>: Always plot the data first!</p>
+</blockquote>
+<p><a href="https://www.autodeskresearch.com/publications/samestats">Here</a> is the paper from which I took Figure <a href="#fig:anscombe">1.1</a> and <a href="#fig:datasaurus">1.3</a>. It explains how the figures were generated and shows more examples for how summary statistics and some kinds of plots are insufficient to get a good sense for what’s going on in the data.</p>
+<div class="figure"><span id="fig:unnamed-chunk-2"></span>
+<img src="figures/data_dino.gif" alt="Animation showing different data sets that all share the same summary statistics."  />
+<p class="caption">
+Figure 1.4: Animation showing different data sets that all share the same summary statistics.
 </p>
 </div>
-<p><a href="https://www.autodeskresearch.com/publications/samestats">Here</a> is the paper from which I took Figure <a href="#fig:anscombe">1.1</a> and <a href="#fig:datasaurus">1.3</a>. It explains how the figures were generated and shows more examples for how summary statistics and some kinds of plots are insufficient to get a good sense for what’s going on in the data.</p>
 <div id="how-not-to-visualize-data" class="section level3">
 <h3><span class="header-section-number">1.3.1</span> How <em>not</em> to visualize data</h3>
 <p>Below are some examples of visualizations that could be improved. How would you make them better?</p>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot1"></span>
 <img src="figures/bad_plot1.png" alt="Example of a bad plot. Source: [Data Visualization -- A practical introduction by Kieran Healy](http://socviz.co/lookatdata.html#lookatdata)" width="90%" />
 <p class="caption">
-Figure 1.4: Example of a bad plot. Source: <a href="http://socviz.co/lookatdata.html#lookatdata">Data Visualization – A practical introduction by Kieran Healy</a>
+Figure 1.5: Example of a bad plot. Source: <a href="http://socviz.co/lookatdata.html#lookatdata">Data Visualization – A practical introduction by Kieran Healy</a>
 </p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot2"></span>
 <img src="figures/bad_plot2.png" alt="Another bad plot. Source: Google image search for 'bad graphs'" width="90%" />
 <p class="caption">
-Figure 1.5: Another bad plot. Source: Google image search for ‘bad graphs’
+Figure 1.6: Another bad plot. Source: Google image search for ‘bad graphs’
 </p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot3"></span>
 <img src="figures/bad_plot3.png" alt="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)" width="90%" />
 <p class="caption">
-Figure 1.6: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
+Figure 1.7: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
 </p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot4"></span>
 <img src="figures/bad_plot4.png" alt="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)" width="90%" />
 <p class="caption">
-Figure 1.7: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
+Figure 1.8: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
 </p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot5"></span>
 <img src="figures/bad_plot5.png" alt="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)" width="90%" />
 <p class="caption">
-Figure 1.8: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
+Figure 1.9: And another one. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
 </p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:bad-plot6"></span>
 <img src="figures/bad_plot6.png" alt="The last one for now. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)" width="90%" />
 <p class="caption">
-Figure 1.9: The last one for now. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
+Figure 1.10: The last one for now. Source: <a href="http://bcuchta.com/wall_of_shame/">Bad graph wall of shame</a>
 </p>
 </div>
 </div>
@@ -288,9 +289,9 @@ Figure 1.9: The last one for now. Source: <a href="http://bcuchta.com/wall_of_sh
 <div id="setting-up-rstudio" class="section level2">
 <h2><span class="header-section-number">1.4</span> Setting up RStudio</h2>
 <div class="figure"><span id="fig:pref-general"></span>
-<img src="figures/screenshots/r_preferences_general.png" alt="General preferences."  />
+<img src="figures/r_preferences_general.png" alt="General preferences." width="100%" />
 <p class="caption">
-Figure 1.10: General preferences.
+Figure 1.11: General preferences.
 </p>
 </div>
 <p><strong>Make sure that</strong>:</p>
@@ -299,9 +300,9 @@ Figure 1.10: General preferences.
 <li>Save workspace to .RData on exit is set to <em>Never</em></li>
 </ul>
 <div class="figure"><span id="fig:pref-code"></span>
-<img src="figures/screenshots/r_preferences_code.png" alt="Code window preferences."  />
+<img src="figures/r_preferences_code.png" alt="Code window preferences." width="100%" />
 <p class="caption">
-Figure 1.11: Code window preferences.
+Figure 1.12: Code window preferences.
 </p>
 </div>
 <p><strong>Make sure that</strong>:</p>
@@ -342,14 +343,9 @@ Figure 1.11: Code window preferences.
 <div id="getting-help" class="section level2">
 <h2><span class="header-section-number">1.5</span> Getting help</h2>
 <p>There are three simple ways to get help in R. You can either put a <code>?</code> in front of the function you’d like to learn more about, or use the <code>help()</code> function.</p>
-<div class="info">
-<p>
-<strong>Tip</strong>:
-</p>
-<p>
-To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press <code>F1</code>.
-</p>
-</div>
+<blockquote>
+<p><strong>Tip</strong>: To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press <code>F1</code>.</p>
+</blockquote>
 <p>I recommend using <code>F1</code> to get to help files – it’s the fastest way!</p>
 <p>R help files can sometimes look a little cryptic. Most R help files have the following sections (copied from <a href="https://www.dummies.com/programming/r/r-for-dummies-cheat-sheet/">here</a>):</p>
 <hr />
@@ -366,7 +362,7 @@ To see the help file, hover over a function (or dataset) with the mouse (or sele
 <div class="figure"><span id="fig:print-function"></span>
 <img src="figures/screenshots/help_print.png" alt="Help file for the print() function."  />
 <p class="caption">
-Figure 1.12: Help file for the print() function.
+Figure 1.13: Help file for the print() function.
 </p>
 </div>
 </div>
@@ -376,7 +372,7 @@ Figure 1.12: Help file for the print() function.
 <div class="figure"><span id="fig:nice-plot"></span>
 <img src="figures/combined_plot.pdf" alt="What a nice figure!"  />
 <p class="caption">
-Figure 1.13: What a nice figure!
+Figure 1.14: What a nice figure!
 </p>
 </div>
 <p>Now let’s figure out how to get there.</p>
@@ -388,29 +384,24 @@ Figure 1.13: What a nice figure!
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">?diamonds</a></code></pre></div>
 <p>Above, we assigned the <code>diamonds</code> dataset to the variable <code>df.diamonds</code> so that we can see it in the data explorer.</p>
 <p>Let’s take a look at the full dataset by clicking on it in the explorer.</p>
-<div class="info">
-<p>
-<strong>Tip</strong>:
-</p>
-<p>
-You can view a data frame by highlighting the text in the editor (or simply moving the mouse above the text), and then press <code>F2</code>.
-</p>
-</div>
+<blockquote>
+<p><strong>Tip</strong>: You can view a data frame by highlighting the text in the editor (or simply moving the mouse above the text), and then press <code>F2</code>.</p>
+</blockquote>
 <p>The <code>df.diamonds</code> data frame contains information about almost 60,000 diamonds, including their <code>price</code>, <code>carat</code> value, size, etc. Let’s use visualization to get a better sense for this dataset.</p>
 <p>We start by setting up the plot. To do so, we pass a data frame to the function <code>ggplot()</code> in the following way.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>This, by itself, won’t do anything yet. We also need to specify what to plot.</p>
 <p>Let’s take a look at how much diamonds of different color cost. The help file says that diamonds labeled D have the best color, and diamonds labeled J the worst color. Let’s make a bar plot that shows the average price of diamonds for different colors.</p>
 <p>We do so via specifying a mapping from the data to the plot aesthetics with the function <code>mapping = aes()</code>. We need to tell <code>aes()</code> what we would like to display on the x-axis, and the y-axis of the plot.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, </a>
 <a class="sourceLine" id="cb7-2" title="2">       <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price))</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 <p>Here, we specified that we want to plot color on the x-axis, and the average price on the y-axis. As you can see, <code>ggplot2</code> has already figured out how to label the axes. However, we still need to specify <em>how</em> to plot it. Let’s make a <strong>bar graph</strong>:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, </a>
 <a class="sourceLine" id="cb8-2" title="2">       <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb8-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 <p>Neat! Two lines of code produce an almost-publication-ready plot (to be published in the <em>Proceedings of Unnecessary Diamonds</em>)! Note how we used a <code>+</code> at the end of the first line of code to specify that there will be more. This is a very powerful idea underlying <code>ggplot2</code>. We can start simple and keep adding things to the plot step by step.</p>
 <p>We used the <code>stat_summary()</code> function to define <em>what</em> we want to plot (the “mean”), and <em>how</em> (as a “bar” chart). Let’s take a closer look at that function.</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="kw">help</span>(stat_summary)</a></code></pre></div>
@@ -422,19 +413,14 @@ You can view a data frame by highlighting the text in the editor (or simply movi
 <p>Instead of showing the “mean”, we could also show the “median” instead.</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb10-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;median&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 <p>And instead of making a bar plot, we could plot some points.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1"><span class="kw">ggplot</span>(df.diamonds, <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb11-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
-<div class="info">
-<p>
-<strong>Tip</strong>:
-</p>
-<p>
-Take a look <a href="https://ggplot2.tidyverse.org/reference/#section-layer-geoms">here</a> to see what other geoms ggplot2 supports.
-</p>
-</div>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<blockquote>
+<p><strong>Tip</strong>: Take a look <a href="https://ggplot2.tidyverse.org/reference/#section-layer-geoms">here</a> to see what other geoms ggplot2 supports.</p>
+</blockquote>
 <p>Somewhat surprisingly, diamonds with the best color (D) are not the most expensive ones. What’s going on here? We’ll need to do some more exploration to figure this out.</p>
 <p>Note that in the last plot, I removed the <code>data =</code> and <code>mapping =</code> specifiers. These keywords are optional, and as long as we provide the arguments to the function in the correct order, we are ok. So, the following doesn’t work:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1"><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price), df.diamonds) <span class="op">+</span></a>
@@ -442,15 +428,15 @@ Take a look <a href="https://ggplot2.tidyverse.org/reference/#section-layer-geom
 <p>While this works:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" title="1"><span class="kw">ggplot</span>(<span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price), <span class="dt">data =</span> df.diamonds) <span class="op">+</span></a>
 <a class="sourceLine" id="cb13-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 <p>In general, it’s good practice to include the specifiers – particularly for functions that are not used all the time. If the same function is used multiple times throughout the script, I would suggest to use the specifiers first, and then it’s ok to drop them later.</p>
 </div>
 <div id="setting-the-default-plot-theme" class="section level3">
 <h3><span class="header-section-number">1.6.2</span> Setting the default plot theme</h3>
 <p>Before moving one, let’s set a different default theme for our plots. Personally, I’m not a big fan of the gray background and the white grid lines. Also, the default size of the text should be bigger. We can change the default theme using the <code>theme_set()</code> function like so:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1"><span class="kw">theme_set</span>(</a>
-<a class="sourceLine" id="cb14-2" title="2">  <span class="kw">theme_classic</span>() <span class="op">+</span><span class="st"> </span><span class="co">#set the theme </span></a>
-<a class="sourceLine" id="cb14-3" title="3"><span class="st">    </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">20</span>)) <span class="co">#set the default text size</span></a>
+<a class="sourceLine" id="cb14-2" title="2">  <span class="kw">theme_classic</span>() <span class="op">+</span><span class="st"> </span><span class="co"># set the theme </span></a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="st">    </span><span class="kw">theme</span>(<span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">20</span>)) <span class="co"># set the default text size</span></a>
 <a class="sourceLine" id="cb14-4" title="4">)</a></code></pre></div>
 <p>From now onwards, all our plots will use what specified in <code>theme_classic()</code>, and the default text size will be larger, too.</p>
 </div>
@@ -462,20 +448,20 @@ Take a look <a href="https://ggplot2.tidyverse.org/reference/#section-layer-geom
 <div class="figure"><span id="fig:scatterplot"></span>
 <img src="visualization1_files/figure-html/scatterplot-1.png" alt="Scatterplot." width="672" />
 <p class="caption">
-Figure 1.14: Scatterplot.
+Figure 1.15: Scatterplot.
 </p>
 </div>
 <p>Cool! That looks sensible. Diamonds with a higher <code>carat</code> value tend to have a higher <code>price</code>. Our dataset has 53940 rows. So the plot actually shows 53940 circles even though we can’t see all of them since they overlap.</p>
-<p>Let’s make some progress on trying to figure out why the diamonds with the better color weren’t the most expensive ones on average. We’ll add some color to the scatter plot in Figure <a href="#fig:scatterplot">1.14</a>. We color each of the points based on the diamond’s color. To do so, we pass another argument to the aesthetics of the plot via <code>aes()</code>.</p>
+<p>Let’s make some progress on trying to figure out why the diamonds with the better color weren’t the most expensive ones on average. We’ll add some color to the scatter plot in Figure <a href="#fig:scatterplot">1.15</a>. We color each of the points based on the diamond’s color. To do so, we pass another argument to the aesthetics of the plot via <code>aes()</code>.</p>
 <div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> carat, <span class="dt">y =</span> price, <span class="dt">color =</span> color)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb16-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>()</a></code></pre></div>
 <div class="figure"><span id="fig:scatterplot-color"></span>
 <img src="visualization1_files/figure-html/scatterplot-color-1.png" alt="Scatterplot with color." width="672" />
 <p class="caption">
-Figure 1.15: Scatterplot with color.
+Figure 1.16: Scatterplot with color.
 </p>
 </div>
-<p>Aha! Now we’ve got some color. Notice how in Figure <a href="#fig:scatterplot-color">1.15</a> <code>ggplot2</code> added a legend for us, thanks! We’ll see later how to play around with legends. Form just eye-balling the plot, it looks like the diamonds with the best <code>color</code> (D) tended to have a lower <code>carat</code> value, and the ones with the worst <code>color</code> (J), tended to have the highest carat values.</p>
+<p>Aha! Now we’ve got some color. Notice how in Figure <a href="#fig:scatterplot-color">1.16</a> <code>ggplot2</code> added a legend for us, thanks! We’ll see later how to play around with legends. Form just eye-balling the plot, it looks like the diamonds with the best <code>color</code> (D) tended to have a lower <code>carat</code> value, and the ones with the worst <code>color</code> (J), tended to have the highest carat values.</p>
 <p>There are many other things that we can define in <code>aes()</code>. Take a quick look at the vignette:</p>
 <div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1"><span class="kw">vignette</span>(<span class="st">&quot;ggplot2-specs&quot;</span>)</a></code></pre></div>
 </div>
@@ -486,11 +472,11 @@ Figure 1.15: Scatterplot with color.
 <a class="sourceLine" id="cb18-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>)</a>
 <a class="sourceLine" id="cb18-3" title="3"><span class="co">#&gt; geom_path: Each group consists of only one observation. Do you need to</span></a>
 <a class="sourceLine" id="cb18-4" title="4"><span class="co">#&gt; adjust the group aesthetic?</span></a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>Oops! All we did is that we replaced <code>x = color</code> with <code>x = cut</code>, and <code>geom = "bar"</code> with <code>geom = "line"</code>. However, the plot doesn’t look like expected (i.e. there is no real plot). What happened here? The reason is that the line plot needs to know what points to connect. The error message tells us that each group consists of only one observation. Let’s adjust the group asthetic to fix this.</p>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> cut, <span class="dt">y =</span> price, <span class="dt">group =</span> <span class="dv">1</span>)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb19-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 <p>By adding the parameter <code>group = 1</code> to <code>mapping = aes()</code>, we specify that we would like all the levels in <code>x = cut</code> to be treated as coming from the same group. The reason for this is that <code>cut</code> (our x-axis variable) is a factor (and not a numeric variable), so, by default, <code>ggplot2</code> tries to draw a separate line for each factor level. We’ll learn more about grouping below (and about factors later).</p>
 <p>Interestingly, there is no simple relationship between the quality of the cut and the price of the diamond. In fact, “Ideal” diamonds tend to be cheapest.</p>
 </div>
@@ -503,7 +489,7 @@ Figure 1.15: Scatterplot with color.
 <div class="figure"><span id="fig:errorbars"></span>
 <img src="visualization1_files/figure-html/errorbars-1.png" alt="Relationship between diamond clarity and price. Error bars indicate 95% bootstrapped confidence intervals." width="672" />
 <p class="caption">
-Figure 1.16: Relationship between diamond clarity and price. Error bars indicate 95% bootstrapped confidence intervals.
+Figure 1.17: Relationship between diamond clarity and price. Error bars indicate 95% bootstrapped confidence intervals.
 </p>
 </div>
 <p>Here we have it. The average price of our diamonds for different levels of <code>clarity</code> together with bootstrapped 95% confidence intervals. How do we know that we have 95% confidence intervals? That’s what <code>mean_cl_boot()</code> computes as a default. Let’s take a look at that function:</p>
@@ -512,8 +498,8 @@ Figure 1.16: Relationship between diamond clarity and price. Error bars indicate
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> clarity, <span class="dt">y =</span> price)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb22-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">fun.args =</span> <span class="kw">list</span>(<span class="dt">conf.int =</span> <span class="fl">.999</span>, <span class="dt">B =</span> <span class="dv">2000</span>)) <span class="op">+</span><span class="st"> </span><span class="co"># plot bootstrapped error bars first</span></a>
 <a class="sourceLine" id="cb22-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;point&quot;</span>) <span class="co">#add points with means</span></a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
-<p>Note how the error bars are larger now compared to Figure <a href="#fig:errorbars">1.16</a>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+<p>Note how the error bars are larger now compared to Figure <a href="#fig:errorbars">1.17</a>
 . Note the somewhat peculiar way in which we supplied the parameters to the <code>mean_cl_boot</code> function. The <code>fun.args</code> argument takes in a list of arguments that it then passes on to the function <code>mean_cl_boot</code>.</p>
 <p>One cool feature about using <code>stat_summary()</code> is that we did not have to change anything about the data frame that we used to make the plots. We directly used our raw data instead of having to make separate data frames that contain the relevant information (such as the means and the confidence intervals).</p>
 <p>You may not remember exactly what confidence intervals actually are. Don’t worry! We’ll have a recap later in class.</p>
@@ -525,25 +511,25 @@ Figure 1.16: Relationship between diamond clarity and price. Error bars indicate
 <p>Let’s make a plot that shows the relationship between <code>price</code> and <code>color</code> separately for the different qualities of <code>cut</code>.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price, <span class="dt">group =</span> cut)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb23-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
 <p>Well, we got some separate lines here but we don’t know which line corresponds to which cut. Let’s add some color!</p>
 <div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price, <span class="dt">group =</span> cut, <span class="dt">color =</span> cut)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb24-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;line&quot;</span>, <span class="dt">size =</span> <span class="dv">2</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
 <p>Nice! In addition to adding color, I’ve made the lines a little thicker here by setting the <code>size</code> argument to 2.</p>
 <p>Grouping is very useful for bar plots. Let’s take a look at how the average price of diamonds looks like taking into account both <code>cut</code> and <code>color</code> (I know – exciting times!). Let’s put the <code>color</code> on the x-axis and then group by the <code>cut</code>.</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price, <span class="dt">group =</span> cut, <span class="dt">color =</span> cut)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb25-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
 <p>That’s a fail! Several things went wrong here. First, all the bars are gray and only their outline is colored differently. Instead we want the bars to have a different color. For that we need to specify the <code>fill</code> argument rather than the <code>color</code> argument. But things are worse. The bars currently are shown on top of each other. Instead, we’d like to put them next to each other. Here is how to do that:</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price, <span class="dt">group =</span> cut, <span class="dt">fill =</span> cut)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb26-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">position =</span> <span class="kw">position_dodge</span>())</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-25-1.png" width="672" /></p>
 <p>Neato! We’ve changed the <code>color</code> argument to <code>fill</code>, and have added the <code>position = position_dodge()</code> argument to the <code>stat_summary()</code> call. This argument makes it such that the bars are nicely dodged next to each other. Let’s add some error bars just for kicks.</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> color, <span class="dt">y =</span> price, <span class="dt">group =</span> cut, <span class="dt">fill =</span> cut)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb27-2" title="2"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.y =</span> <span class="st">&quot;mean&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;bar&quot;</span>, <span class="dt">position =</span> <span class="kw">position_dodge</span>(<span class="dt">width =</span> <span class="fl">0.9</span>), <span class="dt">color =</span> <span class="st">&quot;black&quot;</span>) <span class="op">+</span></a>
 <a class="sourceLine" id="cb27-3" title="3"><span class="st">  </span><span class="kw">stat_summary</span>(<span class="dt">fun.data =</span> <span class="st">&quot;mean_cl_boot&quot;</span>, <span class="dt">geom =</span> <span class="st">&quot;linerange&quot;</span>, <span class="dt">position =</span> <span class="kw">position_dodge</span>(<span class="dt">width =</span> <span class="fl">0.9</span>))</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-26-1.png" width="672" /></p>
 <p>Voila! Now with error bars. Note that we’ve added the <code>width = 0.9</code> argument to <code>position_dodge()</code>. Somehow R was complaining when this was not defined for geom “linerange”. I’ve also added some outline to the bars by including the argument <code>color = "black"</code>. I think it looks nicer this way.</p>
 <p>So, still somewhat surprisingly, diamonds with the worst color (J) are more expensive than dimanods with the best color (D), and diamonds with better cuts are not necessarily more expensive.</p>
 </div>
@@ -610,10 +596,10 @@ Figure 1.16: Relationship between diamond clarity and price. Error bars indicate
 <div class="figure"><span id="fig:stretching-it"></span>
 <img src="visualization1_files/figure-html/stretching-it-1.png" alt="A figure that is stretching it in terms of information." width="672" />
 <p class="caption">
-Figure 1.17: A figure that is stretching it in terms of information.
+Figure 1.18: A figure that is stretching it in terms of information.
 </p>
 </div>
-<p>Figure <a href="#fig:stretching-it">1.17</a> is stretching it in terms of how much information it presents. But it gives you a sense for how to combine the differnet bits and pieces we’ve learned so far.</p>
+<p>Figure <a href="#fig:stretching-it">1.18</a> is stretching it in terms of how much information it presents. But it gives you a sense for how to combine the differnet bits and pieces we’ve learned so far.</p>
 </div>
 <div id="more-on-aesthetics" class="section level3">
 <h3><span class="header-section-number">1.6.8</span> More on aesthetics</h3>
@@ -624,19 +610,19 @@ Figure 1.17: A figure that is stretching it in terms of information.
 <div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> carat, <span class="dt">y =</span> price, <span class="dt">color =</span> color)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb37-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></a>
 <a class="sourceLine" id="cb37-3" title="3"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&quot;lm&quot;</span>, <span class="dt">se =</span> F)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-30-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-27-1.png" width="672" /></p>
 <p>Here, I’ve drawn a scatter plot of the relationship between <code>carat</code> and <code>price</code>, and I have added the best-fitting regression lines via the <code>geom_smooth(method = "lm")</code> call. (We will learn much more about what these regression lines mean later in class.)</p>
 <p>Because I have defined all the aesthetics at the top level (i.e. directly within the <code>ggplot()</code> function), the aesthetics apply to all the functions afterwards. In this case, the <code>geom_point()</code> and the <code>geom_smooth()</code> functions. The <code>geom_smooth()</code> function produces separate best-fit regression lines for each different color.</p>
 <p>But what if we only wanted to show one regression line instead that applies to all the data? Here is one way of doing so:</p>
 <div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> carat, <span class="dt">y =</span> price)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb38-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">color =</span> color)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb38-3" title="3"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&quot;lm&quot;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-31-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-28-1.png" width="672" /></p>
 <p>Here, I’ve moved the color aesthetic into the <code>geom_point()</code> function call. Now, the <code>x</code> and <code>y</code> aesthetics still apply to both the <code>geom_point()</code> and the <code>geom_smooth()</code> function call, but the <code>color</code> aesthetic applies only to <code>geom_point()</code>. Alternatively, we can simply overwrite global aesthetics within local function calls.</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" title="1"><span class="kw">ggplot</span>(<span class="dt">data =</span> df.diamonds, <span class="kw">aes</span>(<span class="dt">x =</span> carat, <span class="dt">y =</span> price, <span class="dt">color =</span> color)) <span class="op">+</span></a>
 <a class="sourceLine" id="cb39-2" title="2"><span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span></a>
 <a class="sourceLine" id="cb39-3" title="3"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&quot;lm&quot;</span>, <span class="dt">color =</span> <span class="st">&#39;black&#39;</span>)</a></code></pre></div>
-<p><img src="visualization1_files/figure-html/unnamed-chunk-32-1.png" width="672" /></p>
+<p><img src="visualization1_files/figure-html/unnamed-chunk-29-1.png" width="672" /></p>
 <p>Here, I’ve set <code>color = 'black'</code> within the <code>geom_smooth()</code> function, and now only one global regression line is displayed since the global color aesthetic was overwritten in the local function call.</p>
 </div>
 <div id="exercises" class="section level3">
@@ -644,41 +630,51 @@ Figure 1.17: A figure that is stretching it in terms of information.
 <p>Now, let’s practice making some plots!</p>
 <div id="practice-plot-1" class="section level4">
 <h4><span class="header-section-number">1.6.9.1</span> Practice plot 1</h4>
-<p>Make a scatter plot that shows the relationship between the variables <code>depth</code> (on the x-axis), and <code>table</code> (on the y-axis). Take a look at the description for the <code>diamonds</code> dataset so you know what these different variables mean. Your plot should look like the one shown in Figure <a href="#fig:practice-plot1">1.18</a>.</p>
+<p>Make a scatter plot that shows the relationship between the variables <code>depth</code> (on the x-axis), and <code>table</code> (on the y-axis). Take a look at the description for the <code>diamonds</code> dataset so you know what these different variables mean. Your plot should look like the one shown in Figure <a href="#fig:practice-plot1">1.19</a>.</p>
 <div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" title="1"><span class="co"># make practice plot 1 here</span></a></code></pre></div>
 <div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb41-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/practice_plot1.png&quot;</span>)</a></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:practice-plot1"></span>
 <img src="figures/practice_plot1.png" alt="Practice plot 1." width="90%" />
 <p class="caption">
-Figure 1.18: Practice plot 1.
+Figure 1.19: Practice plot 1.
 </p>
 </div>
 </div>
 <div id="practice-plot-2" class="section level4">
 <h4><span class="header-section-number">1.6.9.2</span> Practice plot 2</h4>
-<p>Make a bar plot that shows the average <code>price</code> of diamonds (on the y-axis) as a function of their <code>clarity</code> (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure <a href="#fig:practice-plot2">1.19</a>.</p>
+<p>Make a bar plot that shows the average <code>price</code> of diamonds (on the y-axis) as a function of their <code>clarity</code> (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure <a href="#fig:practice-plot2">1.20</a>.</p>
 <div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb42-1" title="1"><span class="co"># make practice plot 2 here</span></a></code></pre></div>
 <div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/practice_plot2.png&quot;</span>)</a></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:practice-plot2"></span>
 <img src="figures/practice_plot2.png" alt="Practice plot 2." width="90%" />
 <p class="caption">
-Figure 1.19: Practice plot 2.
+Figure 1.20: Practice plot 2.
 </p>
 </div>
 </div>
 <div id="practice-plot-3" class="section level4">
 <h4><span class="header-section-number">1.6.9.3</span> Practice plot 3</h4>
-<p>Recreate the plot shown in Figure <a href="#fig:practice-plot3"><strong>??</strong></a>.</p>
+<p>Recreate the plot shown in Figure <a href="#fig:practice-plot3">1.21</a>.</p>
 <div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb44-1" title="1"><span class="co"># make practice plot 3 here </span></a></code></pre></div>
 <div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/practice_plot3.png&quot;</span>)</a></code></pre></div>
-<p><img src="figures/practice_plot3.png" width="90%" style="display: block; margin: auto;" /></p>
+<div class="figure" style="text-align: center"><span id="fig:practice-plot3"></span>
+<img src="figures/practice_plot3.png" alt="Practice plot 3." width="90%" />
+<p class="caption">
+Figure 1.21: Practice plot 3.
+</p>
+</div>
 </div>
 <div id="practice-plot-4" class="section level4">
 <h4><span class="header-section-number">1.6.9.4</span> Practice plot 4</h4>
-<p>Recreate the plot shown in Figure <a href="#fig:practice-plot4"><strong>??</strong></a>.</p>
+<p>Recreate the plot shown in Figure <a href="#fig:practice-plot4">1.22</a>.</p>
 <div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" title="1"><span class="co"># make practice plot 4 here </span></a></code></pre></div>
 <div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb47-1" title="1"><span class="kw">include_graphics</span>(<span class="st">&quot;figures/practice_plot4.png&quot;</span>)</a></code></pre></div>
-<p><img src="figures/practice_plot4.png" width="90%" style="display: block; margin: auto;" /></p>
+<div class="figure" style="text-align: center"><span id="fig:practice-plot4"></span>
+<img src="figures/practice_plot4.png" alt="Practice plot 4." width="90%" />
+<p class="caption">
+Figure 1.22: Practice plot 4.
+</p>
+</div>
 </div>
 </div>
 </div>
@@ -731,6 +727,7 @@ Figure 1.19: Practice plot 2.
 <li><a href="http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html">ggplot2 visualizations with code</a> –&gt; gallery of plots with code</li>
 <li><a href="https://rmarkdown.rstudio.com/lesson-1.html">R Markdown in RStudio introduction</a></li>
 <li><a href="http://www.stat.cmu.edu/~cshalizi/rmarkdown/">R Markdown for class reports</a></li>
+<li><a href="https://github.com/r-lib/styler">styler</a> –&gt; tool for writing</li>
 </ul>
 </div>
 </div>
@@ -738,9 +735,9 @@ Figure 1.19: Practice plot 2.
 <h2><span class="header-section-number">1.8</span> Session info</h2>
 <p>Information about this R session including which version of R was used, and what packages were loaded.</p>
 <div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" title="1"><span class="kw">sessionInfo</span>()</a>
-<a class="sourceLine" id="cb48-2" title="2"><span class="co">#&gt; R version 3.5.1 (2018-07-02)</span></a>
+<a class="sourceLine" id="cb48-2" title="2"><span class="co">#&gt; R version 3.5.2 (2018-12-20)</span></a>
 <a class="sourceLine" id="cb48-3" title="3"><span class="co">#&gt; Platform: x86_64-apple-darwin15.6.0 (64-bit)</span></a>
-<a class="sourceLine" id="cb48-4" title="4"><span class="co">#&gt; Running under: macOS  10.14.2</span></a>
+<a class="sourceLine" id="cb48-4" title="4"><span class="co">#&gt; Running under: macOS Mojave 10.14.2</span></a>
 <a class="sourceLine" id="cb48-5" title="5"><span class="co">#&gt; </span></a>
 <a class="sourceLine" id="cb48-6" title="6"><span class="co">#&gt; Matrix products: default</span></a>
 <a class="sourceLine" id="cb48-7" title="7"><span class="co">#&gt; BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib</span></a>
@@ -754,7 +751,7 @@ Figure 1.19: Practice plot 2.
 <a class="sourceLine" id="cb48-15" title="15"><span class="co">#&gt; </span></a>
 <a class="sourceLine" id="cb48-16" title="16"><span class="co">#&gt; other attached packages:</span></a>
 <a class="sourceLine" id="cb48-17" title="17"><span class="co">#&gt;  [1] forcats_0.3.0   stringr_1.3.1   dplyr_0.7.8     purrr_0.2.5    </span></a>
-<a class="sourceLine" id="cb48-18" title="18"><span class="co">#&gt;  [5] readr_1.3.0     tidyr_0.8.2     tibble_1.4.2    ggplot2_3.1.0  </span></a>
+<a class="sourceLine" id="cb48-18" title="18"><span class="co">#&gt;  [5] readr_1.3.1     tidyr_0.8.2     tibble_1.4.2    ggplot2_3.1.0  </span></a>
 <a class="sourceLine" id="cb48-19" title="19"><span class="co">#&gt;  [9] tidyverse_1.2.1 knitr_1.20     </span></a>
 <a class="sourceLine" id="cb48-20" title="20"><span class="co">#&gt; </span></a>
 <a class="sourceLine" id="cb48-21" title="21"><span class="co">#&gt; loaded via a namespace (and not attached):</span></a>
@@ -766,19 +763,19 @@ Figure 1.19: Practice plot 2.
 <a class="sourceLine" id="cb48-27" title="27"><span class="co">#&gt; [16] pillar_1.3.1          rlang_0.3.0.1         lazyeval_0.2.1       </span></a>
 <a class="sourceLine" id="cb48-28" title="28"><span class="co">#&gt; [19] readxl_1.1.0          data.table_1.11.8     rstudioapi_0.8.0.9000</span></a>
 <a class="sourceLine" id="cb48-29" title="29"><span class="co">#&gt; [22] rpart_4.1-13          Matrix_1.2-15         checkmate_1.8.5      </span></a>
-<a class="sourceLine" id="cb48-30" title="30"><span class="co">#&gt; [25] rmarkdown_1.10        labeling_0.3          splines_3.5.1        </span></a>
+<a class="sourceLine" id="cb48-30" title="30"><span class="co">#&gt; [25] rmarkdown_1.10        labeling_0.3          splines_3.5.2        </span></a>
 <a class="sourceLine" id="cb48-31" title="31"><span class="co">#&gt; [28] foreign_0.8-71        htmlwidgets_1.3       munsell_0.5.0        </span></a>
-<a class="sourceLine" id="cb48-32" title="32"><span class="co">#&gt; [31] broom_0.5.0           compiler_3.5.1        modelr_0.1.2         </span></a>
+<a class="sourceLine" id="cb48-32" title="32"><span class="co">#&gt; [31] broom_0.5.0           compiler_3.5.2        modelr_0.1.2         </span></a>
 <a class="sourceLine" id="cb48-33" title="33"><span class="co">#&gt; [34] xfun_0.4              pkgconfig_2.0.2       base64enc_0.1-3      </span></a>
 <a class="sourceLine" id="cb48-34" title="34"><span class="co">#&gt; [37] htmltools_0.3.6       nnet_7.3-12           tidyselect_0.2.5     </span></a>
 <a class="sourceLine" id="cb48-35" title="35"><span class="co">#&gt; [40] htmlTable_1.12        gridExtra_2.3         bookdown_0.7         </span></a>
 <a class="sourceLine" id="cb48-36" title="36"><span class="co">#&gt; [43] Hmisc_4.1-1           viridisLite_0.3.0     crayon_1.3.4         </span></a>
-<a class="sourceLine" id="cb48-37" title="37"><span class="co">#&gt; [46] withr_2.1.2           grid_3.5.1            nlme_3.1-137         </span></a>
+<a class="sourceLine" id="cb48-37" title="37"><span class="co">#&gt; [46] withr_2.1.2           grid_3.5.2            nlme_3.1-137         </span></a>
 <a class="sourceLine" id="cb48-38" title="38"><span class="co">#&gt; [49] jsonlite_1.6          gtable_0.2.0          magrittr_1.5         </span></a>
 <a class="sourceLine" id="cb48-39" title="39"><span class="co">#&gt; [52] scales_1.0.0          cli_1.0.1             stringi_1.2.4        </span></a>
 <a class="sourceLine" id="cb48-40" title="40"><span class="co">#&gt; [55] reshape2_1.4.3        bindrcpp_0.2.2        latticeExtra_0.6-28  </span></a>
 <a class="sourceLine" id="cb48-41" title="41"><span class="co">#&gt; [58] xml2_1.2.0            Formula_1.2-3         RColorBrewer_1.1-2   </span></a>
-<a class="sourceLine" id="cb48-42" title="42"><span class="co">#&gt; [61] tools_3.5.1           glue_1.3.0            hms_0.4.2            </span></a>
+<a class="sourceLine" id="cb48-42" title="42"><span class="co">#&gt; [61] tools_3.5.2           glue_1.3.0            hms_0.4.2            </span></a>
 <a class="sourceLine" id="cb48-43" title="43"><span class="co">#&gt; [64] survival_2.43-3       yaml_2.2.0            colorspace_1.3-2     </span></a>
 <a class="sourceLine" id="cb48-44" title="44"><span class="co">#&gt; [67] cluster_2.0.7-1       rvest_0.3.2           bindr_0.1.1          </span></a>
 <a class="sourceLine" id="cb48-45" title="45"><span class="co">#&gt; [70] haven_2.0.0</span></a></code></pre></div>

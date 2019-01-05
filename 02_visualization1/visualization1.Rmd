@@ -39,10 +39,10 @@ In this lecture, we will take a look at how to visualize data using the powerful
 ## Learning objectives 
 
 - Get familiar with the RStudio interface.
-- Take a look at some bad plot, and think about how to make them better.
+- Take a look at some suboptimal plots, and think about how to make them better.
 - Understand the general philosophy behind ggplot -- a grammar of graphics. 
-- Create informative figures using grouping and facets. 
 - Understand the mapping from data to geoms in ggplot.
+- Create informative figures using grouping and facets. 
 
 ## Load packages 
 
@@ -79,13 +79,14 @@ include_graphics("figures/datasaurus_dozen.png")
 
 The data sets in Figure \@ref(fig:datasaurus) all share the same summary statistics. Clearly, the data sets are not the same though. 
 
-```{block, type='info'}
-__Tip__: 
-
-Always plot the data first! 
-```
+> __Tip__: Always plot the data first! 
 
 [Here](https://www.autodeskresearch.com/publications/samestats) is the paper from which I took Figure \@ref(fig:anscombe) and \@ref(fig:datasaurus). It explains how the figures were generated and shows more examples for how summary statistics and some kinds of plots are insufficient to get a good sense for what's going on in the data.
+
+```{r, echo=FALSE, fig.cap="Animation showing different data sets that all share the same summary statistics."}
+include_graphics("figures/data_dino.gif")
+```
+
 
 ### How _not_ to visualize data 
 
@@ -123,8 +124,8 @@ Instead of learning rigid rules for what makes for a good figure, you will learn
 
 ## Setting up RStudio 
 
-```{r pref-general, echo=FALSE, fig.cap="General preferences."}
-  include_graphics("figures/screenshots/r_preferences_general.png")
+```{r pref-general, out.width='100%', echo=FALSE, fig.cap="General preferences."}
+  include_graphics("figures/r_preferences_general.png")
 ```
 
 __Make sure that__: 
@@ -132,8 +133,8 @@ __Make sure that__:
 - Restore .RData into workspace at startup is _unselected_ 
 - Save workspace to .RData on exit is set to _Never_
 
-```{r pref-code, echo=FALSE, fig.cap="Code window preferences."}
-  include_graphics("figures/screenshots/r_preferences_code.png")
+```{r pref-code, out.width='100%', echo=FALSE, fig.cap="Code window preferences."}
+  include_graphics("figures/r_preferences_code.png")
 ```
 
 __Make sure that__: 
@@ -188,12 +189,8 @@ There are three simple ways to get help in R. You can either put a `?` in front 
 help("print")
 ```
 
-```{block, type='info'}
-__Tip__: 
+>__Tip__: To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press `F1`.
   
-To see the help file, hover over a function (or dataset) with the mouse (or select the text) and then press `F1`.
-```
-
 I recommend using `F1` to get to help files -- it's the fastest way! 
 
 R help files can sometimes look a little cryptic. Most R help files have the following sections (copied from [here](https://www.dummies.com/programming/r/r-for-dummies-cheat-sheet/)): 
@@ -252,11 +249,7 @@ Above, we assigned the `diamonds` dataset to the variable `df.diamonds` so that 
 
 Let's take a look at the full dataset by clicking on it in the explorer. 
 
-```{block, type='info'}
-__Tip__: 
-  
-You can view a data frame by highlighting the text in the editor (or simply moving the mouse above the text), and then press `F2`. 
-```
+>__Tip__: You can view a data frame by highlighting the text in the editor (or simply moving the mouse above the text), and then press `F2`. 
 
 The `df.diamonds` data frame contains information about almost 60,000 diamonds, including their `price`, `carat` value, size, etc. Let's use visualization to get a better sense for this dataset.   
 
@@ -313,11 +306,7 @@ ggplot(df.diamonds, aes(x = color, y = price)) +
   stat_summary(fun.y = "mean", geom = "point")
 ```
 
-```{block, type='info'}
-__Tip__: 
-  
-Take a look [here](https://ggplot2.tidyverse.org/reference/#section-layer-geoms) to see what other geoms ggplot2 supports.
-```
+>__Tip__: Take a look [here](https://ggplot2.tidyverse.org/reference/#section-layer-geoms) to see what other geoms ggplot2 supports.
 
 Somewhat surprisingly, diamonds with the best color (D) are not the most expensive ones. What's going on here? We'll need to do some more exploration to figure this out. 
 
@@ -642,7 +631,7 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 ```
 
 
-```{r practice-plot3, out.width="90%", fig.align="center"}
+```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3."}
 include_graphics("figures/practice_plot3.png")
 ```
 
@@ -655,7 +644,7 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 ```
 
 
-```{r practice-plot4, out.width="90%", fig.align="center"}
+```{r practice-plot4, out.width="90%", fig.align="center", fig.cap="Practice plot 4."}
 include_graphics("figures/practice_plot4.png")
 ```
 
@@ -697,7 +686,7 @@ include_graphics("figures/practice_plot4.png")
 - [ggplot2 visualizations with code](http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html) --> gallery of plots with code
 - [R Markdown in RStudio introduction](https://rmarkdown.rstudio.com/lesson-1.html)
 - [R Markdown for class reports](http://www.stat.cmu.edu/~cshalizi/rmarkdown/)
-- [styler](https://github.com/r-lib/styler) --> tool for writing 
+- [styler](https://github.com/r-lib/styler) --> RStudio add-in that re-formats code using a good style 
 
 ## Session info 
 

@@ -583,7 +583,11 @@ library(gganimate)
 
 ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour = country)) +
   geom_point(alpha = 0.7, show.legend = FALSE) +
-  geom_text(data = gapminder %>% filter(country %in% c("United States", "China", "India")), mapping = aes(label = country), color = "black", vjust = -0.75, show.legend = FALSE) +
+  geom_text(data = gapminder %>% filter(country %in% c("United States", "China", "India")), 
+            mapping = aes(label = country),
+            color = "black",
+            vjust = -0.75,
+            show.legend = FALSE) +
   scale_colour_manual(values = country_colors) +
   scale_size(range = c(2, 12)) +
   scale_x_log10() +
@@ -632,6 +636,7 @@ The package [`shiny`](https://shiny.rstudio.com/) makes it relatively easy to cr
 - [ggplot2 gui](https://github.com/dreamRs/esquisse) --> ggplot2 extension package 
 - [ggplot2 visualizations with code](http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html) --> gallery of plots with code
 - [Color brewer](http://colorbrewer2.org/) --> for finding colors 
+- [shiny apps examples](https://sites.psu.edu/shinyapps/) --> shiny apps examples that focus on statistics teaching (made by students at PennState) 
 
 ## Session info 
 

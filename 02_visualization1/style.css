@@ -1,0 +1,20 @@
+.caption {
+  color: #777;
+  margin-top: 10px;
+}
+p code {
+  white-space: inherit;
+}
+pre {
+  word-break: normal;
+  word-wrap: normal;
+}
+pre code {
+  white-space: inherit;
+}
+.info {
+  background-color: #ADD8E6;
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
+}
