@@ -5,7 +5,6 @@ date: "January 18th, 2019"
 output: html_notebook
 bibliography: ../references.bib
 biblio-style: apalike
-css: ../style.css
 editor_options: 
   chunk_output_type: inline
 ---
@@ -141,6 +140,110 @@ digraph dot{
 ")
 ```
 
+## Flipping a coin many times 
+
+```{r FlipSim,echo=FALSE,fig.cap='A demonstration of the law of large numbers.'}
+
+# Example taken from here: http://statsthinking21.org/probability.html#empirical-frequency
+
+set.seed(1) # set the seed so that the outcome is consistent
+nsamples = 50000 # how many flips do we want to make?
+
+# create some random coin flips using the rbinom() function with
+# a true probability of 0.5
+
+df.samples = tibble(
+  trial_number = seq(nsamples), 
+  outcomes = rbinom(nsamples, 1, 0.5)) %>% 
+  mutate(mean_probability = cumsum(outcomes) / seq_along(outcomes)) %>% 
+  filter(trial_number >= 10) # start with a minimum sample of 10 flips
+
+ggplot(data = df.samples, 
+       mapping = aes(x = trial_number, y = mean_probability)) +
+  geom_hline(yintercept = 0.5, color = "gray", linetype = "dashed") +
+  geom_line() +
+  labs(
+    x = "Number of trials",
+    y = "Estimated probability of heads"
+  )+
+  theme_classic()+
+  theme(text = element_text(size = 20))
+# ggsave("figures/flipping_coins.png", width = 12, height = 6)
+```
+
+## Probability operations 
+
+```{r}
+# Make a deck of cards 
+df.cards = tibble(
+  suit = rep(c("Clubs", "Spades", "Hearts", "Diamonds"), each = 8),
+  value = rep(c("7", "8", "9", "10", "Jack", "Queen", "King", "Ace"), 4)
+) 
+```
+
+```{r}
+# conditional probability: p(Hearts | Queen) (via rules of probability)
+df.cards %>% 
+  summarize(p_hearts_given_queen = 
+              sum(suit == "Hearts" & value == "Queen") / 
+              sum(value == "Queen"))
+```
+
+```{r}
+# conditional probability: p(Hearts | Queen) (via rejection)
+df.cards %>% 
+  filter(value == "Queen") %>%
+  summarize(p_hearts_given_queen = sum(suit == "Hearts")/n())
+```
+
+
+## Bayesian updating
+
+- Example from 
+
+```{r}
+grViz("
+digraph dot{
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 10,
+    fillcolor = lightblue,
+    fixedsize=true,
+    width = 0.8
+    ]
+  
+  # edges between nodes
+  edge [color = black,
+        fontname = 'Helvetica',
+        fontsize = 10]
+  1 -> 2 [label = 'ill']
+  1 -> 3 [label = 'healthy']
+  2 -> 4 [label = 'test +'] 
+  2 -> 5 [label = 'test -']
+  3 -> 6 [label = 'test +']
+  3 -> 7 [label = 'test -']
+  
+
+  # labels for each node
+  1 [label = '10000\npeople']
+  2 [label = '100']
+  3 [label = '9900']
+  4 [label = '95']
+  5 [label = '5']
+  6 [label = '495']
+  7 [label = '9405']
+  
+  rankdir='LR'
+  }"
+)
+```
+
 ## Concepts to teach 
 
 - Counting 
@@ -151,6 +254,9 @@ digraph dot{
   - Simpson's paradox 
   - law of total probability 
   - Bayes' rule 
+
+- Causal Bayesian Networks 
+  - 
 
 - Law of large numbers 
   - Central limit theorem

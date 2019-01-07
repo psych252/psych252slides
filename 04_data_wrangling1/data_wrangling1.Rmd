@@ -150,7 +150,7 @@ Arrays work the same was as matrices with data of more than two dimensions.
 #### Data frame 
 
 ```{r}
-df = data_frame(participant_id = c(1, 2, 3),
+df = tibble(participant_id = c(1, 2, 3),
                 participant_name = c("Leia", "Luke", "Darth")) # make the data frame 
 
 df # the complete data frame
@@ -165,7 +165,7 @@ df[["participant_name"]][2] # same as above
 
 We'll use data frames a lot. Data frames are like a matrix with column names. Data frames are also more general than matrices in that different columns can have different modes. For example, one column might be a character, another one numeric, and another one a factor. 
 
-You may sometimes also see a `tibble` instead of a data frame. A `tibble` is almost the same asa  data frame but it has better defaults for formatting output in the console (more information on tibbles is [here](http://r4ds.had.co.nz/tibbles.html)). 
+Here we used the `tibble()` function to create the data frame. A `tibble` is almost the same as a data frame but it has better defaults for formatting output in the console (more information on tibbles is [here](http://r4ds.had.co.nz/tibbles.html)). 
 
 #### Lists 
 
@@ -174,7 +174,7 @@ l.mixed = list(number = 1,
                character = "2", 
                factor = factor(3), 
                matrix = matrix(1:4, ncol = 2),
-               df = data_frame(x = c(1, 2), y = c(3, 4)))
+               df = tibble(x = c(1, 2), y = c(3, 4)))
 l.mixed
 l.mixed$character
 l.mixed[['character']]
@@ -191,7 +191,7 @@ Table \@ref(tab:operators) shows the comparison operators that result in logical
 operators = c("`==`", "`!=`", "`>, <`", "`>=, <=`", "`&, |, !`", "`%in%`")
 explanation = c("equal to", "not equal to", "greater/less than", "greater/less than or equal", "logical operators: and, or, not", "checks whether an element is in an object")
 kable(
-  data_frame(symbol = operators, name = explanation), 
+  tibble(symbol = operators, name = explanation), 
   caption = "Table of comparison operators that result in boolean (TRUE/FALSE) outputs.", 
   booktabs = TRUE)
 ```

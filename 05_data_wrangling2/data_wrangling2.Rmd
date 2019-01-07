@@ -104,7 +104,7 @@ Sometimes `group_by()` is also useful without summarising the data. For example,
 
 ```{r}
 # first let's generate some random data 
-df.data = data_frame(
+df.data = tibble(
   participant = rep(1:3, each = 5),
   judgment = sample(0:100, size = 15, replace = TRUE)
 )
@@ -175,7 +175,7 @@ Let's first generate a data set that is _not_ tidy.
 
 ```{r}
 # construct data frame 
-df.data1 = data_frame(
+df.data1 = tibble(
   participant = c(1, 2),
   observation_1 = c(10, 25),
   observation_2 = c(100, 63),
@@ -219,7 +219,7 @@ Here is a slightly more advanced example that involves reshaping a data frame. L
 
 ```{r}
 # construct data frame 
-df.data2 = data_frame(
+df.data2 = tibble(
   participant = c(1, 2),
   stimulus_1 = c("flower", "car"),
   observation_1 = c(10, 25),
@@ -298,7 +298,7 @@ The rest is familiar. I've used `mutate_at()` to turn `order` and `observation` 
 Sometimes, we may have a data frame where data is recorded in a long string. 
 
 ```{r}
-df = data_frame(
+df = tibble(
   participant = 1:2,
   judgments = c("10, 4, 12, 15", "3, 4")
 )
@@ -329,7 +329,7 @@ For example, we may have one data frame `df.stimuli` with information about each
 set.seed(1) # setting random seed to make this example reproducible
 
 # data frame with stimulus information
-df.stimuli = data_frame(
+df.stimuli = tibble(
   index = 1:5,
   height = c(2, 3, 1, 4, 5),
   width = c(4, 5, 2, 3, 1),
@@ -339,7 +339,7 @@ df.stimuli = data_frame(
   print()
 
 # data frame with participants' responses 
-df.responses = data_frame(
+df.responses = tibble(
   participant = rep(1:3, each = 5),
   index = rep(1:5, 3), 
   response = sample(0:100, size = 15, replace = TRUE) # randomly sample 15 values from 0 to 100
@@ -409,7 +409,7 @@ I've first created a vector `tmp.na` with a missing value at index 3. Calling th
 Let's say that we have a data frame with missing values and that we want to replace those missing values with something else. Let's first create a data frame with missing values. 
 
 ```{r}
-df.data = data_frame(x = c(1, 2, NA),
+df.data = tibble(x = c(1, 2, NA),
                      y = c("a", NA, "b"))
 head(df.data)
 ```
@@ -439,7 +439,7 @@ df.data %>%
 To make the distinction between implicit and explicit missing values more concrete, let's consider the following example (taken from [here](https://r4ds.had.co.nz/tidy-data.html#missing-values-3)): 
 
 ```{r}
-df.stocks = data_frame(
+df.stocks = tibble(
   year   = c(2015, 2015, 2015, 2015, 2016, 2016, 2016),
   qtr    = c(   1,    2,    3,    4,    2,    3,    4),
   return = c(1.88, 0.59, 0.35,   NA, 0.92, 0.17, 2.66)
@@ -491,7 +491,7 @@ description = c(
   "fast interaction between R and python"
 )
 
-kable(data_frame(`file type` = file_type,
+kable(tibble(`file type` = file_type,
                  platform = platform,
                  description = description),
       align = c("r", "l", "l"))
@@ -541,7 +541,7 @@ I've set the `verbose = ` argument to `TRUE` here so that the `load()` function 
 To save a data frame as a csv file, we simply write: 
 
 ```{r}
-df.test = data_frame(
+df.test = tibble(
   x = 1:3,
   y = c("test1", "test2", "test3")
 )

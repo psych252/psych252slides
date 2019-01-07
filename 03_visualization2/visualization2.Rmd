@@ -587,9 +587,10 @@ ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour =
             show.legend = FALSE) +
   scale_colour_manual(values = country_colors) +
   scale_size(range = c(2, 12)) +
-  scale_x_log10() +
+  scale_x_log10(breaks = c(1e3, 1e4, 1e5),
+                labels = c("1,000", "10,000", "100,000")) +
   theme_classic() +
-  theme(text = element_text(size = 24)) +
+  theme(text = element_text(size = 23)) +
   # Here come the gganimate specific bits
   labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
   transition_time(year) +
