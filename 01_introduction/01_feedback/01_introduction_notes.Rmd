@@ -1,0 +1,89 @@
+---
+title: "01_Introduction"
+author: "Tobias Gerstenberg"
+date: "1/7/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + # set the theme 
+    theme(text = element_text(size = 20)) # set the default text size
+)
+```
+
+## Student feedback 
+
+> I appreciate knowing expectations about the course. Humor was also helpful. Having a date for the midterm and more details about the final project will be helpful as I plan my quarter. __Might be good to dive into some material, too__, although I imagine that'll happen on Wednesday.
+
+> I really appreciated that you gave an overview at the start of lecture of what we'll be covering and the important points. It's helpful to know what's important to focus on. On the same note (and maybe it's not so applicable to this lecture) it would be similarly helpful to __wrap up at the end with the biggest takeaways__.
+
+> Great overview of what we will be learning. You come across as super approachable and knowledgeable. __I would have liked to know the length of the homework and the average amount of time you estimate us spending on: (a) homework, (b) readings + datacamp__. Also, I loved citing sources and the thank you slide!
+
+> It was informative. __Next time it would be great if all deadlines for the midterm etc. would already be known by the first lecture__. In terms of setup of the class I think 2 longer lectures rather than 3 short ones per week would be better (less switching costs etc)
+
+> I would have liked to hear more from you on __what you define to be 'good science.'__ For example, you alluded to replication, but beyond replication, what are some of your thoughts or philosophical orientation when it comes to conducting social science.
+
+> I will be happy to get started with R and its exercises! It was the first lecture, __so it was slower than expected__. But I like how you made the class expectation clear to students! __But perhaps we can keep the first lecture shorter in length.__
+
+> __It was nice to meet our neighbors.__ I hope we keep having time and ways to meet others in class. It makes it easier to ask each other questions when the time comes. I like how many resources you list on the class website.
+
+> Disliked: no concepts today...
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-1.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read_csv("how-was-the-pace-of-1.csv", skip = 10) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-1.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+
+```
+
+## What to do next time
+
+- keep the interactive "introduce yourself to your neighbor" bit at the beginning 
+- keep the interactive feedback (polleverywhere) 
+- smoothen out the part about building models (with the Field figure, and the "Statistics as arguments" reference)
+- introduce some conceptual material from the very beginning 
+	+ a few fun statistics examples would be nice 
+	+ maybe a worked example of how to go from research question 
+

@@ -2,24 +2,12 @@
 title: "Class 3"
 author: "Tobias Gerstenberg"
 date: "January 11th, 2019"
-output: 
-  bookdown::gitbook:
-    config:
-      toc:
-        collapse: none
-        scroll_highlight: yes
-        before: null
-        after: null
-      toolbar:
-        position: fixed
-      edit : null
-      search: yes
-      fontsettings:
-        theme: white
-        family: sans
-        size: 2
-      sharing: no
+output:
+  bookdown::html_document2:
+    toc: true
     toc_depth: 4
+    theme: cosmo
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}

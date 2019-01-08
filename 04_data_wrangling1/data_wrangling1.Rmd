@@ -3,26 +3,13 @@ title: "Class 4"
 author: "Tobias Gerstenberg"
 date: "January 14th, 2019"
 output: 
-  bookdown::gitbook:
-    config:
-      toc:
-        collapse: none
-        scroll_highlight: yes
-        before: null
-        after: null
-      toolbar:
-        position: fixed
-      edit : null
-      search: yes
-      fontsettings:
-        theme: white
-        family: sans
-        size: 2
-      sharing: no
-    toc_depth: 3
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
 bibliography: ../references.bib
 biblio-style: apalike
-css: ../style.css
 ---
 
 ```{r setup, include=FALSE}
