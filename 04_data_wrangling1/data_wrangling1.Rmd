@@ -471,6 +471,8 @@ df.starwars %>%
   summarytools::view()
 ```
 
+> Note: The summarytools::view() function will not show up here in the html. It generates a summary of the data that is displayed in the Viewer in RStudio. 
+
 Once we've taken a look at the data, the next step would be to visualize relationships between variables of interest. 
 
 ### A quick note on naming things 

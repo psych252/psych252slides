@@ -95,11 +95,24 @@ If we are interested in comparing proportions and we don't have too many data po
 
 Often we want to compare the data from many different conditions. And sometimes, it's also useful to get a sense for what the individual participant data look like. Here is a plot that achieves both. 
 
-```{r}
+```{r comparison-plot, fig.cap='Price of differently colored diamonds. Red circles are means, black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
 ggplot(data = df.diamonds[1:150,], mapping = aes(x = color, y = price)) +
-  geom_point(alpha = 0.2, position = position_jitter(width = 0.1, height = 0), size = 2) + # individual data points (jittered horizontally)
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", color = "black", size = 1) + # error bars 
-  stat_summary(fun.y = "mean", geom = "point", shape = 21, fill = "red", color = "black", size = 4) # means
+  # individual data points (jittered horizontally)
+  geom_point(alpha = 0.2,
+             position = position_jitter(width = 0.1, height = 0),
+             size = 2) + 
+  # error bars 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               color = "black",
+               size = 1) + 
+  # means
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               shape = 21,
+               fill = "red",
+               color = "black",
+               size = 4) 
 ```
 
 This plot shows means, bootstrapped confidence intervals, and individual data points. I've used two tricks to make the individual data points easier to see. 
@@ -145,7 +158,6 @@ Personally, I'm not a big fan of boxplots. Many data sets are consistent with th
 include_graphics("figures/boxplots.gif")
 ```
 
-
 Figure \@ref(fig:boxplots) shows three different distributions that each correspond to the same boxplot. 
 
 If there is not too much data, I recommend to plot jittered individual data points instead. If you do have a lot of data points, then violin plots can be helpful. 
@@ -159,11 +171,11 @@ Figure \@ref(fig:boxplot-violin) shows the same raw data represented as jittered
 The `ggpol` packages has a `geom_boxjitter()` function which displays a boxplot and the jittered data right next to each other. 
 
 ```{r}
-library(ggpol)
+# install.packages("ggpol") # run this once if you don't have the package yet
 
 set.seed(1) # used to make the example reproducible 
 ggplot(data = df.diamonds %>% sample_n(1000), mapping = aes(x = color, y = price)) +
-  geom_boxjitter(jitter.shape = 1,
+  ggpol::geom_boxjitter(jitter.shape = 1,
                  jitter.color = "black", 
                  jitter.alpha = 0.2,
                  jitter.height = 0, 
@@ -195,13 +207,30 @@ ggplot(data = data, mapping = aes(x = 'Likert', y = rating)) +
 
 This represents a vase much better than it represents the data.
 
-We can also show the distributions along the x-axis using the `geom_density_ridges()` function form the `ggridges` package. 
+We can also show the distributions along the x-axis using the `geom_density_ridges()` function from the `ggridges` package. 
 
 ```{r}
-library(ggridges)
+# install.packages("ggridges") # run this once if you don't have the package yet
 ggplot(data = df.diamonds, mapping = aes(x = price, y = color)) +
-  geom_density_ridges(scale = 1.5)
+  ggridges::geom_density_ridges(scale = 1.5)
 ```
+
+#### Practice plot 1 
+
+Try to make the plot shown in Figure \@ref(fig:practice-plot1). Here are some tips: 
+
+- For the data argument in `ggplot()` use: `df.diamonds[1000, ]` (this selects the first 1000 rows).
+- Note that the violin plots have different areas that reflect the number of observations. Take a look at `geom_violin()`'s help file to figure out how to set this. 
+- Figure \@ref(fig:comparison-plot) will help you with figuring out the other components
+
+```{r}
+# make the plot here 
+```
+
+```{r practice-plot1, echo=F, fig.cap='Practice plot 1.'}
+include_graphics("figures/practice_plot1.png")
+```
+
 
 ### Relationships 
 
@@ -235,7 +264,7 @@ I've added some outlines to the tiles by specifying `color = "black"` in `geom_t
 
 ### Temporal data 
 
-Line plots are a good choice for temporal data. For that, I've used the `txhousing` data that comes with the `ggplot2` package. The dataset contains information about housing sales in Texas. 
+Line plots are a good choice for temporal data. Here, I'll use the `txhousing` data that comes with the `ggplot2` package. The dataset contains information about housing sales in Texas. 
 
 ```{r}
 df.plot = txhousing %>% 
@@ -263,25 +292,47 @@ df.text = df.plot %>%
   summarize(year = mean(year) + 0.2, 
             median = mean(median))
 
-ggplot(data = df.plot, mapping = aes(x = year, y = median, color = city, fill = city)) +
-  geom_hline(yintercept = seq(from = 100000, to = 250000, by = 50000), linetype = 2, alpha = 0.2) + # draw dashed horizontal lines in the background
-  stat_summary(fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.2, linetype = 0) +
-  stat_summary(fun.y = "mean", geom = "point") +
-  stat_summary(fun.y = "mean", geom = "line") +
-  geom_text(data = df.text, mapping = aes(label = city), hjust = 0, size = 5) + #add the city names 
-  scale_y_continuous(breaks = seq(from = 100000, to = 250000, by = 50000), 
-                     labels = str_c("$", seq(from = 100, to = 250, by = 50), "K")) + #set the y-axis labels 
-  scale_x_continuous(breaks = seq(from = 2000, to = 2015, by = 5)) + #set the x-axis labels 
-  coord_cartesian(xlim = c(1999, 2015), clip = "off", expand = F) + #set the limits for the coordinates 
+ggplot(
+  data = df.plot,
+  mapping = aes(x = year, 
+                y = median,
+                color = city,
+                fill = city)) +
+  # draw dashed horizontal lines in the background
+  geom_hline(yintercept = seq(from = 100000, to = 250000, by = 50000),
+             linetype = 2,
+             alpha = 0.2) + 
+  stat_summary(fun.data = mean_cl_boot,
+               geom = "ribbon",
+               alpha = 0.2,
+               linetype = 0) +
+  stat_summary(fun.y = "mean",
+               geom = "point") +
+  stat_summary(fun.y = "mean",
+               geom = "line") +
+  # add the city names
+  geom_text(data = df.text,
+            mapping = aes(label = city),
+            hjust = 0,
+            size = 5) + 
+  # set the y-axis labels
+  scale_y_continuous(breaks = seq(from = 100000, to = 250000, by = 50000),
+                     labels = str_c("$", seq(from = 100, to = 250, by = 50), "K")) + 
+  # set the x-axis labels
+  scale_x_continuous(breaks = seq(from = 2000, to = 2015, by = 5)) +
+  # set the limits for the coordinates
+  coord_cartesian(xlim = c(1999, 2015),
+                  clip = "off",
+                  expand = F) + 
+  # set the plot title and axes titles
   labs(title = "Change of median house sale price in Texas",
-       x = "Year", 
-       y = "Median house sale price", 
-       fill = "", 
-       color = "") + #set the plot title and axis titles
+       x = "Year",
+       y = "Median house sale price",
+       fill = "",
+       color = "") + 
   theme(title = element_text(size = 16),
         legend.position = "none",
-        plot.margin = margin(r = 1, unit = "in") 
-  )
+        plot.margin = margin(r = 1, unit = "in"))
 ```
 
 ## Customizing plots 
@@ -300,25 +351,43 @@ This plot shows the average price for diamonds with a different quality of the c
 
 ```{r}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) + #change color of the fill, make a little more space between bars by setting their width
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) + #make error bars thicker
-  labs(
-    title = "Price as a function of quality of cut", 
+  # change color of the fill, make a little more space between bars by setting their width
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               fill = "lightblue",
+               width = 0.85) + 
+  # make error bars thicker
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1.5) + 
+  # add a title, subtitle, and changed axis labels 
+  labs(title = "Price as a function of quality of cut", 
     subtitle = "Note: The price is in US dollars",
     tag = "A",
     x = "Quality of the cut", 
-    y = "Price") + #added a title, subtitle, and changed axis labels 
+    y = "Price") + 
+  # adjust what to show on the y-axis
   scale_y_continuous(breaks = seq(from = 0, to = 4000, by = 2000),
-                     labels = seq(from = 0, to = 4000, by = 2000)) + #adjusted what to show on the y-axis
-  coord_cartesian(xlim = c(0.25, 5.75), ylim = c(0, 5000), expand = F) + #adjusted the range of both axes
+                     labels = seq(from = 0, to = 4000, by = 2000)) + 
+  # adjust the range of both axes
+  coord_cartesian(xlim = c(0.25, 5.75),
+                  ylim = c(0, 5000),
+                  expand = F) + 
   theme(
-    text = element_text(size = 20), #adjust the text size 
-    axis.title.x = element_text(margin = margin(t = 0.2, unit = "inch")), #added some space at top of x-title 
-    axis.title.y = element_text(margin = margin(r = 0.1, unit = "inch")), #added some space t the right of y-title
+    # adjust the text size 
+    text = element_text(size = 20), 
+    # add some space at top of x-title 
+    axis.title.x = element_text(margin = margin(t = 0.2, unit = "inch")), 
+    # add some space t the right of y-title
+    axis.title.y = element_text(margin = margin(r = 0.1, unit = "inch")), 
+    # add some space underneath the subtitle and make it gray
     plot.subtitle = element_text(margin = margin(b = 0.3, unit = "inch"),
-                                 color = "gray70"), #added some space underneath the subtitle, and made it gray,
-    plot.tag = element_text(face = "bold"), #make the plot tag bold 
-    plot.tag.position = c(0.05, 0.99) #move it a little
+                                 color = "gray70"),  
+    # make the plot tag bold 
+    plot.tag = element_text(face = "bold"), 
+    # move the plot tag a little
+    plot.tag.position = c(0.05, 0.99) 
   )
 ```
 
@@ -330,8 +399,14 @@ Sometimes we don't have a natural ordering of our independent variable. In that 
 
 ```{r}
 ggplot(data = df.diamonds, mapping = aes(x = reorder(cut, price), y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) +
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               fill = "lightblue",
+               width = 0.85) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1.5) +
   labs(x = "cut")
 ```
 
@@ -378,7 +453,6 @@ ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity))
     ) 
   )
 ```
-
 
 ### Choosing good colors
 
@@ -483,8 +557,7 @@ If possible, it's __much__ better to do everything in R though so that your plot
 
 ## Peeking behind the scenes 
 
-Sometimes it can be helpful for debugging to take a look behind the scenes. Silently, `ggplot2` computes a data frame based on the information you pass to it. We can take a look at the data frame that's underlying the plot. 
-
+Sometimes it can be helpful for debugging to take a look behind the scenes. Silently, `ggplot()` computes a data frame based on the information you pass to it. We can take a look at the data frame that's underlying the plot. 
 
 ```{r}
 p = ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, z = carat)) +
@@ -498,7 +571,7 @@ print(head(info))
 
 I've called the `ggplot_build()` function on the ggplot2 object that we saved as `p`. I've then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, `r nrow(info)`. That's good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the `fill`, the `value` associated with each row, where each row is being displayed (`x` and `y`), etc.   
 
-If a plot looks weird, it's worth taking a look behind the scenes. For example, one thing we thing we could have tried is the following (in fact, this is what I tried first): 
+If a plot looks weird, it's worth taking a look behind the scenes. For example, something we thing we could have tried is the following (in fact, this is what I tried first): 
 
 ```{r}
 p = ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, fill = carat)) +
@@ -563,8 +636,8 @@ devtools::install_github('thomasp85/gganimate')
 Here is an example showing how to use it. 
 
 ```{r interval=1/60, results='hold'}
-library(gapminder)
-library(gganimate)
+library("gapminder")
+library("gganimate")
 
 ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour = country)) +
   geom_point(alpha = 0.7, show.legend = FALSE) +
@@ -583,7 +656,7 @@ ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour =
   labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
   transition_time(year) +
   ease_aes("linear")
-anim_save(filename = "figures/life_gdp_animation.gif") #save the animation
+# anim_save(filename = "figures/life_gdp_animation.gif") # to save the animation
 ```
 
 This takes a while to run but it's worth the wait. The plot shows the relationship between GDP per capita (on the x-axis) and life expectancy (on the y-axis) changes across different years for the countries of different continents. The size of each dot represents the population size of the respective country. And different countries are shown in different colors. This animation is not super useful yet in that we don't know which continents and countries the different dots represent. I've added a label to the United States, China, and India. 
