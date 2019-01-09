@@ -2,7 +2,12 @@
 title: "01_Introduction"
 author: "Tobias Gerstenberg"
 date: "1/7/2019"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}
@@ -11,8 +16,11 @@ library("DT")
 library("tidyverse")
 opts_chunk$set(echo = TRUE)
 theme_set(
-  theme_classic() + # set the theme 
-    theme(text = element_text(size = 20)) # set the default text size
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
 )
 ```
 
@@ -32,7 +40,7 @@ theme_set(
 
 > __It was nice to meet our neighbors.__ I hope we keep having time and ways to meet others in class. It makes it easier to ask each other questions when the time comes. I like how many resources you list on the class website.
 
-> Disliked: no concepts today...
+> Disliked: __no concepts today...__
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-1.csv") %>% 
@@ -56,7 +64,7 @@ ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-
+# ggsave("01_introduction_pace.pdf", width = 8, height = 6)
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
@@ -75,7 +83,7 @@ ggplot(data = df.overall,
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
-
+# ggsave("01_introduction_overall.pdf", width = 8, height = 6)
 ```
 
 ## What to do next time
@@ -85,5 +93,13 @@ ggplot(data = df.overall,
 - smoothen out the part about building models (with the Field figure, and the "Statistics as arguments" reference)
 - introduce some conceptual material from the very beginning 
 	+ a few fun statistics examples would be nice 
-	+ maybe a worked example of how to go from research question 
-
+	+ maybe a worked example from my own research: 
+	  - research question
+	  - statistical model 
+	  - experiment
+	  - results 
+- have a slide the motivates the different tools: 
+  + a person in the middle, "Question about homework" --> Piazza; "Not feeling well" --> Office hour / email, ... 
+- move some of the visualization content to the first lecture: 
+  + motivation for why visualization is so important 
+  + discuss some bad plots 

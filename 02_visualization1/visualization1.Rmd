@@ -50,7 +50,7 @@ The `tidyverse` is a collection of packages that includes `ggplot2`.
 
 > ...make __both__ calculations __and__ graphs. Both sorts of output should be studied; each will contribute to understanding. [@anscombe1973american]
 
-```{r anscombe, echo=FALSE, fig.cap= "Anscombe's quartet."}
+```{r anscombe, echo=FALSE, fig.cap="Anscombe's quartet."}
 include_graphics("figures/anscombe.png")
 ```
 
@@ -75,7 +75,6 @@ The data sets in Figure \@ref(fig:datasaurus) all share the same summary statist
 ```{r, echo=FALSE, fig.cap="Animation showing different data sets that all share the same summary statistics."}
 include_graphics("figures/data_dino.gif")
 ```
-
 
 ### How _not_ to visualize data
 
@@ -153,12 +152,11 @@ ggplot(data = diamonds, aes(x = cut, y = price)) +
                geom = "linerange",
                size = 1.5) +
   # change labels
-  labs(
-    title = "Price as a function of quality of cut",
-    subtitle = "Note: The price is in US dollars", # we might want to change this later
-    tag = "A",
-    x = "Quality of the cut",
-    y = "Price")
+  labs(title = "Price as a function of quality of cut",
+       subtitle = "Note: The price is in US dollars", # we might want to change this later
+       tag = "A",
+       x = "Quality of the cut",
+       y = "Price")
 ```
 
 This makes it much easier to see what's going on, and you can easily add comments to individual lines of code.
@@ -399,7 +397,7 @@ ggplot(data = df.diamonds,
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange") + # plot bootstrapped error bars first
   stat_summary(fun.y = "mean",
-               geom = "point") #add points with means
+               geom = "point") # add points with means
 ```
 
 Here we have it. The average price of our diamonds for different levels of `clarity` together with bootstrapped 95% confidence intervals. How do we know that we have 95% confidence intervals? That's what `mean_cl_boot()` computes as a default. Let's take a look at that function:
@@ -416,7 +414,7 @@ ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price)) +
                geom = "linerange",
                fun.args = list(conf.int = .999, B = 2000)) + # plot bootstrapped error bars first
   stat_summary(fun.y = "mean",
-               geom = "point") #add points with means
+               geom = "point") # add points with means
 ```
 
 Note how the error bars are larger now compared to Figure \@ref(fig:errorbars)
@@ -447,7 +445,7 @@ One cool feature about using `stat_summary()` is that we did not have to change 
 
 You may not remember exactly what confidence intervals actually are. Don't worry! We'll have a recap later in class.
 
-Let's take a look at two more principles for plotting data that are extremely helpful: groups and facets.
+Let's take a look at two more principles for plotting data that are extremely helpful: groups and facets. But before, another practice plot. 
 
 #### Practice plot 2
 
