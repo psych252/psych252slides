@@ -103,3 +103,4 @@ ggplot(data = df.overall,
 - move some of the visualization content to the first lecture: 
   + motivation for why visualization is so important 
   + discuss some bad plots 
+- make clear that sections are a mandatory part of class 

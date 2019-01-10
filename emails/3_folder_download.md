@@ -1,3 +1,6 @@
+Both methods actually work fine, the problem was that I hadn't set the copyright permissions for the figures. 
+
+~~~~~~~~~~~~~~~
 Hi, 
 
 Turns out there are two different ways for downloading folders on Canvas, and only one of the methods downloads the contents in the subfolders as well. 
@@ -12,3 +15,4 @@ Don't download the folder by clicking on the three vertical points on the right 
 See you tomorrow, 
 
 Tobi 
+
