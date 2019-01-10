@@ -104,3 +104,4 @@ ggplot(data = df.overall,
   + motivation for why visualization is so important 
   + discuss some bad plots 
 - make clear that sections are a mandatory part of class 
+- make clear that they can call me "Tobi"

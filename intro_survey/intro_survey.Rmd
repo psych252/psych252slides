@@ -1,0 +1,23 @@
+---
+title: 'Psych252: Intro survey'
+author: "Tobias Gerstenberg"
+date: "1/9/2019"
+output: html_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# load packages 
+library("knitr")
+library("tidyverse")
+```
+
+
+## Load data 
+
+```{r}
+df.survey = read_csv("psych252_intro_survey.csv")
+```
+

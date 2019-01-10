@@ -23,17 +23,31 @@ In this lecture, we will lift our ggplot2 skills to the next level!
 
 ## Learning objectives 
 
-- Decide what plot is appropriate for what kind of data.  
-- Take a sad plot and make it better. 
-- Make figure panels. 
-- Fix legends,  
+- Deciding what plot is appropriate for what kind of data.  
+- Customizing plots: Take a sad plot and make it better. 
+- Saving plots. 
+- Making figure panels. 
+- Debugging. 
 
-## Load packages and data 
+## Install and load packages, load data, set theme
+
+Let's install the new packages that you might not have yet. 
+
+```{r, eval=FALSE}
+install.packages(c("ggpol", "gganimate","gapminder", "ggridges", "devtools"))
+devtools::install_github("thomasp85/patchwork")
+```
+Note that the `patchwork` package is not on [CRAN](https://cran.r-project.org/) yet (where most of the R packages live), but we can install it directly from the [github repository](https://github.com/thomasp85/patchwork).
 
 Let's first load the packages that we need for this chapter. 
 
 ```{r, message=FALSE}
-library("knitr") # for rendering the RMarkdown file
+library("knitr")     # for rendering the RMarkdown file
+library("patchwork") # for making figure panels
+library("ggpol")     # for making fancy boxplots
+library("ggridges")  # for making joyplots 
+library("gganimate") # for making animations
+library("gapminder") # data available from Gapminder.org 
 library("tidyverse") # for plotting (and many more cool things we'll discover later)
 ```
 
@@ -123,7 +137,7 @@ This plot shows means, bootstrapped confidence intervals, and individual data po
 ```{r shapes, fig.cap="Different shapes that can be used for plotting."}
 # plot showing the different shapes 
 
-df.plot = data_frame(
+df.plot = tibble(
   x = rep(1:5, 5),
   y = rep(seq(5, 1, -1), each = 5),
   shape = 1:25
@@ -135,7 +149,6 @@ ggplot(data = df.plot, mapping = aes(x = x, y = y, shape = shape)) +
   geom_text(mapping = aes(label = shape), vjust = -1.3, size = 5) +
   scale_shape_manual(values = 1:25) +
   theme_void()
-  
 ```
 
 
@@ -171,9 +184,7 @@ Figure \@ref(fig:boxplot-violin) shows the same raw data represented as jittered
 The `ggpol` packages has a `geom_boxjitter()` function which displays a boxplot and the jittered data right next to each other. 
 
 ```{r}
-# install.packages("ggpol") # run this once if you don't have the package yet
-
-set.seed(1) # used to make the example reproducible 
+set.seed(1) # used to make the example reproducible
 ggplot(data = df.diamonds %>% sample_n(1000), mapping = aes(x = color, y = price)) +
   ggpol::geom_boxjitter(jitter.shape = 1,
                  jitter.color = "black", 
@@ -200,8 +211,8 @@ Violin plots don't work well for Likert-scale data (e.g. ratings on a discrete s
 
 ```{r}
 set.seed(1)
-data = data.frame(rating = sample(x = 1:7, prob = c(0.1, 0.4, 0.1, 0.1, 0.2, 0, 0.1), size = 300, replace = T))
-ggplot(data = data, mapping = aes(x = 'Likert', y = rating)) +
+data = data.frame(rating = sample(x = 1:7, prob = c(0.1, 0.4, 0.1, 0.1, 0.2, 0, 0.1), size = 100, replace = T))
+ggplot(data = data, mapping = aes(x = "Likert", y = rating)) +
   geom_violin()
 ```
 
@@ -210,7 +221,6 @@ This represents a vase much better than it represents the data.
 We can also show the distributions along the x-axis using the `geom_density_ridges()` function from the `ggridges` package. 
 
 ```{r}
-# install.packages("ggridges") # run this once if you don't have the package yet
 ggplot(data = df.diamonds, mapping = aes(x = price, y = color)) +
   ggridges::geom_density_ridges(scale = 1.5)
 ```
@@ -219,7 +229,7 @@ ggplot(data = df.diamonds, mapping = aes(x = price, y = color)) +
 
 Try to make the plot shown in Figure \@ref(fig:practice-plot1). Here are some tips: 
 
-- For the data argument in `ggplot()` use: `df.diamonds[1000, ]` (this selects the first 1000 rows).
+- For the data argument in `ggplot()` use: `df.diamonds[1:1000, ]` (this selects the first 1000 rows).
 - Note that the violin plots have different areas that reflect the number of observations. Take a look at `geom_violin()`'s help file to figure out how to set this. 
 - Figure \@ref(fig:comparison-plot) will help you with figuring out the other components
 
@@ -230,7 +240,6 @@ Try to make the plot shown in Figure \@ref(fig:practice-plot1). Here are some ti
 ```{r practice-plot1, echo=F, fig.cap='Practice plot 1.'}
 include_graphics("figures/practice_plot1.png")
 ```
-
 
 ### Relationships 
 
@@ -302,14 +311,15 @@ ggplot(
   geom_hline(yintercept = seq(from = 100000, to = 250000, by = 50000),
              linetype = 2,
              alpha = 0.2) + 
+  # draw ribbon
   stat_summary(fun.data = mean_cl_boot,
                geom = "ribbon",
                alpha = 0.2,
                linetype = 0) +
-  stat_summary(fun.y = "mean",
-               geom = "point") +
-  stat_summary(fun.y = "mean",
-               geom = "line") +
+  # draw means as points
+  stat_summary(fun.y = "mean", geom = "point") +
+  # draw lines connecting the means
+  stat_summary(fun.y = "mean", geom = "line") +
   # add the city names
   geom_text(data = df.text,
             mapping = aes(label = city),
@@ -443,13 +453,13 @@ Let's change a few more things in the legend using the `guides()` function:
 
 ```{r}
 ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity)) +
-  stat_summary(fun.y = "mean", geom = "point") +
+  stat_summary(fun.y = "mean", geom = "point", size = 2) +
   theme(legend.position = "bottom") +
   guides(
     color = guide_legend(
       nrow = 3, # 3 rows 
       reverse = TRUE, # reversed order 
-      override.aes = list(size = 10) # point size 
+      override.aes = list(size = 6) # point size 
     ) 
   )
 ```
@@ -457,8 +467,6 @@ ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity))
 ### Choosing good colors
 
 [Color brewer](http://colorbrewer2.org/) helps with finding colors that are colorblind safe and printfriendly. For more information on how to use color effectively see [here](http://socviz.co/refineplots.html#refineplots). 
-
-
 ### Customizing themes 
 
 For a given project, I often want all of my plots to share certain visual features such as the font type, font size, how the axes are displayed, etc. Instead of defining these for each individual plot, I can set a theme at the beginning of my project so that it applies to all the plots in this file. To do so, I use the `theme_set()` command: 
@@ -485,7 +493,7 @@ ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1)
 
-ggsave(filename = 'figures/diamond_plot.pdf', width = 8, height = 6)
+ggsave(filename = "figures/diamond_plot.pdf", width = 8, height = 6)
 ```
 
 Here, I'm saving the plot in the `figures` folder and it's name is `diamond_plot.pdf`. I also specify the width and height as the plot in inches (which is the default unit). 
@@ -494,17 +502,9 @@ Here, I'm saving the plot in the `figures` folder and it's name is `diamond_plot
 
 Sometimes, we want to create a figure with several subfigures, each of which is labeled with a), b), etc. We have already learned how to make separate panels using `facet_wrap()` or `facet_grid()`. The R package `patchwork` makes it very easy to combine multiple plots. 
 
-Let's first install the package. It's not on [CRAN](https://cran.r-project.org/) yet (where most of the R packages live), but we can install it directly from the [github repository](https://github.com/thomasp85/patchwork).
-
-```{r eval=FALSE}
-devtools::install_github("thomasp85/patchwork")
-```
-
-Then we load the package and use it. First, I'm just combining a few plots that we've made above into one. 
+Let's combine a few plots that we've made above into one. 
 
 ```{r}
-library("patchwork")
-
 # first plot
 p1 = ggplot(data = df.diamonds, mapping = aes(x = y, fill = color)) +
   geom_density(bw = 0.2, show.legend = F) +
@@ -565,11 +565,12 @@ p = ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, z = carat))
   scale_fill_gradient(low = "white", high = "black")
 print(p)
 
-info = ggplot_build(p)$data[[1]]
-print(head(info))
+build = ggplot_build(p)
+df.plot_info = build$data[[1]]
+print(head(df.plot_info))
 ```
 
-I've called the `ggplot_build()` function on the ggplot2 object that we saved as `p`. I've then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, `r nrow(info)`. That's good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the `fill`, the `value` associated with each row, where each row is being displayed (`x` and `y`), etc.   
+I've called the `ggplot_build()` function on the ggplot2 object that we saved as `p`. I've then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, `r nrow(df.plot_info)`. That's good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the `fill`, the `value` associated with each row, where each row is being displayed (`x` and `y`), etc.   
 
 If a plot looks weird, it's worth taking a look behind the scenes. For example, something we thing we could have tried is the following (in fact, this is what I tried first): 
 
@@ -577,12 +578,50 @@ If a plot looks weird, it's worth taking a look behind the scenes. For example, 
 p = ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, fill = carat)) +
   geom_tile(color = "black") +
   scale_fill_gradient(low = "white", high = "black")
-
 print(p)
-info = ggplot_build(p)$data[[1]]
+
+build = ggplot_build(p)
+df.plot_info = build$data[[1]]
+print(head(df.plot_info))
 ```
 
-Why does this plot look different from the one before? What went wrong here? Notice that the data frame associated with the ggplot2 object has `r nrow(info)` rows. So instead of plotting means here, we plotted all the individual data points. So what we are seeing here is just the top layer of many, many layers. 
+Why does this plot look different from the one before? What went wrong here? Notice that the data frame associated with the ggplot2 object has `r nrow(df.plot_info)` rows. So instead of plotting means here, we plotted all the individual data points. So what we are seeing here is just the top layer of many, many layers. 
+
+## Making animations 
+
+Animated plots can be a great way to illustrate your data in presentations. The R package `gganimate` lets you do just that. 
+
+Here is an example showing how to use it. 
+
+```{r interval=1/60, results='hold'}
+ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  geom_text(data = gapminder %>% filter(country %in% c("United States", "China", "India")), 
+            mapping = aes(label = country),
+            color = "black",
+            vjust = -0.75,
+            show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10(breaks = c(1e3, 1e4, 1e5),
+                labels = c("1,000", "10,000", "100,000")) +
+  theme_classic() +
+  theme(text = element_text(size = 23)) +
+  # Here come the gganimate specific bits
+  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
+  transition_time(year) +
+  ease_aes("linear")
+# anim_save(filename = "figures/life_gdp_animation.gif") # to save the animation
+```
+
+This takes a while to run but it's worth the wait. The plot shows the relationship between GDP per capita (on the x-axis) and life expectancy (on the y-axis) changes across different years for the countries of different continents. The size of each dot represents the population size of the respective country. And different countries are shown in different colors. This animation is not super useful yet in that we don't know which continents and countries the different dots represent. I've added a label to the United States, China, and India. 
+
+Note how little is required to define the `gganimate`-specific information! The `{frame_time}` variable changes the title for each frame. The `transition_time()` variable is set to `year`, and the kind of transition is set as 'linear' in `ease_aes()`. I've saved the animation as a gif in the figures folder. 
+We won't have time to go into more detail here but I encourage you to play around with `gganimate`. It's fun, looks cool, and (if done well) makes for a great slide in your next presentation! 
+
+## Shiny apps 
+
+The package [`shiny`](https://shiny.rstudio.com/) makes it relatively easy to create interactive plots that can be hosted online. Here is a [gallery](https://shiny.rstudio.com/gallery/) with some examples. 
 
 ## Defining snippets 
 
@@ -622,52 +661,6 @@ usethis::edit_rstudio_snippets()
 ```
 
 This command opens up a separate tab in RStudio called `r.snippets` so that you can make new snippets and adapt old ones more quickly. Take a look at the snippets that RStudio already comes with. And then, make some new ones! By using snippets you will be able to avoid typing the same code over and over again, and you won't have to memorize as much, too. 
-
-## Making animations 
-
-Animated plots can be a great way to illustrate your data in presentations. The R package `gganimate` lets you do just that. 
-
-Again, we install the package `gganimate` directly from the [github repository](https://github.com/thomasp85/gganimate/). 
-
-```{r eval=FALSE}
-devtools::install_github('thomasp85/gganimate')
-```
-
-Here is an example showing how to use it. 
-
-```{r interval=1/60, results='hold'}
-library("gapminder")
-library("gganimate")
-
-ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour = country)) +
-  geom_point(alpha = 0.7, show.legend = FALSE) +
-  geom_text(data = gapminder %>% filter(country %in% c("United States", "China", "India")), 
-            mapping = aes(label = country),
-            color = "black",
-            vjust = -0.75,
-            show.legend = FALSE) +
-  scale_colour_manual(values = country_colors) +
-  scale_size(range = c(2, 12)) +
-  scale_x_log10(breaks = c(1e3, 1e4, 1e5),
-                labels = c("1,000", "10,000", "100,000")) +
-  theme_classic() +
-  theme(text = element_text(size = 23)) +
-  # Here come the gganimate specific bits
-  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
-  transition_time(year) +
-  ease_aes("linear")
-# anim_save(filename = "figures/life_gdp_animation.gif") # to save the animation
-```
-
-This takes a while to run but it's worth the wait. The plot shows the relationship between GDP per capita (on the x-axis) and life expectancy (on the y-axis) changes across different years for the countries of different continents. The size of each dot represents the population size of the respective country. And different countries are shown in different colors. This animation is not super useful yet in that we don't know which continents and countries the different dots represent. I've added a label to the United States, China, and India. 
-
-Note how little is required to define the `gganimate`-specific information! The `{frame_time}` variable changes the title for each frame. The `transition_time()` variable is set to `year`, and the kind of transition is set as 'linear' in `ease_aes()`. I've saved the animation as a gif in the figures folder. 
-
-We won't have time to go into more detail here but I encourage you to play around with `gganimate`. It's fun, looks cool, and (if done well) makes for a great slide in your next presentation! 
-
-## Shiny apps 
-
-The package [`shiny`](https://shiny.rstudio.com/) makes it relatively easy to create interactive plots that can be hosted online. Here is a [gallery](https://shiny.rstudio.com/gallery/) with some examples. 
 
 ## Additional resources 
 

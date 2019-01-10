@@ -81,7 +81,14 @@ ggsave("02_visualization1_overall.pdf", width = 8, height = 6)
 
 ## What to do next time
 
-- explain the key components of an R Markdown file (have a slide on that)
+- explain the key components of an R Markdown file (have a slide on that before going into RStudio)
+  - yaml header
+  - headings 
+  - text components 
+  - code chunks 
+  - inline code
+  - how to execute code chunks
+  - how to build a document 
 - explain the basic setup of R Studio
 - stress test materials 
   + the figures were missing and it took students a while to download the new materials

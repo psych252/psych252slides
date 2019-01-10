@@ -35,8 +35,8 @@ In this lecture, we will take a look at how to visualize data using the powerful
 
 Let's first load the packages that we need for this chapter.
 
-```{r, message=FALSE}
-library("knitr") # for rendering the RMarkdown file
+```{r message=FALSE}
+library("knitr")     # for rendering the RMarkdown file
 library("tidyverse") # for plotting (and many more cool things we'll discover later)
 ```
 
