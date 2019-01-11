@@ -113,22 +113,24 @@ If we are interested in comparing proportions and we don't have too many data po
 Often we want to compare the data from many different conditions. And sometimes, it's also useful to get a sense for what the individual participant data look like. Here is a plot that achieves both. 
 
 ```{r comparison-plot, fig.cap='Price of differently colored diamonds. Red circles are means, black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
-ggplot(data = df.diamonds[1:150,], mapping = aes(x = color, y = price)) +
+ggplot(data = df.diamonds[1:150, ], mapping = aes(x = color, y = price)) +
   # individual data points (jittered horizontally)
   geom_point(alpha = 0.2,
+             color = "blue",
              position = position_jitter(width = 0.1, height = 0),
-             size = 2) + 
-  # error bars 
+             size = 2) +
+  # error bars
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                color = "black",
-               size = 1) + 
+               size = 1) +
   # means
   stat_summary(fun.y = "mean",
                geom = "point",
                shape = 21,
-               fill = "red",
+               fill = "yellow",
                color = "black",
+               stroke = 2,
                size = 4) 
 ```
 
@@ -198,7 +200,8 @@ ggplot(data = df.diamonds %>% sample_n(1000), mapping = aes(x = color, y = price
                  jitter.height = 0, 
                  jitter.width = 0.04,
                  outlier.color = NA, 
-                 errorbar.draw = FALSE)
+                 errorbar.draw = FALSE)+
+  stat_summary(fun.y = "mean", geom = "point", shape = 21, color = "black", fill = "yellow", size = 4)
 ```
 
 #### Violin plots
@@ -219,9 +222,12 @@ Violin plots don't work well for Likert-scale data (e.g. ratings on a discrete s
 
 ```{r}
 set.seed(1)
-data = data.frame(rating = sample(x = 1:7, prob = c(0.1, 0.4, 0.1, 0.1, 0.2, 0, 0.1), size = 100, replace = T))
+data = data.frame(rating = sample(x = 1:7, prob = c(0.1, 0.4, 0.1, 0.1, 0.2, 0, 0.1), size = 500, replace = T))
+
 ggplot(data = data, mapping = aes(x = "Likert", y = rating)) +
-  geom_violin()
+  geom_point(position = position_jitter(width = 0.05, height = 0.1), alpha = 0.05)+
+  stat_summary(fun.y = "mean", geom = "point", shape = 21, fill = "blue", size = 5)
+  
 ```
 
 This represents a vase much better than it represents the data.
@@ -501,11 +507,16 @@ I strongly recommend to use a relative path to specify where the figure should b
 Here is an example for how to save one of the plots that we've created above. 
 
 ```{r, results = "hold"}
-ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
+p1 = ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
+  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue") +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1)
+print(p1)
+
+p2 = ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1)
 
-ggsave(filename = "figures/diamond_plot.pdf", width = 8, height = 6)
+ggsave(filename = "figures/diamond_plot.pdf", plot = p1, width = 8, height = 6)
 ```
 
 Here, I'm saving the plot in the `figures` folder and it's name is `diamond_plot.pdf`. I also specify the width and height as the plot in inches (which is the default unit). 

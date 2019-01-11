@@ -1,0 +1,89 @@
+---
+title: "03_Visualization2"
+author: "Tobias Gerstenberg"
+date: "1/11/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> It would be helpful if you could pause at your code a little more once we have made our practice plots (for future lectures). Also we covered a lot of types of plots which was good, but it would've helped to focus on the most commonly used ones and ways to edit and customize that - we can explore the other types at home. Thank you!
+
+> I think the lecture about class 3 is way too fast for beginners to follow. I really appreciate the lecture notes that you have prepared and it is very informative. However, if we can save time at the beginning of the lecture (not to talk about the poll results , and you can simply email us the results), then perhaps we will have much more time to talk about the lecture. Another thing that I will appreciate is that if you can talk about more how to interpret a violin/joy plots, this will be awesome, as traditional stats class did not talk about these!
+
+> Like the diversity of graphs we generated
+
+> Great overall. Possibly too much material planned for 1 class. The exercises are super helpful. __Note that our lines in the code don't match yours once we fill in an exercise, so direct references to lines as poiters to where we are don't always work.__
+
+> I thought it was a good class! I think mastering ggplot takes a lot of time and it's kind of endless skillset, so it just takes a ton of practice and iteration
+
+> It's nice to have the in-class Rmd files as far in advance as possible. I like to work through them before class so I can keep up.
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-3.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read_csv("how-was-the-pace-of-3.csv", skip = 12) %>%
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+ggsave("03_visualization2_pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-3.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+ggsave("03_visualization2_overall.pdf", width = 8, height = 6)
+```
+
+## What to do next time
+
+- have bookmarks that allow me to go to the different sections (line numbers get out of sync)
+- maybe focus on fewer plots (the most used ones), and discuss these in more depth 
+- make materials available as early as possible (maybe use github in the future so I can easily tweak things)
+- keep the music! 

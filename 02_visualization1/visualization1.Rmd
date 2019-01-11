@@ -509,7 +509,8 @@ ggplot(data = df.diamonds,
                      fill = cut)) +
   stat_summary(fun.y = "mean",
                geom = "bar",
-               position = position_dodge())
+               position = position_dodge()) +
+  scale_fill_manual(values = c("lightblue", "blue", "lightred", "red", "black"))
 ```
 
 Neato! We've changed the `color` argument to `fill`, and have added the `position = position_dodge()` argument to the `stat_summary()` call. This argument makes it such that the bars are nicely dodged next to each other. Let's add some error bars just for kicks.
@@ -539,7 +540,9 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
 ```{r}
 # make practice plot 3 here
-
+ggplot(diamonds, aes(x = color, y = price, group = clarity, color = clarity))+
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1)+
+  stat_summary(fun.y = "mean", geom = "line", size = 2)
 ```
 
 
@@ -658,6 +661,17 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
 ```{r}
 # make practice plot 4 here
+ggplot(diamonds, aes(x = color, y = price, fill = cut))+
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               position = position_dodge(width = 0.9),
+               color = "black")+
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               position = position_dodge(width = 0.9),
+               color = "black")+
+  facet_grid(rows = vars(clarity)) +
+  theme(axis.text.y = element_text(size = 10))
 ```
 
 
