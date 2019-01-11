@@ -2,11 +2,12 @@
 title: "Class 6"
 author: "Tobias Gerstenberg"
 date: "January 18th, 2019"
-output: html_notebook
-bibliography: ../references.bib
-biblio-style: apalike
-editor_options: 
-  chunk_output_type: inline
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}
@@ -33,26 +34,29 @@ library("DiagrammeR") # for drawing diagrams
 library("tidyverse") # for data wrangling 
 ```
 
+
+
 ## Counting 
 
 Imagine that there are three balls in an urn. The balls are labeled 1, 2, and 3. Let's consider a few possible situations. 
 
 
 ```{r}
+library("arrangements") # fast generators and iterators for permutations, combinations and partitions
 balls = 1:3 # number of balls in urn 
 ndraws = 2 # number of draws
-
-# order doesn't matter, with replacement 
-combinations(balls, ndraws, replace = T)
-
-# order doesn't matter, without replacement 
-combinations(balls, ndraws)
 
 # order matters, without replacement
 permutations(balls, ndraws)
 
 # order matters, with replacement
 permutations(balls, ndraws, replace = T)
+
+# order doesn't matter, with replacement 
+combinations(balls, ndraws, replace = T)
+
+# order doesn't matter, without replacement 
+combinations(balls, ndraws)
 ```
 
 ```{r, fig.cap="Drawing two marbles out of an urn __with__ replacement."}
@@ -251,20 +255,23 @@ digraph dot{
   - formal definition of probability 
 
 - Thinking conditionally 
-  - Simpson's paradox 
   - law of total probability 
   - Bayes' rule 
 
-- Causal Bayesian Networks 
-  - 
+- Bayesian networks 
 
-- Law of large numbers 
-  - Central limit theorem
+- Causal Bayesian Networks:
+  - conditional
+  - hypothetical 
+  - counterfactual 
 
 - Probability distributions 
   - continuous 
   - discrete
-  
+
+- Law of large numbers 
+  - Central limit theorem
+
 
 ## Additional resources 
 

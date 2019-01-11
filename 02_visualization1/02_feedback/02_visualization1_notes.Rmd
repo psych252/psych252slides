@@ -90,6 +90,7 @@ ggsave("02_visualization1_overall.pdf", width = 8, height = 6)
   - how to execute code chunks
   - how to build a document 
 - explain the basic setup of R Studio
+- explain the + operator in `ggplot2`
 - stress test materials 
   + the figures were missing and it took students a while to download the new materials
 - make sure that my .Rmd file doesn't already have the plots pre-loaded 

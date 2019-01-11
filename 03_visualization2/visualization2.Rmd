@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 # Visualization 2
 
-In this lecture, we will lift our ggplot2 skills to the next level! 
+In this lecture, we will lift our `ggplot2` skills to the next level! 
 
 ## Learning objectives 
 
@@ -28,18 +28,21 @@ In this lecture, we will lift our ggplot2 skills to the next level!
 - Saving plots. 
 - Making figure panels. 
 - Debugging. 
+- Making animations. 
+- Defining snippets. 
 
 ## Install and load packages, load data, set theme
 
-Let's install the new packages that you might not have yet. 
+Let's first install the new packages that you might not have yet. 
 
 ```{r, eval=FALSE}
-install.packages(c("ggpol", "gganimate","gapminder", "ggridges", "devtools"))
-devtools::install_github("thomasp85/patchwork")
+install.packages(c("ggpol", "gganimate", "gapminder", "ggridges", "devtools", "png", "gifski"))
+devtools::install_github("thomasp85/patchwork", force=T)
 ```
+
 Note that the `patchwork` package is not on [CRAN](https://cran.r-project.org/) yet (where most of the R packages live), but we can install it directly from the [github repository](https://github.com/thomasp85/patchwork).
 
-Let's first load the packages that we need for this chapter. 
+Now, let's load the packages that we need for this chapter. 
 
 ```{r, message=FALSE}
 library("knitr")     # for rendering the RMarkdown file
@@ -95,9 +98,9 @@ Pie charts have a bad reputation. And there are indeed a number of problems with
 - don't look good when there are many categories 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = "cut", y = stat(count / sum(count)), fill = cut)) +
+ggplot(data = df.diamonds, mapping = aes(x = 1, y = stat(count / sum(count)), fill = cut)) +
   geom_bar() +
-  coord_polar("y", start=0) +
+  coord_polar("y", start = 0) +
   theme_void()
 ```
 
@@ -134,9 +137,8 @@ This plot shows means, bootstrapped confidence intervals, and individual data po
 2. I've used the `position_jitter()` function to jitter the points horizontally.
 3. I've used `shape = 21` for displaying the mean. For this circle shape, we can set a `color` and `fill` (see Figure \@ref(fig:shapes))
 
-```{r shapes, fig.cap="Different shapes that can be used for plotting."}
+```{r shapes, echo=FALSE, fig.cap="Different shapes that can be used for plotting."}
 # plot showing the different shapes 
-
 df.plot = tibble(
   x = rep(1:5, 5),
   y = rep(seq(5, 1, -1), each = 5),
@@ -148,11 +150,15 @@ ggplot(data = df.plot, mapping = aes(x = x, y = y, shape = shape)) +
   geom_point(fill = "red", size = 5, show.legend = F) +
   geom_text(mapping = aes(label = shape), vjust = -1.3, size = 5) +
   scale_shape_manual(values = 1:25) +
-  theme_void()
+  coord_cartesian(clip = "off") + 
+  theme_void()+
+  theme(plot.margin = margin(t = 0.2, unit = "inch"))
 ```
 
 
 Note that I'm only plotting the first 150 entries of the data here by setting `data = df.diamonds[1:150,]` in `gpplot()`. 
+
+#### Boxplots
 
 Another way to get a sense for the distribution of the data is to use box plots.
 
@@ -167,7 +173,7 @@ What do boxplots show? Here adapted from `help(geom_boxplot())`:
 
 Personally, I'm not a big fan of boxplots. Many data sets are consistent with the same boxplot. 
 
-```{r boxplots, fig.cap="Box plot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
+```{r boxplots, echo=FALSE, fig.cap="Box plot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
 include_graphics("figures/boxplots.gif")
 ```
 
@@ -175,7 +181,7 @@ Figure \@ref(fig:boxplots) shows three different distributions that each corresp
 
 If there is not too much data, I recommend to plot jittered individual data points instead. If you do have a lot of data points, then violin plots can be helpful. 
 
-```{r boxplot-violin, fig.cap="Boxplot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
+```{r boxplot-violin, echo=FALSE, fig.cap="Boxplot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
 include_graphics("figures/box_violin.gif")
 ```
 
@@ -194,6 +200,8 @@ ggplot(data = df.diamonds %>% sample_n(1000), mapping = aes(x = color, y = price
                  outlier.color = NA, 
                  errorbar.draw = FALSE)
 ```
+
+#### Violin plots
 
 We make violin plots like so: 
 
@@ -218,6 +226,8 @@ ggplot(data = data, mapping = aes(x = "Likert", y = rating)) +
 
 This represents a vase much better than it represents the data.
 
+#### Joy plots
+
 We can also show the distributions along the x-axis using the `geom_density_ridges()` function from the `ggridges` package. 
 
 ```{r}
@@ -237,7 +247,7 @@ Try to make the plot shown in Figure \@ref(fig:practice-plot1). Here are some ti
 # make the plot here 
 ```
 
-```{r practice-plot1, echo=F, fig.cap='Practice plot 1.'}
+```{r practice-plot1, echo=FALSE, fig.cap='Practice plot 1.'}
 include_graphics("figures/practice_plot1.png")
 ```
 
@@ -266,7 +276,8 @@ Not too bad. Let's add a few tweaks to make it look nicer.
 ```{r}
 ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, z = carat)) +
   stat_summary_2d(fun = "mean", geom = "tile", color = "black") +
-  scale_fill_gradient(low = "white", high = "black")
+  scale_fill_gradient(low = "white", high = "black") +
+  labs(fill = "carat")
 ```
 
 I've added some outlines to the tiles by specifying `color = "black"` in `geom_tile()` and I've changed the scale for the fill gradient. I've defined the color for the low value to be "white", and for the high value to be "black." Finally, I've changed the lower and upper limit of the scale via the `limits` argument. Looks much better now! We see that diamonds with clarity `I1` and color `J` tend to have the highest `carat` values on average. 
@@ -276,19 +287,20 @@ I've added some outlines to the tiles by specifying `color = "black"` in `geom_t
 Line plots are a good choice for temporal data. Here, I'll use the `txhousing` data that comes with the `ggplot2` package. The dataset contains information about housing sales in Texas. 
 
 ```{r}
+# ignore this part for now (we'll learn about data wrangling soon)
 df.plot = txhousing %>% 
   filter(city %in% c("Dallas", "Fort Worth", "San Antonio", "Houston")) %>% 
   mutate(city = factor(city, levels = c("Dallas", "Houston", "San Antonio", "Fort Worth")))
 
 ggplot(data = df.plot, mapping = aes(x = year, y = median, color = city, fill = city)) +
-  stat_summary(fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.2, linetype = 0) +
-  stat_summary(fun.y = mean, geom = "point") +
-  stat_summary(fun.y = mean, geom = "line")
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.2, linetype = 0) +
+  stat_summary(fun.y = "mean", geom = "line") +
+  stat_summary(fun.y = "mean", geom = "point") 
 ```
 
-Ignore the top part where I'm defining `df.plot` for now (we'll look into this in the next class). The other part is fairly straightforward. I've used `stat_summary()` three times: First, to define the confidence interval as a `geom = "ribbon"`. Second, to show the points, and third to show the lines. 
+Ignore the top part where I'm defining `df.plot` for now (we'll look into this in the next class). The other part is fairly straightforward. I've used `stat_summary()` three times: First, to define the confidence interval as a `geom = "ribbon"`. Second, to show the lines connecting the means, and third to put the means as data points points on top of the lines. 
 
-Let's tweak the figure some more to make it look good. 
+Let's tweak the figure some more to make it look real good. 
 
 ```{r}
 df.plot = txhousing %>% 
@@ -316,10 +328,10 @@ ggplot(
                geom = "ribbon",
                alpha = 0.2,
                linetype = 0) +
-  # draw means as points
-  stat_summary(fun.y = "mean", geom = "point") +
   # draw lines connecting the means
   stat_summary(fun.y = "mean", geom = "line") +
+  # draw means as points
+  stat_summary(fun.y = "mean", geom = "point") +
   # add the city names
   geom_text(data = df.text,
             mapping = aes(label = city),
@@ -488,7 +500,7 @@ I strongly recommend to use a relative path to specify where the figure should b
 
 Here is an example for how to save one of the plots that we've created above. 
 
-```{r}
+```{r, results = "hold"}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1)
@@ -567,7 +579,7 @@ print(p)
 
 build = ggplot_build(p)
 df.plot_info = build$data[[1]]
-print(head(df.plot_info))
+dim(df.plot_info) # data frame dimensions
 ```
 
 I've called the `ggplot_build()` function on the ggplot2 object that we saved as `p`. I've then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, `r nrow(df.plot_info)`. That's good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the `fill`, the `value` associated with each row, where each row is being displayed (`x` and `y`), etc.   
@@ -582,7 +594,7 @@ print(p)
 
 build = ggplot_build(p)
 df.plot_info = build$data[[1]]
-print(head(df.plot_info))
+dim(df.plot_info) # data frame dimensions
 ```
 
 Why does this plot look different from the one before? What went wrong here? Notice that the data frame associated with the ggplot2 object has `r nrow(df.plot_info)` rows. So instead of plotting means here, we plotted all the individual data points. So what we are seeing here is just the top layer of many, many layers. 
@@ -593,7 +605,7 @@ Animated plots can be a great way to illustrate your data in presentations. The 
 
 Here is an example showing how to use it. 
 
-```{r interval=1/60, results='hold'}
+```{r interval=1/60, results='hold', cache=TRUE}
 ggplot(gapminder, mapping = aes(x = gdpPercap, y = lifeExp, size = pop, colour = country)) +
   geom_point(alpha = 0.7, show.legend = FALSE) +
   geom_text(data = gapminder %>% filter(country %in% c("United States", "China", "India")), 
