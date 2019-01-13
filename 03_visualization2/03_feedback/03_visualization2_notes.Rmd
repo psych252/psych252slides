@@ -48,7 +48,8 @@ read_csv("what-did-you-like-about-3.csv") %>%
 ### PollEverywhere results 
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read_csv("how-was-the-pace-of-3.csv", skip = 12) %>%
+df.pace = read.csv("how-was-the-pace-of-3.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
   set_names(c("response", "date")) %>% 
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
@@ -87,3 +88,4 @@ ggsave("03_visualization2_overall.pdf", width = 8, height = 6)
 - maybe focus on fewer plots (the most used ones), and discuss these in more depth 
 - make materials available as early as possible (maybe use github in the future so I can easily tweak things)
 - keep the music! 
+- maybe add another practice block 

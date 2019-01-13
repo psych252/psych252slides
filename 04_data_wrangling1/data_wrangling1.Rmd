@@ -8,20 +8,18 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-bibliography: ../references.bib
-biblio-style: apalike
 ---
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  # collapse = TRUE,
   comment = "#>")
 ```
 
 # Data wrangling 1 
 
-In this lecture, we will take a look at how to wrangle data using the [dplyr](https://ggplot2.dplyr.org/) package. Again, getting our data into shape is something we'll need to do throughout the course, so it's worth spending some time getting a good sense for how this works. The nice thing about R is that (thanks to the tidyverse), both visualization and data wrangling are particularly powerful. 
+In this lecture, we will take a look at how to wrangle data using the [dplyr](https://ggplot2.dplyr.org/) package. Again, getting our data into shape is something we'll need to do throughout the course, so it's worth spending some time getting a good sense for how this works. The nice thing about R is that (thanks to the `tidyverse`), both visualization and data wrangling are particularly powerful. 
 
 ## Learning objectives 
 
@@ -30,11 +28,18 @@ In this lecture, we will take a look at how to wrangle data using the [dplyr](ht
 - See different ways for getting a sense of one's data. 
 - Master key data manipulation verbs from the `dplyr` package (incl. `filter()`, `rename()`, `select()`, `mutate()`, and `arrange()`)
 
+## Install packages 
+
+```{r install-packages, eval=FALSE}
+install.packages(c("skimr", "visdat", "summarytools"))
+```
+
+
 ## Load packages 
 
 Let's first load the packages that we need for this chapter. 
 
-```{r, message=FALSE}
+```{r load-packages, message=FALSE}
 library("knitr") # for rendering the RMarkdown file
 library("tidyverse") # for data wrangling
 ```
@@ -62,7 +67,7 @@ kable(x = tibble(name, example),
 
 For characters you can either use `"` or `'`. R has a number of functions to convert a variable from one mode to another. `NA` is used for missing values.
 
-```{r}
+```{r as-character}
 tmp1 = "1" # we start with a character
 str(tmp1) 
 
@@ -105,7 +110,7 @@ kable(x = tibble(name, description),
 
 We build vectors using the concatenate function `c()`, and we use `[]` to access one or more elements of a vector.  
 
-```{r}
+```{r vectors}
 numbers = c(1, 4, 5) # make a vector
 numbers[2] # access the second element 
 numbers[1:2] # access the first two elements
@@ -119,7 +124,7 @@ In R (unlike in Python for example), 1 refers to the first element of a vector (
 
 We build a matrix using the `matrix()` function, and we use `[]` to access its elements. 
 
-```{r}
+```{r matrix}
 matrix = matrix(data = c(1, 2, 3, 4, 5, 6), nrow = 3, ncol = 2)
 matrix # the full matrix
 matrix[1, 2] # element in row 1, column 2
@@ -136,9 +141,9 @@ Arrays work the same was as matrices with data of more than two dimensions.
 
 #### Data frame 
 
-```{r}
+```{r data-frame}
 df = tibble(participant_id = c(1, 2, 3),
-                participant_name = c("Leia", "Luke", "Darth")) # make the data frame 
+            participant_name = c("Leia", "Luke", "Darth")) # make the data frame 
 
 df # the complete data frame
 df[1, 2] # a single element using numbers 
@@ -156,16 +161,18 @@ Here we used the `tibble()` function to create the data frame. A `tibble` is alm
 
 #### Lists 
 
-```{r}
+```{r lists}
 l.mixed = list(number = 1, 
                character = "2", 
                factor = factor(3), 
                matrix = matrix(1:4, ncol = 2),
                df = tibble(x = c(1, 2), y = c(3, 4)))
 l.mixed
+
+# three different ways of accessing a list
 l.mixed$character
 l.mixed[['character']]
-l.mixed[[2]] # three different ways of accessing a list
+l.mixed[[2]] 
 ```
 
 Lists are a very flexible data format. You can put almost anything in a list.
@@ -187,7 +194,7 @@ kable(
 
 #### if-then {#if-else}
 
-```{r}
+```{r if-then}
 number = 3
 if(number == 1){
   print("The number is 1.")
@@ -198,9 +205,17 @@ if(number == 1){
 }
 ```
 
+As a shorthand version, we can also use the `ifelse()` function like so: 
+
+```{r ifelse}
+number = 3
+ifelse(test = number == 1, yes = "correct", no = "false")
+```
+
+
 #### for loop
 
-```{r}
+```{r for-loop}
 
 sequence = 1:10
 
@@ -211,7 +226,7 @@ for(i in 1:length(sequence)){
 
 #### while loop 
 
-```{r}
+```{r while-loop}
 number = 1 
 
 while(number <= 10){
@@ -223,13 +238,13 @@ while(number <= 10){
 
 ### Functions 
 
-```{r}
-fun.addition = function(a, b){
+```{r functions}
+fun.add_two_numbers = function(a, b){
   x = a + b
   return(str_c("The result is ", x))
 }
 
-fun.addition(1,2)
+fun.add_two_numbers(1,2)
 
 ```
 
@@ -286,11 +301,51 @@ kable(x = tibble(name, description),
 include_graphics("figures/magrittr.png")
 ```
 
-The pipe operator `%>%` is a special operator introduced in the `magrittr` package. It is used heavily in the tidyverse. The basic idea is simple: this operator allows us to "pipe" several functions into one long chain. 
+The pipe operator `%>%` is a special operator introduced in the `magrittr` package. It is used heavily in the tidyverse. The basic idea is simple: this operator allows us to "pipe" several functions into one long chain that matches the order in which we want to do stuff.  
 
-The logic is the following: 
+Abstractly, the pipe operator does the following: 
 
-```{r}
+> `f(x)` can be rewritten as `x %>% f()`
+
+For example, in standard R, we would write: 
+
+```{r pipe1}
+x = 1:3
+
+# standard R 
+sum(x)
+```
+
+With the pipe, we can rewrite this as: 
+
+```{r pipe2}
+x = 1:3
+
+# with the pipe  
+x %>% sum()
+```
+
+This doesn't seem super useful yet, but just hold on a little longer. 
+
+> `f(x, y)` can be rewritten as `x %>% f(y)`
+
+So, we could rewrite the following standard R code ... 
+
+```{r pipe3}
+# rounding pi to 6 digits, standard R 
+round(pi, digits = 6)
+```
+
+... by using the pipe: 
+
+```{r pipe4}
+# rounding pi to 6 digits, standard R 
+pi %>% round(digits = 6)
+```
+
+Here is another example: 
+
+```{r pipe5}
 a = 3
 b = 4
 sum(a, b) # standard way 
@@ -299,7 +354,7 @@ a %>% sum(b) # the pipe way
 
 The pipe operator inserts the result of the previous computation as a first element into the next computation. So, `a %>% sum(b)` is equivalent to `sum(a, b)`. We can also specify to insert the result at a different position via the `.` operator. For example:  
 
-```{r}
+```{r pipe6}
 a = 1
 b = 10 
 b %>% seq(from = a, to = .)
@@ -307,11 +362,24 @@ b %>% seq(from = a, to = .)
 
 Here, I used the `.` operator to specify that I woud like to insert the result of `b` where I've put the `.` in the `seq()` function. 
 
-So far, the pipe operator may not seem particularly useful. One of the great features of the operator though is that it allows us to write code in an intuitive way that fits the order in which we would like to do stuff. 
+> `f(x, y)` can be rewritten as `y %>% f(x, .)`
 
-For example, consider that we want to calculate the root mean squared error between prediction and data. In base R, we would do the following. 
+Still not to thrilled about the pipe? We can keep going though (and I'm sure you'll be convinced eventually.)
 
-```{r}
+> `h(g(f(x)))` can be rewritten as `x %>% f() %>% g() %>% h()`
+
+For example, consider that we want to calculate the root mean squared error (RMSE) between prediction and data. 
+
+Here is how the RMSE is defined: 
+
+$$
+\text{RMSE} = \sqrt\frac{\sum_{i=1}^n(\hat{y}_i-y_i)^2}{n}
+$$
+
+
+In base R, we would do the following. 
+
+```{r rmse-standard}
 data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
@@ -322,31 +390,63 @@ print(rmse)
 
 Using the pipe operator makes the operation more intuitive: 
 
-```{r}
+```{r rmse-pipe}
 data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
 # calculate root mean squared error the pipe way 
-rmse = (data-prediction)^2 %>% #  first we calculate the squared difference 
-  mean() %>% # then we take the mean
-  sqrt() %>% # and then the square root
-  print() # and finally we print the result
+rmse = (data-prediction)^2 %>% 
+  mean() %>% 
+  sqrt() %>% 
+  print() 
 ```
 
 First, we calculate the squared error, then we take the mean, then the square root, and then print the result. 
 
 The pipe operator `%>%` is similar to the `+` used in `ggplot2`. It allows us to take step-by-step actions in a way that fits the causal ordering of how we want to do things. 
 
+> __Tip__: The keyboard shortcut for the pipe operator is:   
+> `cmd/ctrl + shift + m`   
+> __Definitely learn this one__ -- we'll use the pipe a lot!! 
+
+> __Tip__: Code is generally easier to read when the pipe `%>%` is at the end of a line (just like the `+` in `ggplot2`).
+
+A key advantage of using the pipe is that you don't have to save intermediate computations as new variables and this help to keep your environment nice and clean! 
+
+#### Practice 1 
+
+Let's practice the pipe operator. 
+
+```{r pipe-practice1}
+# some numbers
+x = seq(from = 1, to = 5, by = 1)
+```
+
+```{r pipe-practice2}
+# standard way
+log(x)
+
+# the pipe way (write your code underneath)
+
+```
+
+```{r pipe-practice3}
+# standard way
+mean(round(sqrt(x), digits = 2))
+
+# the pipe way (write your code underneath)
+
+```
+
 ## Looking at data
 
 The package `dplyr` which we loaded as part of the tidyverse, includes a data set with information about starwars characters. Let's store this as  `df.starwars`. 
 
-```{r}
+```{r starwars}
 df.starwars = starwars
 ```
 
 > Note: Unlike in other languages (such as Python or Matlab), a `.` in a variable name has no special meaning and can just be used as part of the name. I've used `df` here to indicate for myself that this variable is a data frame. 
-
 Before visualizing the data, it's often useful to take a quick direct look at the data. 
 
 There are several ways of taking a look at data in R. Personally, I like to look at the data within RStudio's data viewer. To do so, you can: 
@@ -365,7 +465,7 @@ Here are some useful functions:
 
 Without any extra arguments specified, `head()` shows the top six rows of the data. 
 
-```{r}
+```{r head}
 head(df.starwars)
 ```
 
@@ -373,7 +473,7 @@ head(df.starwars)
 
 `glimpse()` is helpful when the data frame has many columns. The data is shown in a transposed way with columns as rows. 
 
-```{r}
+```{r glimpse}
 glimpse(df.starwars)
 ```
 
@@ -381,7 +481,7 @@ glimpse(df.starwars)
 
 `distinct()` shows all the distinct values for a character or factor column. 
 
-```{r}
+```{r distinct}
 df.starwars %>% 
   distinct(name)
 ```
@@ -390,47 +490,26 @@ df.starwars %>%
 
 `count()` shows a count of all the different distinct values in a column. 
 
-```{r}
+```{r count}
 df.starwars %>% 
   count(gender)
 ```
 
 It's possible to do grouped counts by combining several variables.
 
-```{r}
+```{r count-groups}
 df.starwars %>% 
   count(species, gender) %>% 
   head(n = 10)
 ```
 
-<!-- By default, `count()` results in a data frame that only lists combinations that actually exist. If you'd like to have all the values, the following code will do:  -->
-
-<!-- ```{r} -->
-<!-- df.starwars %>%  -->
-<!--   count(species, gender) %>% -->
-<!--   complete(species, gender, fill = list(n = 0)) %>%  -->
-<!--   head(n = 10) -->
-<!-- ``` -->
-
-<!-- Here, I've used the `complete()` function to generate all the combinations of `species` and `gender`, and told the function to fill in the value 0 for those combinations that don't exist.   -->
-
-<!-- You can also add counts to a data frame.  -->
-
-<!-- ```{r} -->
-<!-- df.starwars %>%  -->
-<!--   add_count(species) %>%  -->
-<!--   head() -->
-<!-- ``` -->
-
 ### `datatable()`
 
 For RMardkown files specifically, we can use the `datatable()` function from the `DT` package to get an interactive table widget.
 
-```{r}
-# install.packages("DT")
-library("DT")
+```{r datatable}
 df.starwars %>% 
-  datatable()
+  DT::datatable()
 ```
 
 ### Other tools for taking a quick look at data 
@@ -439,8 +518,7 @@ df.starwars %>%
 
 The `vis_dat()` function from the `visdat` package, gives a visual summary that makes it easy to see the variable types and whether there are missing values in the data. 
 
-```{r}
-# install.packages("visdat")
+```{r visdat}
 visdat::vis_dat(df.starwars)
 ```
 
@@ -454,7 +532,7 @@ This is why, in general, I recommend to load the tidyverse package last (since i
 
 The `skim()` function from the `skimr` package provides a nice overview of the data, separated by variable types. 
 
-```{r}
+```{r skim}
 # install.packages("skimr")
 skimr::skim(df.starwars)
 ```
@@ -463,8 +541,7 @@ skimr::skim(df.starwars)
 
 The `summarytools` package is another great package for taking a look at the data. It renders a nice html output for the data frame including a lot of helpful information. You can find out more about this package [here](https://cran.r-project.org/web/packages/summarytools/vignettes/Introduction.html).
 
-```{r eval=FALSE}
-# install.packages("summarytools")
+```{r dfsummary, eval=FALSE}
 df.starwars %>% 
   select_if(negate(is.list)) %>% # this removes all list columns (we'll learn about this later)
   summarytools::dfSummary() %>% 
@@ -479,7 +556,7 @@ Once we've taken a look at the data, the next step would be to visualize relatio
 
 Personally, I like to name things in a (pretty) consistent way so that I have no trouble finding stuff even when I open up a project that I haven't worked on for a while. I try to use the following naming conventions: 
 
-```{r, echo=FALSE}
+```{r naming, echo=FALSE}
 name = c(
   "df.thing",
   "l.thing",
@@ -506,14 +583,14 @@ We use the functions in the package `dplyr` to manipulate our data.
 
 `filter()` lets us apply logical (and other) operators (see Table \@ref(tab:operators)) to subset the data. Here, I've filtered out the male characters. 
 
-```{r}
+```{r filter1}
 df.starwars %>% 
   filter(gender == 'male')
 ```
 
 We can combine multiple conditions in the same call. Here, I've filtered out male characters, whose height is greater than the median height (i.e. they are in the top 50 percentile), and whose mass was not `NA`. 
 
-```{r}
+```{r filter2}
 df.starwars %>% 
   filter(gender == 'male',
          height > median(height, na.rm = T),
@@ -524,7 +601,7 @@ Many functions like `mean()`, `median()`, `var()`, `sd()`, `sum()` have the argu
 
 You can use `,` and `&` interchangeably in `filter()`. Make sure to use parentheses when combining several logical operators to indicate which logical operation should be performed first: 
 
-```{r}
+```{r filter3}
 df.starwars %>% 
   filter((skin_color %in% c("dark", "pale") | gender == "hermaphrodite") & height > 170)
 ```
@@ -535,111 +612,100 @@ The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or 
 
 `rename()` renames column names.
 
-```{r}
+```{r rename1}
 df.starwars %>% 
   rename(person = name,
          mass_kg = mass)
 ```
 
+The new variable names goes on the LHS of the`=` sign, and the old name on the RHS.  
+
 To rename all variables at the same time use `set_names()`: 
 
-```{r}
+```{r rename2}
 df.starwars %>%
-  set_names(letters[1:ncol(.)]) %>% #renamed all variables to letters: a, b, ...
-  head()
+  set_names(letters[1:ncol(.)])  # renamed all variables to letters: a, b, ...
 ```
 
 ### select() 
 
 `select()` allows us to select a subset of the columns in the data frame. 
 
-```{r}
+```{r select1}
 df.starwars %>% 
   select(name, height, mass)
 ```
 
 We can select multiple columns using the `(from:to)` syntax: 
 
-```{r}
+```{r select2}
 df.starwars %>%  
-  select(name:birth_year) %>%  #from name to birth_year
-  head()
+  select(name:birth_year) # from name to birth_year
 ```
 
 Or use a variable for column selection: 
 
-```{r}
+```{r select3}
 columns = c("name", "height", "species")
 df.starwars %>% 
-  select(one_of(columns)) %>% # useful when using a variable for column selection
-  head()
+  select(one_of(columns)) # useful when using a variable for column selection
 ```
 
 We can also _deselect_ (multiple) columns:
 
-```{r}
+```{r select4}
 df.starwars %>% 
   select(-name, -(birth_year:vehicles))
 ```
 
 And select columns by partially matching the column name:
 
-```{r}
+```{r select5}
 df.starwars %>% 
-  select(contains("_")) %>% # every column that contains the character "_"
-  head()
+  select(contains("_")) # every column that contains the character "_"
+```
 
+```{r select6}
 df.starwars %>% 
-  select(starts_with("h")) %>% # every column that starts with an "h"
-  head()
+  select(starts_with("h")) # every column that starts with an "h"
 ```
 
 We can also use `select()` to reorder the columns: 
 
-```{r}
+```{r select7}
+# useful trick for changing the column order, now eye_color is at the beginning
 df.starwars %>% 
-  select(eye_color, everything()) %>% # useful trick for changing the column order, now eye_color is at the beginning
-  head()
+  select(eye_color, everything())
 ```
 
 Here, I've moved the `eye_color` column to the beginning of the data frame. `everything()` is a helper function which selects all the columns. 
 
-```{r}
+```{r select8}
 df.starwars %>% 
-  select(-eye_color, everything(), eye_color) %>% # move eye_color to the end
-  head()
+  select(-eye_color, everything(), eye_color) # move eye_color to the end
 ```
 
 Here, I've moved `eye_color` to the end. Note that I had to deselect it first. 
 
 We can select columns based on their data type using `select_if()`. 
 
-```{r}
+```{r select9}
 df.starwars %>% 
-  select_if(is.numeric) %>% # just select numeric columns
-  head()
+  select_if(is.numeric) # just select numeric columns
 ```
 
 The following selects all columns that are not numeric: 
 
-```{r}
+```{r select10}
 df.starwars %>% 
-  select_if(funs(!is.numeric(.))) %>% # selects all columns that are not numeric 
-  head()
+  select_if(funs(!is.numeric(.))) # selects all columns that are not numeric 
 ```
 
 Note that I needed to use the `funs()` helper function here. 
 
-It's also possible to select columns based on logical criteria. For example, this bit of code selects columns whose mean value is greater than 90. 
+We can rename some of the columns using `select()` like so: 
 
-```{r}
-df.starwars %>% 
-  select_if(funs(is.numeric(.) & mean(., na.rm = T) > 90))
-```
-
-We can rename some of the columns using select like so: 
-
-```{r}
+```{r select11}
 df.starwars %>% 
   select(person = name, height, mass_kg = mass)
 ```
@@ -650,10 +716,10 @@ For more details, take a look at the help file for `select()`, and this [this gr
 
 `mutate()` is used to change exisitng columns or make new ones. 
 
-```{r}
+```{r mutate1}
 df.starwars %>% 
   mutate(height = height / 100, # to get height in meters
-    bmi = mass / (height^2)) %>% # bmi = kg / (m^2)
+         bmi = mass / (height^2)) %>% # bmi = kg / (m^2)
   select(name, height, mass, bmi)
 ```
 
@@ -661,7 +727,7 @@ Here, I've calculated the bmi for the different starwars characters. I first mut
 
 A useful helper function for `mutate()` is `ifelse()` which is a shorthand for the if-else control flow (Section \@ref(if-else)). Here is an example: 
 
-```{r}
+```{r mutate2}
 df.starwars %>% 
   mutate(height_categorical = ifelse(height > median(height, na.rm = T), 'tall', 'short')) %>% 
   select(name, contains("height"))
@@ -670,11 +736,12 @@ df.starwars %>%
 `ifelse()` works in the following way: we first specify the condition, then what should be returned if the condition is true, and finally what should be returned otherwise. The more verbose version of the statement above would be: `ifelse(test = height > median(height, na.rm = T), yes = 'tall', no = 'short')` 
 
 There are a number of variants of the `mutate()` function. Let's take a look at them. 
+
 #### mutate_at()
 
 With `mutate_at()`, we can mutate several columns at the same time. 
 
-```{r}
+```{r mutate-at1}
 df.starwars %>% 
   mutate_at(vars(height, mass, birth_year), funs(scale))
 ```
@@ -689,7 +756,7 @@ Within `vars()`, we can use the same helper functions for selecting columns that
 
 We can also use names to create new columns:
 
-```{r}
+```{r mutate-at2}
 df.starwars %>% 
   mutate_at(vars(height, mass, birth_year), funs(z = scale)) %>% 
   select(name, contains("height"), contains("mass"), contains("birth_year"))
@@ -699,7 +766,7 @@ As we can see, new columns were created with `_z` added to the end of the column
 
 And we can apply several functions at the same time. 
 
-```{r}
+```{r mutate-at3}
 df.starwars %>% 
   mutate_at(vars(height, mass, birth_year),
             funs(z = scale,
@@ -713,35 +780,34 @@ Here, I've created z-scored and centered (i.e. only subtracted the mean but didn
 
 `mutate_all()` is used to mutate all columns in a data frame.  
 
-```{r}
+```{r mutate-all-1}
 df.starwars %>% 
   select(height, mass) %>%
-  mutate_all(funs(as.character)) #transform all columns to characters
+  mutate_all(funs(as.character)) # transform all columns to characters
 ```
 
 Here, I've selected some columns first, and then changed the mode to character in each of them. 
 
 Like we've seen with `mutate_at()`, you can add a name in the `mutate_all()` function call to make new columns instead of replacing the existing ones. 
 
-```{r}
+```{r mutate-all-2}
 df.starwars %>% 
   select(height, mass) %>%
-  mutate_all(funs(char = as.character)) #make new character columns
+  mutate_all(funs(char = as.character)) # make new character columns
 ```
-
 
 #### mutate_if()
 
 `mutate_if()` can sometimes come in handy. For example, the following code changes all the numeric columns to character columns:
 
-```{r}
+```{r mutate-if1}
 df.starwars %>% 
   mutate_if(is.numeric, as.character)
 ```
 
 Or we can round all the numeric columns: 
 
-```{r}
+```{r mutate-if2}
 df.starwars %>% 
   mutate_if(is.numeric, round)
 ```
@@ -750,7 +816,7 @@ df.starwars %>%
 
 `arrange()` allows us to sort the values in a data frame by one or more column entries. 
 
-```{r}
+```{r arrange}
 df.starwars %>% 
   arrange(hair_color, desc(height))
 ```
@@ -779,8 +845,6 @@ Here, I've sorted the data frame first by `hair_color`, and then by `height`. I'
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r}
+```{r session}
 sessionInfo()
 ```
-
-## References 

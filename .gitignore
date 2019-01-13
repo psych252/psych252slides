@@ -8,3 +8,4 @@
 *.utf8.md
 *.knit.md
 .Rproj.user
+/piazza-bot/*

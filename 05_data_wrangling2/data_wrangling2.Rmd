@@ -8,14 +8,12 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-bibliography: ../references.bib
-biblio-style: apalike
 ---
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
 knitr::opts_chunk$set(
-  collapse = TRUE,
+  # collapse = TRUE,
   comment = "#>")
 ```
 
@@ -98,7 +96,7 @@ head(df.data, n = 10)
 ```
 
 ```{r}
-tmp = df.data %>%   
+df.data %>%   
   group_by(participant) %>% # group by participants
   mutate(judgment_zscored = scale(judgment)) %>% # z-score data on individual participant level 
   ungroup() %>% # ungroup the data frame
@@ -577,10 +575,6 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
   - [Two-table verbs](https://dplyr.tidyverse.org/articles/two-table.html)
   - [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
 
-### Homework
-
-- [assignment](https://beanumber.github.io/sds192/hw/hw_babynames.html)
-  
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 

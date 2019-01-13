@@ -95,7 +95,8 @@ ggsave("02_visualization1_overall.pdf", width = 8, height = 6)
   + the figures were missing and it took students a while to download the new materials
 - make sure that my .Rmd file doesn't already have the plots pre-loaded 
 - we only managed to get until section "Adding error bars" (incl. practice 2)
-
+- name the different code chunks so that it's easier for students to follow where we are (line numbers change because of the exercises)
+- take some more time going through the solutions of the in-class practice plots 
 
 
 
