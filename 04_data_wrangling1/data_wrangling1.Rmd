@@ -130,7 +130,7 @@ matrix # the full matrix
 matrix[1, 2] # element in row 1, column 2
 matrix[1, ] # all elements in the first row 
 matrix[ , 1] # all elements in the first column 
-matrix[-1 , ] # a matrix which excludes the first row
+matrix[-1, ] # a matrix which excludes the first row
 ```
 
 Note how we use an empty placeholder to indicate that we want to select all the values in a row or column, and `-` to indicate that we want to remove something.
@@ -182,13 +182,14 @@ Lists are a very flexible data format. You can put almost anything in a list.
 Table \@ref(tab:operators) shows the comparison operators that result in logical outputs. 
 
 ```{r operators, echo=FALSE}
-operators = c("`==`", "`!=`", "`>, <`", "`>=, <=`", "`&, |, !`", "`%in%`")
+operators = c("`==`", "`!=`", "`>`, `<`", "`>=`, `<=`", "`&`, `|`, `!`", "`%in%`")
 explanation = c("equal to", "not equal to", "greater/less than", "greater/less than or equal", "logical operators: and, or, not", "checks whether an element is in an object")
 kable(
   tibble(symbol = operators, name = explanation), 
   caption = "Table of comparison operators that result in boolean (TRUE/FALSE) outputs.", 
   booktabs = TRUE)
 ```
+
 
 ### Control flow 
 
@@ -358,6 +359,7 @@ The pipe operator inserts the result of the previous computation as a first elem
 a = 1
 b = 10 
 b %>% seq(from = a, to = .)
+
 ```
 
 Here, I used the `.` operator to specify that I woud like to insert the result of `b` where I've put the `.` in the `seq()` function. 
@@ -647,6 +649,7 @@ Or use a variable for column selection:
 
 ```{r select3}
 columns = c("name", "height", "species")
+
 df.starwars %>% 
   select(one_of(columns)) # useful when using a variable for column selection
 ```
@@ -834,7 +837,6 @@ Compute the body mass index for `male` characters who are `human`.
 
 ```{r practice2}
 # write your code here 
-
 ```
 
 ## Additional resources 
