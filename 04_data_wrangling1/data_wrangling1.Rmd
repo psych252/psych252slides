@@ -31,7 +31,7 @@ In this lecture, we will take a look at how to wrangle data using the [dplyr](ht
 ## Install packages 
 
 ```{r install-packages, eval=FALSE}
-install.packages(c("skimr", "visdat", "summarytools"))
+install.packages(c("skimr", "visdat", "summarytools", "DT"))
 ```
 
 
@@ -53,7 +53,7 @@ To test your knowledge of the R basics, I recommend taking the free interactive 
 Variables in R can have different modes. Table \@ref(tab:modes) shows the most common ones. 
 
 ```{r modes, echo=FALSE}
-name = c("numeric", "character", "logical", 'not available')
+name = c("numeric", "character", "logical", "not available")
 example = c(
   "`1`, `3`, `48`",
   "`'Steve'`, `'a'`, `'78'`",
@@ -375,7 +375,7 @@ Here is how the RMSE is defined:
 $$
 \text{RMSE} = \sqrt\frac{\sum_{i=1}^n(\hat{y}_i-y_i)^2}{n}
 $$
-
+where $\hat{y}_i$ denotes the prediction, and $y_i$ the actually observed value.
 
 In base R, we would do the following. 
 
@@ -384,7 +384,7 @@ data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
 # calculate root mean squared error
-rmse = sqrt(mean((data-prediction)^2))
+rmse = sqrt(mean((prediction-data)^2))
 print(rmse)
 ```
 
@@ -395,7 +395,7 @@ data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
 # calculate root mean squared error the pipe way 
-rmse = (data-prediction)^2 %>% 
+rmse = (prediction-data)^2 %>% 
   mean() %>% 
   sqrt() %>% 
   print() 
@@ -822,6 +822,20 @@ df.starwars %>%
 ```
 
 Here, I've sorted the data frame first by `hair_color`, and then by `height`. I've used the `desc()` function to sort `height` in descending order. Bail Prestor Organa is the tallest black character in starwars. 
+
+### Practice 2 
+
+Compute the body mass index for `male` characters who are `human`.
+
+- select only the columns you need 
+- filter out only the rows you need 
+- make the new variable with the body mass index 
+- arrange the data frame starting with the highest body mass index 
+
+```{r practice2}
+# write your code here 
+
+```
 
 ## Additional resources 
 
