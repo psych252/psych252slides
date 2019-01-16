@@ -615,7 +615,7 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 ### Cheatsheets 
 
 - [wrangling data](figures/data-wrangling.pdf) --> wrangling data using `dplyr` and `tidyr`
-- [importing data & ](figures/data-import.pdf) --> importing and saving data with `readr`
+- [importing & saving data](figures/data-import.pdf) --> importing and saving data with `readr`
 
 ### Data camp courses 
 
