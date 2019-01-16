@@ -494,7 +494,7 @@ $(document).ready(function () {
 <li>Learn how to group and summarize data using <code>group_by()</code> and <code>summarize()</code>.</li>
 <li>Learn how to deal with missing data entries <code>NA</code>.</li>
 <li>Get familiar with how to reshape data using <code>gather()</code>, <code>spread()</code>, <code>separate()</code> and <code>unite()</code>.</li>
-<li>Learn the basics of how to join multiple data frames with a focus on <code>join_left()</code>.</li>
+<li>Learn the basics of how to join multiple data frames with a focus on <code>left_join()</code>.</li>
 <li>Master how to <em>read</em> and <em>save</em> data.</li>
 </ul>
 </div>
@@ -572,21 +572,21 @@ df.summarize =<span class="st"> </span><span class="kw">tibble</span>(
 <pre><code># A tibble: 15 x 2
    participant judgment
          &lt;int&gt;    &lt;int&gt;
- 1           1       54
- 2           1       16
- 3           1       24
- 4           1       45
- 5           1       85
- 6           2        9
- 7           2       23
- 8           2       18
- 9           2       45
-10           2       70
-11           3       72
-12           3       57
-13           3       18
-14           3       77
-15           3       27</code></pre>
+ 1           1       92
+ 2           1        9
+ 3           1       33
+ 4           1        1
+ 5           1       32
+ 6           2       82
+ 7           2       53
+ 8           2       88
+ 9           2       76
+10           2       71
+11           3       28
+12           3       65
+13           3       73
+14           3       70
+15           3       21</code></pre>
 <pre class="sourceCode r"><code class="sourceCode r">df.summarize <span class="op">%&gt;%</span><span class="st">   </span>
 <span class="st">  </span><span class="kw">group_by</span>(participant) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># group by participants</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">judgment_zscored =</span> <span class="kw">scale</span>(judgment)) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># z-score data on individual participant level </span>
@@ -595,16 +595,16 @@ df.summarize =<span class="st"> </span><span class="kw">tibble</span>(
 <pre><code># A tibble: 10 x 3
    participant judgment judgment_zscored
          &lt;int&gt;    &lt;int&gt;            &lt;dbl&gt;
- 1           1       54          0.338  
- 2           1       16         -1.06   
- 3           1       24         -0.764  
- 4           1       45          0.00735
- 5           1       85          1.48   
- 6           2        9         -0.977  
- 7           2       23         -0.407  
- 8           2       18         -0.611  
- 9           2       45          0.488  
-10           2       70          1.51   </code></pre>
+ 1           1       92           1.64  
+ 2           1        9          -0.685 
+ 3           1       33          -0.0112
+ 4           1        1          -0.909 
+ 5           1       32          -0.0393
+ 6           2       82           0.599 
+ 7           2       53          -1.57  
+ 8           2       88           1.05  
+ 9           2       76           0.150 
+10           2       71          -0.225 </code></pre>
 <p>First, I’ve generated some random data using the repeat function <code>rep()</code> for making a <code>participant</code> column, and the <code>sample()</code> function to randomly choose values from a range between 0 and 100 with replacement. (We will learn more about these functions later when we look into how to simulate data.) I’ve then grouped the data by participant, and used the scale function to z-score the data.</p>
 <blockquote>
 <p><strong>TIP</strong>: Don’t forget to <code>ungroup()</code> your data frame. Otherwise, any subsequent operations are applied per group.</p>
@@ -733,7 +733,7 @@ df.reshape =<span class="st"> </span><span class="kw">tibble</span>(
 </ol>
 <p><code>spread()</code> is the counterpart of <code>gather()</code>. We can use it to go from a data frame that is in <em>long</em> format, to a data frame that’s in <em>wide</em> format, like so:</p>
 <pre class="sourceCode r"><code class="sourceCode r">df.reshape.wide =<span class="st"> </span>df.reshape.long <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">spread</span>(index, rating) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">spread</span>(<span class="dt">key =</span> index, <span class="dt">value =</span> rating) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">print</span>()</code></pre>
 <pre><code># A tibble: 2 x 4
   participant observation_1 observation_2 observation_3
@@ -763,7 +763,7 @@ df.reshape2 =<span class="st"> </span><span class="kw">tibble</span>(
 <pre class="sourceCode r"><code class="sourceCode r">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">gather</span>(<span class="dt">key =</span> <span class="st">&quot;index&quot;</span>, <span class="dt">value =</span> <span class="st">&quot;value&quot;</span>, <span class="op">-</span>participant) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">separate</span>(<span class="dt">col =</span> index, <span class="dt">into =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>), <span class="dt">sep =</span> <span class="st">&quot;_&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">spread</span>(index, value) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">spread</span>(<span class="dt">key =</span> index, <span class="dt">value =</span> value) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">mutate_at</span>(<span class="kw">vars</span>(order, observation), <span class="kw">funs</span>(as.numeric)) <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">select</span>(participant, order, stimulus, <span class="dt">rating =</span> observation)</code></pre>
 <pre><code># A tibble: 6 x 4
@@ -1265,6 +1265,7 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5,�
 <li><a href="https://dplyr.tidyverse.org/articles/two-table.html">Two-table verbs</a></li>
 <li><a href="http://stat545.com/bit001_dplyr-cheatsheet.html">Tutorial by Jenny Bryan</a></li>
 </ul></li>
+<li><a href="https://github.com/gadenbuie/tidyexplain">tidyexplain</a>: Animations that illustrate how <code>gather()</code>, <code>spread()</code>, <code>left_join()</code>, etc. work</li>
 </ul>
 </div>
 </div>

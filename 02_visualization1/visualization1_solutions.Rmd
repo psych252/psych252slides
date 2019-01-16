@@ -1,0 +1,104 @@
+---
+title: "Class 2"
+author: "Tobias Gerstenberg"
+date: "January 9th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "")
+```
+
+# Visualization 1: Exercise solutions 
+
+## Load packages and set theme 
+
+Let's first load the packages that we need for this chapter. 
+
+```{r load_packages, message=FALSE}
+library("knitr") # for rendering the RMarkdown file
+library("tidyverse") # for data wrangling 
+```
+
+Let's set the plotting theme. 
+
+```{r plotting_theme}
+theme_set(
+  theme_classic()+ #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Practice plot 1
+
+Make a scatter plot that shows the relationship between the variables `depth` (on the x-axis), and `table` (on the y-axis). Take a look at the description for the `diamonds` dataset so you know what these different variables mean. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1).
+
+```{r}
+ggplot(diamonds, aes(x = depth, y = table)) +
+  geom_point()
+```
+
+```{r practice-plot1, out.width="90%", fig.align="center", fig.cap="Practice plot 1."}
+include_graphics("figures/practice_plot1.png")
+```
+
+## Practice plot 2
+
+Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:practice-plot2).
+
+```{r}
+ggplot(diamonds, aes(x = clarity, y = price)) +
+  stat_summary(fun.y = "mean", geom = "bar") +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange")
+```
+
+```{r practice-plot2, out.width="90%", fig.align="center", fig.cap="Practice plot 2."}
+include_graphics("figures/practice_plot2.png")
+```
+
+## Practice plot 3
+
+Recreate the plot shown in Figure \@ref(fig:practice-plot3).
+
+```{r}
+# make practice plot 3 here
+ggplot(diamonds, aes(x = color, y = price, group = clarity, color = clarity)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1) +
+  stat_summary(fun.y = "mean", geom = "line", size = 2)
+```
+
+
+```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3."}
+include_graphics("figures/practice_plot3.png")
+```
+
+#### Practice plot 4
+
+Recreate the plot shown in Figure \@ref(fig:practice-plot4).
+
+```{r}
+# make practice plot 4 here
+ggplot(diamonds, aes(x = color, y = price, fill = cut)) +
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               position = position_dodge(width = 0.9),
+               color = "black") +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               position = position_dodge(width = 0.9),
+               color = "black") +
+  facet_grid(rows = vars(clarity)) +
+  theme(axis.text.y = element_text(size = 10))
+```
+
+```{r practice-plot4, out.width="90%", fig.align="center", fig.cap="Practice plot 4."}
+include_graphics("figures/practice_plot4.png")
+```
+

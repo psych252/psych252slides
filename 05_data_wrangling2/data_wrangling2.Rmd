@@ -13,7 +13,6 @@ output:
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
 knitr::opts_chunk$set(
-  # collapse = TRUE,
   comment = "")
 ```
 
@@ -26,7 +25,7 @@ In this session, we will continue to learn about wrangling data. Some of the fun
 - Learn how to group and summarize data using `group_by()` and `summarize()`. 
 - Learn how to deal with missing data entries `NA`. 
 - Get familiar with how to reshape data using `gather()`, `spread()`, `separate()` and `unite()`.
-- Learn the basics of how to join multiple data frames with a focus on `join_left()`. 
+- Learn the basics of how to join multiple data frames with a focus on `left_join()`. 
 - Master how to _read_ and _save_ data. 
 
 ## Load packages 
@@ -210,7 +209,7 @@ The `gather()` function takes four arguments:
 
 ```{r reshaping3}
 df.reshape.wide = df.reshape.long %>% 
-  spread(index, rating) %>% 
+  spread(key = index, value = rating) %>% 
   print()
 ```
 
@@ -238,7 +237,7 @@ Now, the data frame contains in each row, which stimuli a participant saw, and w
 df.reshape2 %>% 
   gather(key = "index", value = "value", -participant) %>% 
   separate(col = index, into = c("index", "order"), sep = "_") %>% 
-  spread(index, value) %>% 
+  spread(key = index, value = value) %>% 
   mutate_at(vars(order, observation), funs(as.numeric)) %>% 
   select(participant, order, stimulus, rating = observation)
 ```
@@ -330,7 +329,7 @@ df.practice2 = tibble(
 
 - Make the `df.practice2` data framey tidy (by turning into a long format).
 - Compute the z-score of each participants' judgments (using the `scale()` function).
-- Caluclate the mean and standard deviation of each participants' z-scored judgments. 
+- Calculate the mean and standard deviation of each participants' z-scored judgments. 
 - Notice anything interesting? Think about what [z-scoring](https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/z-score/) does ... 
 
 ```{r reshaping-practice2}
@@ -636,6 +635,7 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 - __Joining data__:
   - [Two-table verbs](https://dplyr.tidyverse.org/articles/two-table.html)
   - [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
+- [tidyexplain](https://github.com/gadenbuie/tidyexplain): Animations that illustrate how `gather()`, `spread()`, `left_join()`, etc. work
 
 ## Session info 
 

@@ -1,0 +1,79 @@
+---
+title: "Class 4"
+author: "Tobias Gerstenberg"
+date: "January 14th, 2019"
+output: 
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "")
+```
+
+# Data wrangling 1: Exercise solutions 
+
+## Load packages and data set 
+
+Let's first load the packages that we need for this chapter. 
+
+```{r load_packages, message=FALSE}
+library("knitr") # for rendering the RMarkdown file
+library("tidyverse") # for data wrangling 
+```
+
+And let's load the data set into the environment
+
+```{r data}
+df.starwars = starwars
+```
+
+## Practice 1 
+
+Let's practice the pipe operator. 
+
+```{r pipe-practice1}
+# some numbers
+x = seq(from = 1, to = 5, by = 1)
+```
+
+```{r pipe-practice2}
+# standard way
+log(x)
+
+# the pipe way (write your code underneath)
+x %>% log()
+```
+
+```{r pipe-practice3}
+# standard way
+mean(round(sqrt(x), digits = 2))
+
+# the pipe way (write your code underneath)
+x %>% 
+  sqrt() %>% 
+  round(digits = 2) %>% 
+  mean()
+```
+
+## Practice 2 
+
+Compute the body mass index for `male` characters who are `human`.
+
+- select only the columns you need 
+- filter out only the rows you need 
+- make the new variable with the body mass index 
+- arrange the data frame starting with the highest body mass index 
+
+```{r practice2}
+df.starwars %>% 
+  select(species, gender, height, mass) %>% 
+  filter(gender == "male", species == "Human") %>% 
+  mutate(bmi = mass / (height/100)^2) %>% 
+  arrange(desc(bmi))
+```
