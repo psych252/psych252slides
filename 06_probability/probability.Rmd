@@ -268,7 +268,7 @@ df.clue = expand.grid(who = who,
 df.suspects = df.clue %>% 
   distinct(who) %>% 
   mutate(gender = ifelse(
-    condition = who %in% c("ms_scarlet", "mrs_white", "mrs_peacock"), 
+    test = who %in% c("ms_scarlet", "mrs_white", "mrs_peacock"), 
     yes = "female", 
     no = "male")
   )
