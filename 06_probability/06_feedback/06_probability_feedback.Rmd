@@ -1,0 +1,56 @@
+---
+title: "06_Probability"
+author: "Tobias Gerstenberg"
+date: "1/18/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> I think the lecture can benefit from two key changes: __(1) spending more time motivating each new concept. It was unclear to me, for instance, why is it that we care about having fewer parameters__. Answering the question: __(2) I think the rain/sprinklers example was not effective at illustrating what seeing the world through Bayesian networks buys us (still unclear to me)__. Perhaps a more intuitive example, in addition to contrasting how a frequentist would approach the same question, may get us there. Thanks again for your hard work. It's not easy to communicate these concepts!
+
+> I like the lecture, but a few things: __1) can you please upload the the lecture note before class?__ Concepts of probability are hard and it makes the class even harder to follow when there was no notes and I wasn't able to mark my notes on the lecture notes. __2) perhaps you may consider to be time efficient in spending less time at the beginning about feedback and homework, but spending more time to explain something abstract, important and the "core component" of the lecture!__ Thanks, generally, the class is still good, but really needs to be time-efficient and not to rush at the end (happens a number of time)
+
+> It was a little fast for me but packed a lot of information which was good to learn! __I think I had trouble with the intuition for how this would track onto the kind of experiments/analyses/data we would be looking at for psychological studies, but the last slide with the A-> B and B->A helped__
+
+> Are there recommendations for reading more about the material today posted on the website, like what you put at the bottom of the Rmd files in the past? Also, could we take time to work out the math of some of the equations you used?
+
+> Thank you for a great lecture. Will we be reviewing probability again or should we review additional materials if we are still confused? If so, do you have any suggestions?
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-6.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+## What to do next time
+
+- too much material, ran out of time at the end (might have spent too much time discussing previous plots)
+- keep the Bayesian reasoning example 
+- provide more signposting at the beginning to give a sense for where this class is going 
+- put numbers on slides 
+- maybe: make slides available before class?!
+- maybe: find a more intuitive example than the sprinkler example 
+- briefly discuss causality again at the beginning of next class 
+- didn't have time to ask pace and overall question 
+- add readings 
