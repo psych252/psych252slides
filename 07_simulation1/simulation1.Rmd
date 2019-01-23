@@ -19,11 +19,10 @@ knitr::opts_chunk$set(comment = "")
 
 ## Load packages and set plotting theme  
 
-```{r install-packages, include=FALSE}
+```{r install-packages, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("kableExtra", "MASS"))
 ```
-
 
 ```{r load-packages, message=FALSE}
 library("knitr")
@@ -527,6 +526,7 @@ df.camp %>%
 The reason this doesn't work is because none of our kids is exactly 175cm tall. Instead, we need to filter kids that are within a certain height range. 
 
 ```{r bayesian5}
+tmp.height = 175
 tmp.margin = 1
 
 df.camp %>% 
@@ -536,7 +536,6 @@ df.camp %>%
   count(sport) %>% 
   spread(sport, n) %>% 
   summarize(prob_basketball = basketball/(basketball + chess))
-
 ```
 
 Here, I've used the `between()` function which is a shortcut for otherwise writing `x >= left & x <= right`. You can play around with the margin to see how the result changes. 
@@ -824,8 +823,8 @@ Here, the empirical distribution of the errors and the theoretical normal distri
 ```{r comparing2}
 ggplot(data = df.residuals, aes(sample = residual))+
   geom_abline(intercept = 0, slope = 1, linetype = 2)+
-  geom_qq(distribution = "qnorm", dparams = theoretical.params)+
-  geom_qq_line(distribution = "qnorm", dparams = theoretical.params)
+  geom_qq(distribution = "qnorm", dparams = params)+
+  geom_qq_line(distribution = "qnorm", dparams = params)
 ```
 
 Note that the QQ plot is sensitive to the general shape of the distribution. 
@@ -838,7 +837,7 @@ Here are some more examples for what these plots would look like when comparing 
 # data frame with parameters saved in a list column 
 df.parameters = data_frame(
   parameters = list(
-    theoretical.params,
+    params,
     list(mean = -2, sd = 2),
     list(mean = 2, sd = 2),
     list(mean = 0, sd = 5)
@@ -928,6 +927,9 @@ l.plots[[8]] +
 
 ```
 
+```{r qqplots, echo=FALSE, out.width='90%', fig.cap="QQ plots indicating different deviations from normality."}
+include_graphics("figures/qqplots.png")
+```
 
 
 ## Some common probability distributions 
