@@ -694,11 +694,17 @@ tmp.samples = 1000
 # make example reproducible 
 set.seed(1)
 
-# a sample from the normal distribution 
+# a sample from the normal distribution
 df.quantile = tibble(
   sample = 1:tmp.samples,
-  value = rnorm(n = tmp.samples)
-)
+  value = rnorm(n = tmp.samples))
+
+df.quantile %>% 
+  head(10) %>% 
+kable(digits = 2) %>% 
+kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
 ```
 
 Let's draw a boxplot using ggplot. 
@@ -784,7 +790,7 @@ ggplot(data = df.quantile,
 
 Neat! Now we know how boxplots are made. 
 
-We can also use the quantile function to create a cumulative probability plot. 
+We can also use the quantile function to create an inverse cumulative probability plot (i.e. the equivalent of what we get from `qnorm()` for the normal distribution). 
 
 ```{r quantile5}
 df.plot = df.quantile$value %>% 
@@ -795,7 +801,46 @@ df.plot = df.quantile$value %>%
 ggplot(data = df.plot,
        mapping = aes(x = x, y = value)) +
   geom_line()
+
 ```
+
+And we can calculate quantiles by hand in the following way: 
+
+```{r quantile6}
+
+tmp.samples = 1000
+
+# make example reproducible 
+set.seed(1)
+
+# a sample from the normal distribution
+df.quantile = tibble(
+  sample = 1:tmp.samples,
+  value = rnorm(n = tmp.samples))
+
+# compute quantiles by hand 
+df.quantile = df.quantile %>% 
+  arrange(value) %>% 
+  mutate(rank = row_number(),
+         quantile = rank/tmp.samples)
+```
+
+To compute the quantiles by hand, I've sorted the data frame, ranked the values, and then computed the quantiles by normalizing the ranks (i.e. dividing by the sample size). 
+
+Let's check whether we get roughly the same result with our hand-calculated quantiles as we do from the `quantile()` function. 
+
+```{r quantile7}
+
+# by hand 
+df.quantile %>% 
+  filter(rank %in% seq(from = 200, to = 800, by = 200)) %>% 
+  pull(value)
+
+# using quantile
+quantile(df.quantile$value, probs = seq(0.2, 0.8, 0.2))
+```
+
+As we can see, the results are very similar. Not identical since the `quantile()` function uses an efficient algorithm for its calculations (see `help(quantile)`).
 
 ## Comparing probability distributions 
 
@@ -821,10 +866,10 @@ ggplot(data = df.residuals, aes(x = residual))+
 Here, the empirical distribution of the errors and the theoretical normal distribution with a mean of 0 and a SD of 2 correspond very closely. Let's take a look at the corresponding QQ plot. 
 
 ```{r comparing2}
-ggplot(data = df.residuals, aes(sample = residual))+
-  geom_abline(intercept = 0, slope = 1, linetype = 2)+
-  geom_qq(distribution = "qnorm", dparams = params)+
-  geom_qq_line(distribution = "qnorm", dparams = params)
+ggplot(data = df.residuals, aes(sample = residual)) +
+  geom_abline(intercept = 0, slope = 1, linetype = 2) +
+  geom_qq(distribution = "qnorm", dparams = params) +
+  coord_cartesian(xlim = c(-40, 40), ylim = c(-40, 40))
 ```
 
 Note that the QQ plot is sensitive to the general shape of the distribution. 
@@ -838,9 +883,9 @@ Here are some more examples for what these plots would look like when comparing 
 df.parameters = data_frame(
   parameters = list(
     params,
-    list(mean = -2, sd = 2),
-    list(mean = 2, sd = 2),
-    list(mean = 0, sd = 5)
+    list(mean = -10, sd = 10),
+    list(mean = 10, sd = 10),
+    list(mean = 0, sd = 3)
   )
 )
 
@@ -848,14 +893,16 @@ df.parameters = data_frame(
 l.plots = list()
 
 for (i in 1:nrow(df.parameters)){
-  p1 = ggplot(data = df.residuals, aes(x = residual))+
-    stat_density(geom = "line", color = "green", size = 1.5)+
-    stat_function(fun = "dnorm", args = df.parameters$parameters[[i]], color = "black", size = 1.5)
+  p1 = ggplot(data = df.residuals, aes(x = residual)) +
+    stat_density(geom = "line", color = "green", size = 1.5) +
+    stat_function(fun = "dnorm", args = df.parameters$parameters[[i]], color = "black", size = 1.5) +
+    scale_y_continuous(limits = c(0, 0.15))
   
-  p2 = ggplot(data = df.residuals, aes(sample = residual))+
-    geom_abline(intercept = 0, slope = 1, linetype = 2)+
-    geom_qq(dparams = df.parameters$parameters[[i]])+
-    geom_qq_line(dparams = df.parameters$parameters[[i]])
+  p2 = ggplot(data = df.residuals, aes(sample = residual)) +
+    geom_abline(intercept = 0, slope = 1, linetype = 2) +
+    geom_qq(dparams = df.parameters$parameters[[i]]) +
+    geom_qq_line(dparams = df.parameters$parameters[[i]]) +
+    scale_x_continuous(limits = c(-40, 40))
   
   l.plots[[length(l.plots) + 1]] = p1
   l.plots[[length(l.plots) + 1]] = p2
@@ -871,7 +918,8 @@ l.plots[[6]] +
 l.plots[[7]] +
 l.plots[[8]] +
   plot_layout(ncol = 4, byrow = F) &
-  theme(text = element_text(size = 10))
+  theme(text = element_text(size = 16))
+# ggsave("figures/qqplots_normal.pdf", width = 10, height = 6)
 ```
 
 The line changes, but it's still a line. So the QQ plot helps us detect what kind of distribution the data follows. 
@@ -903,11 +951,13 @@ l.plots = list()
 for (i in 1:nrow(df.parameters)){
   p1 = ggplot(data = df.plot, aes(x = residual))+
     stat_density(geom = "line", color = "green", size = 1.5)+
-    stat_function(fun = "dbeta", args = df.parameters$parameters[[i]], color = "black", size = 1.5)
+    stat_function(fun = "dbeta", args = df.parameters$parameters[[i]], color = "black", size = 1.5) + 
+    scale_y_continuous(limits = c(0, 3.5))
   
   p2 = ggplot(data = df.plot, aes(sample = residual))+
     geom_abline(intercept = 0, slope = 1, linetype = 2)+
-    geom_qq(distribution = "qbeta", dparams = df.parameters$parameters[[i]])
+    geom_qq(distribution = "qbeta", dparams = df.parameters$parameters[[i]]) +
+    scale_x_continuous(limits = c(0, 1), breaks = seq(.25, .75, .25))
   
   l.plots[[length(l.plots) + 1]] = p1
   l.plots[[length(l.plots) + 1]] = p2
@@ -923,7 +973,8 @@ l.plots[[6]] +
 l.plots[[7]] +
 l.plots[[8]] +
   plot_layout(ncol = 4, byrow = F) &
-  theme(text = element_text(size = 10))
+  theme(text = element_text(size = 16))
+ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
 
 ```
 
