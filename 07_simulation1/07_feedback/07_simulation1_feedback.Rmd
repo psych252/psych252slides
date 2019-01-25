@@ -1,0 +1,154 @@
+---
+title: "07_Simulation1"
+author: "Tobias Gerstenberg"
+date: "1/23/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> The class is okay. Right now it is difficult to map what's learn to what we will use it later. So hopefully for later classes, it will be okay. __The major problem for me is that I was not able to make notes on the lecture notes.__ I understand that it is difficult to prepare notes several days in advance, but I hope you can at least post the notes 10 min before the class, so students can download it and make notes when attending the class
+
+> Overall I followed it well and felt good about where we left off. __The one thing I would find useful is having definitions of some of the more obscure arguments in functions (such as Kernel) that we haven't seen before__
+
+> My comment is about the homework. __I am a bit concerned about how the questions were answered on piazza. I got most of my answers from stackoverflow and I felt very upset when I couldn't receive any hint on how to fix the error in my code, when I spent countless of hours on it.__
+
+> For the midterm, I was wondering how many days we have to work on it. It seemed like it was only 24 hrs and over a weekday. I wonder if it might make more sense to extend this or give it over a weekend to allow people to work on it that may have other classes/exams/etc.
+
+> It could be __more interactive__. We could get some time for brainstorming and pondering on a question with another student.
+
+> Today's class was much better than last time. The examples were easier to follow and the pace was right. __I would recommend switching the order of how you present some materials. Specifically, it is difficult to be given a series of tools without understanding the ultimate goal of why we need them. I would recommend you start by really digging into why we need these tools and how we would be contained without them.__
+
+> We don't have a __formal opportunity to provide feedback on HW__, which is arguably very important!
+
+> can you also take open ended feedback abt homework or course in general? like maybe an anonymous feedback form on the website or something
+
+> Intro activity felt a little bit like wasting time
+
+> I liked the basketball and chess summer camp examples. __I just wish there were more real-world examples like that throughout the lecture__
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-7.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-7.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+ggsave("pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-7.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+ggsave("overall.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.hw1 = read_csv("how-many-hours-did-it-hw1.csv") %>%
+  set_names(c("response", "date")) %>% 
+  mutate(response = as.numeric(response))
+
+# summarize results
+df.hw1_summary = df.hw1 %>% 
+  summarize(time.mean = mean(response),
+            time.sd = sd(response)) %>% 
+  mutate_all(funs(round(., 2)))
+
+# plot histogram 
+ggplot(data = df.hw1,
+       mapping = aes(x = response)) + 
+  geom_histogram(binwidth = 0.25, fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How much time did you spend on hw 1?") +
+  scale_x_continuous(breaks = unique(df.hw1$response))
+```
+
+Students spent and average of `r df.hw1_summary$time.mean` (SD = `r df.hw1_summary$time.sd`) on homework 1. 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.hw2 = read_csv("how-many-hours-did-it-hw2.csv") %>%
+  set_names(c("response", "date")) %>% 
+  mutate(response = as.numeric(response))
+
+# summarize results
+df.hw2_summary = df.hw2 %>% 
+  summarize(time.mean = mean(response),
+            time.sd = sd(response)) %>% 
+  mutate_all(funs(round(., 2)))
+
+# plot histogram 
+ggplot(data = df.hw2,
+       mapping = aes(x = response)) + 
+  geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How much time did you spend on hw 2?") + 
+  scale_x_continuous(breaks = seq(0, 30, 5))
+```
+
+Students spent and average of `r df.hw2_summary$time.mean` (SD = `r df.hw2_summary$time.sd`) on homework 2. 
+
+## What to do next time
+
+- make the first part of the lecture more concrete: use a particular distribution (e.g. height of students), and then illustrate how we can use the different functions to get answers to questions about these distributions 
+- better explain difference between likelihood and probability
+- maybe focus on concepts more first 
+- less R code 
+- summer camp example works well 
+  - maybe have another version for which the solution cannot be derived analytically 
+- more examples of the same topic 
+- giving the students some time to break 
+- make sure to keep students on board (make the next version of this class more interactive) 
+- publish slides before class
+- introduce the idea of making minimal working examples for getting help on Piazza 
+- discuss with TAs what kind / how much help we should provide on Piazza 
+- have the midterm be over the weekend instead? 
+- better motivate the class by pointing out the kinds of things that we'll need to do (and how the tools will help us get there)
+- include some interactive parts (either running code directly, or having the students play around with code to answer some questions)
+- better way of eliciting feedback on the homework 
+- try and give real-world examples to illustrate particular concepts 
+- better motivate / change up the intro activity: the motivation is to have students interact with each other who haven't interacted yet

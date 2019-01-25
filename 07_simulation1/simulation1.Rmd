@@ -12,7 +12,10 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "")
+knitr::opts_chunk$set(
+  comment = "",
+  results="hold",
+  fig.show="hold")
 ```
 
 # Simulation 1 
@@ -266,7 +269,7 @@ ggplot(data = tibble(x = c(-5, 5)),
 
 ### Inverse cumulative distribution 
 
-```{r}
+```{r inverse1}
 ggplot(data = tibble(x = c(0, 1)),
        mapping = aes(x = x)) +
   stat_function(fun = "qnorm",
@@ -276,8 +279,9 @@ ggplot(data = tibble(x = c(0, 1)),
 
 And let's compute the inverse cumulative probability for a particular value. 
 
-```{r}
-tmp.x = 0.841
+```{r inverse2}
+# tmp.x = 0.841
+tmp.x = 0.975
 tmp.y = qnorm(tmp.x, mean = 0, sd = 1)
 
 print(tmp.y %>% round(3))
@@ -320,7 +324,7 @@ rm(list = str_subset(string = ls(), pattern = "tmp."))
 
 Let's compute the probability of observing a particular value $x$ in a given range. 
 
-```{r}
+```{r computing1}
 # tmp.lower = -1
 # tmp.upper = 1
 
@@ -571,7 +575,7 @@ df.density %>%
 
 Now, let's plot the density. 
 
-```{r density2, results='hold'}
+```{r density2}
 ggplot(data = df.density, aes(x = x, y = y)) +
   geom_line(size = 2) +
   geom_point(data = as.tibble(observations),
@@ -878,7 +882,7 @@ I've used the `geom_qq()` and `geom_qq_line()` functions that are part of `ggplo
 
 Here are some more examples for what these plots would look like when comparing different theoretical distributions to the same empirical distribution. 
 
-```{r comparing3}
+```{r comparing3, warning=FALSE}
 # data frame with parameters saved in a list column 
 df.parameters = data_frame(
   parameters = list(
@@ -926,7 +930,7 @@ The line changes, but it's still a line. So the QQ plot helps us detect what kin
 
 Now, let's see what happens if distributions don't have the same shape. 
 
-```{r}
+```{r comparing4, warning=FALSE}
 
 #let's generate some "empirical" data from a beta distribution 
 set.seed(0)
@@ -982,21 +986,20 @@ ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
 include_graphics("figures/qqplots.png")
 ```
 
+## Additional resources 
 
-## Some common probability distributions 
+### Cheatsheets 
 
-### Discrete probability distributions 
+- [Probability cheatsheet](figures/probability.pdf)
 
-- Binomial distribution
-- Geometric distribution
-- Poisson distribution 
+### Datacamp 
 
-### Continuous probability distributions 
+- [Foundations of probability in R](https://www.datacamp.com/courses/foundations-of-probability-in-r)
+  
+## Session info 
 
-- Normal distribution 
-- t-distribution 
-- F-distribution 
-- Beta distribution 
+Information about this R session including which version of R was used, and what packages were loaded. 
 
-
-
+```{r}
+sessionInfo()
+```
