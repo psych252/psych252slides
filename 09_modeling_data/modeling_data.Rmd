@@ -1,0 +1,738 @@
+---
+title: "Class 9"
+author: "Tobias Gerstenberg"
+date: "January 28th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=8"]
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Modeling data
+
+In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
+
+- Central limit theorem 
+- Sampling distributions 
+- p-value
+- Confidence interval
+
+## Load packages and set plotting theme  
+
+```{r install-packages, include=FALSE, eval=FALSE}
+# run this code chunk once to install these packages
+install.packages(c("janitor", "NHANES"))
+```
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("magrittr")    # for wrangling
+library("patchwork")    # for making figure panels
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Things that came up in class 
+
+### Calculating RMSE using `magrittr` verbs
+
+```{r}
+data = c(1, 3, 4, 2, 5)
+prediction = c(1, 2, 2, 1, 4)
+
+# calculate root mean squared error the pipe way 
+rmse = prediction %>% 
+  subtract(data) %>% 
+  raise_to_power(2) %>% 
+  mean() %>% 
+  sqrt() %>% 
+  print() 
+```
+
+### Relationship between probability and likelihood 
+
+```{r}
+p1 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  labs(y = "density") +
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1)))
+
+p2 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "pnorm",
+                size = 1) + 
+  labs(y = "cum prob") +
+  scale_y_continuous(breaks = c(0, 0.5, 1),
+                     expand = expand_scale(mult = c(0, 0.1)))
+
+p1 + p2 +
+  plot_layout(ncol = 1)
+```
+
+```{r}
+
+point = 1
+
+p1 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(-3, point),
+                fill = "red", 
+                alpha = 0.5) +
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_point(x = point,
+             y = dnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+p2 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "pnorm",
+                size = 1) + 
+  geom_segment(mapping = aes(x = -3, 
+                             y = pnorm(point),
+                             xend = point,
+                             yend = pnorm(point)),
+               color = "red",
+               size = 1) + 
+  geom_point(x = point,
+             y = pnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "cum prob") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1),
+                     expand = expand_scale(add = c(0.01, 0.1)))
+
+p1 + p2 +
+  plot_layout(ncol = 1)
+```
+
+```{r}
+
+point = 0
+
+p1 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point),
+                             xend = point,
+                             yend = dnorm(point)),
+               color = "red",
+               size = 1) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_point(x = point,
+             y = dnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+p2 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "pnorm",
+                size = 1) + 
+  geom_abline(slope = dnorm(point),
+              intercept = pnorm(point) - dnorm(point) * point,
+              color = "red",
+              size = 1) +
+  geom_point(x = point,
+             y = pnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "cum prob") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1),
+                     expand = expand_scale(add = c(0.01, 0.1)))
+
+p1 + p2 +
+  plot_layout(ncol = 1)
+```
+
+```{r}
+margin = 0
+point_blue = -1
+point_red = 0
+
+ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point_red - margin, point_red + margin),
+                fill = "red", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point_blue - margin, point_blue + margin),
+                fill = "blue", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point_red),
+                             xend = point_red,
+                             yend = dnorm(point_red)),
+               color = "red",
+               size = 1) +
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point_blue),
+                             xend = point_blue,
+                             yend = dnorm(point_blue)),
+               color = "blue",
+               size = 1) + 
+  geom_point(x = point_red,
+             y = dnorm(point_red),
+             shape = 21,
+             fill = "red",
+             size = 4) +
+  geom_point(x = point_blue,
+             y = dnorm(point_blue),
+             shape = 21,
+             fill = "blue",
+             size = 4) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+(pnorm(point_red + margin) - pnorm(point_red - margin)) / 
+  (pnorm(point_blue + margin) - pnorm(point_blue - margin)) 
+
+dnorm(point_red) / dnorm(point_blue)
+```
+
+
+```{r}
+margin = 1
+point = 0
+
+ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point - margin, point + margin),
+                fill = "red", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+```
+
+```{r}
+point = 0
+param_mean = 1
+param_sd = 1
+
+ggplot(data = tibble(x = c(-3, 3)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                args = list(mean = param_mean,
+                            sd = param_sd)) +
+  geom_segment(aes(
+    x = point,
+    y = 0,
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1
+  ) +
+  geom_segment(aes(
+    x = -3, 
+    y = dnorm(point, mean = param_mean, sd = param_sd),
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1) +
+  geom_point(x = point,
+             y = dnorm(point, mean = param_mean, sd = param_sd),
+             shape = 21,
+             fill = "red",
+             size = 4) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+dnorm(point, mean = param_mean, sd = param_sd)
+
+```
+## Modeling data 
+
+```{r}
+df.data = tibble(
+  observation = 1:5,
+  value = c(1, 3, 5, 9, 14)
+)
+```
+
+```{r}
+ggplot(data = df.data,
+       mapping = aes(x = "1",
+                     y = value)) + 
+  geom_point(size = 3) + 
+  scale_y_continuous(breaks = seq(0, 16, 2),
+                     limits = c(0, 16)) +
+  theme(panel.grid.major.y = element_line(color = "gray80", linetype = 2),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        text = element_text(size = 24))
+```
+
+
+
+```{r, warnings=FALSE}
+
+value_predicted = 7
+
+df.data = df.data %>% 
+  mutate(prediction = value_predicted,
+         error_absolute = abs(prediction - value))
+
+ggplot(data = df.data,
+       mapping = aes(x = observation, 
+                     y = value)) + 
+  geom_segment(mapping = aes(x = observation,
+                             xend = observation,
+                             y = value_predicted,
+                             yend = value
+                             ),
+               color = "blue",
+               size = 1) +
+  geom_line(data = tibble(x = c(1, 5),
+                   y = value_predicted),
+            mapping = aes(x = x,
+                y = y),
+            size = 1,
+            color = "green") +
+  geom_point(size = 4) +
+  annotate(x = 1,
+           y = 15.5,
+           geom = "text",
+           label = str_c("Prediction = ", value_predicted),
+           size = 8,
+           hjust = 0,
+           vjust = 1,
+           color = "green") +
+  annotate(x = 1,
+           y = 13.5,
+           geom = "text",
+           label = str_c("Sum of absolute errors = ", sum(df.data$error_absolute)),
+           size = 8,
+           hjust = 0,
+           vjust = 1,
+           color = "blue") +
+  annotate(x = 5,
+           y = value_predicted,
+           geom = "text",
+           label = parse(text = str_c("{hat(Y)","==b[0]}==", value_predicted)),
+           hjust = -0.1,
+           size = 8) +
+  scale_x_continuous(breaks = df.data$observation,
+                     labels = parse(text = str_c('e[',df.data$observation,']', "==", df.data$error_absolute)),
+                     limits = c(1, 6)) +
+  scale_y_continuous(breaks = seq(0, 16, 2),
+                     limits = c(0, 16)) +
+  theme(panel.grid.major.y = element_line(color = "gray80", linetype = 2),
+        axis.title.x = element_blank(),
+        text = element_text(size = 24))
+```
+
+Sum of absolute errors 
+
+```{r}
+
+value_predicted = seq(0, 50, 0.1)
+# value_predicted = seq(0, 10, 1)
+
+df.data = tibble(
+  observation = 1:5,
+  value = c(1, 3, 5, 9, 140)
+)
+
+# function that calculates the sum absolute error
+fun.sum_absolute_error = function(prediction){
+  x = df.data$value
+  sum_absolute_error = sum(abs(x-prediction))
+  return(sum_absolute_error)
+}
+
+# function that calculates the sum squared error
+fun.sum_squared_error = function(prediction){
+  x = df.data$value
+  sum_squared_error = sum((x-prediction)^2)
+  return(sum_squared_error)
+}
+
+df.model = tibble(
+  estimate = value_predicted,
+  sum_absolute_error = map_dbl(value_predicted, fun.sum_absolute_error),
+  sum_squared_error = map_dbl(value_predicted, fun.sum_squared_error)
+)
+
+ggplot(data = df.model,
+       mapping = aes(x = estimate,
+                     # y = sum_absolute_error)) +
+                     y = sum_squared_error)) +
+  geom_line(size = 1) +
+  # scale_x_continuous(breaks = 0:10) +
+  # scale_y_continuous(breaks = seq(10, 40, 10),
+  #                    limits = c(10, 40)) +
+  # labs(y = "Sum absolute error")
+  labs(y = "Sum of squared errors")
+```
+
+```{r}
+tibble(
+  `Error definition` = c("Count of errors",
+                         "Sum of absolute errors",
+                         "Sum of squared errors"),
+  `Best estimator` = c("Mode = most frequent value",
+                       "Median = middle observation of all values",
+                       "Mean = average of all values")
+) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+  
+```
+
+
+## Internet
+
+
+```{r}
+df.internet = read_table2(file = "data/internet_access.txt") %>% 
+  clean_names()
+```
+
+```{r}
+df.internet %>% 
+  mutate(i = 1:n()) %>% 
+  select(i, internet, everything()) %>% 
+  head(10) %>% 
+  kable(digits = 1) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+```
+
+
+```{r}
+pa = 1
+pc = 0 
+
+df.model = df.internet %>%
+  select(internet, state) %>% 
+  mutate(i = 1:n(),
+         compact_b = 75,
+         augmented_b = mean(internet),
+         compact_se = (internet-compact_b)^2,
+         augmented_se = (internet-augmented_b)^2) %>% 
+  select(i, state, internet, contains("compact"), contains("augmented"))
+  
+# df.model %>% 
+#   head(10) %>% 
+#   kable(digits = 2) %>% 
+#   kable_styling(bootstrap_options = "striped",
+#               full_width = F)
+
+df.model %>% 
+  summarize(augmented_sse = sum(augmented_se),
+            compact_sse = sum(compact_se),
+            pre = 1 - augmented_sse/compact_sse,
+            f = (pre/(pa-pc))/((1-pre)/(nrow(df.model)-pa)),
+            pvalue = 1-pf(f, pa-pc, nrow(df.model)-1),
+            mean = mean(internet),
+            sd = sd(internet)) %>% 
+              kable() %>% 
+              kable_styling(bootstrap_options = "striped",
+                          full_width = F)
+            
+
+m_c = lm(internet~-1+75, data = df.internet)
+m_a = lm(internet~1, data = df.internet)
+
+
+# anova(m_a, )
+
+
+tmp = t.test(df.internet$internet, mu = 75)
+tmp %>% 
+  tidy()
+
+```
+
+F-distribution 
+
+```{r}
+df1 = 1
+df2 = 49
+
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "df",
+                geom = "area",
+                fill = "red",
+                alpha = 0.5,
+                args = list(df1 = df1,
+                            df2 = df2),
+                size = 1,
+                xlim = c(qf(0.95, df1 = df1, df2 = df2), 10)
+                ) + 
+  stat_function(fun = "df",
+                args = list(df1 = df1,
+                            df2 = df2),
+                size = 0.5) + 
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1))) +
+  labs(y = "density")
+```
+
+
+
+Simple model with internet access fixed to 75.
+
+```{r}
+# calculate the 
+
+```
+
+## Simplicity vs. accuracy trade-off 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+n_samples = 20
+
+df.data = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
+)
+ 
+# plot a fit to the data
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.data$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, 15, raw=TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+```
+
+## PRE per parameter for different n 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+# n_samples = 20
+n_samples = 3
+
+df.pre = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 2 * x + rnorm(n_samples, sd = 1)
+)
+
+# plot a fit to the data
+ggplot(data = df.pre,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.pre$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, 1, raw=TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+
+```
+
+## Mean, median, mode 
+
+```{r}
+
+mu = 0 
+sigma = 1
+
+mean = mu
+median = mu
+mode = mu
+
+ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_segment(aes(x = median,
+                   xend = median,
+                   y = dnorm(median),
+                   yend = 0),
+               color = "green",
+               size = 2) +
+  geom_segment(aes(x = mode,
+                   xend = mode,
+                   y = dnorm(mode),
+                   yend = 0),
+               color = "red",
+               size = 2) +
+  geom_segment(aes(x = mean,
+                   xend = mean,
+                   y = dnorm(mean),
+                   yend = 0),
+               color = "blue",
+               size = 2) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+```
+
+```{r}
+rate = 1 
+
+mean = rate
+median = rate * log(2)
+mode = 0
+
+ggplot(data = tibble(x = c(-0.1, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dexp",
+                size = 1) +
+  geom_segment(aes(x = median,
+                   xend = median,
+                   y = dexp(median),
+                   yend = 0),
+               color = "green",
+               size = 2) +
+  geom_segment(aes(x = mode,
+                   xend = mode,
+                   y = dexp(mode),
+                   yend = 0),
+               color = "red",
+               size = 2) +
+  geom_segment(aes(x = mean,
+                   xend = mean,
+                   y = dexp(mean),
+                   yend = 0),
+               color = "blue",
+               size = 2) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = 0:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+```
+
+## Sampling distributions for median and mean 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 40 # size of each sample
+sample_n = 1000 # number of samples 
+
+# draw sample
+fun.draw_sample = function(sample_size, distribution){
+  x = 50 + rnorm(sample_size)
+  return(x)
+}
+
+# generate many samples 
+samples = replicate(n = sample_n,
+                    fun.draw_sample(sample_size, df.population))
+
+# set up a data frame with samples 
+df.sampling_distribution = matrix(samples, ncol = sample_n) %>%
+  as_tibble() %>%
+  set_names(str_c(1:ncol(.))) %>%
+  gather("sample", "number") %>% 
+  mutate(sample = as.numeric(sample)) %>% 
+  group_by(sample) %>% 
+  mutate(draw = 1:n()) %>% 
+  select(sample, draw, number) %>% 
+  ungroup()
+
+# turn the data frame into long format and calculate the means of each sample
+df.sampling_distribution_means = df.sampling_distribution %>% 
+  group_by(sample) %>% 
+  summarize(mean = mean(number),
+            median = median(number)) %>% 
+  ungroup() %>% 
+  gather("index", "value", -sample)
+
+```
+
+And plot it: 
+
+```{r clt7}
+# plot a histogram of the means with density overlaid 
+ggplot(data = df.sampling_distribution_means,
+       mapping = aes(x = value, color = index)) + 
+  # geom_histogram(aes(y = stat(density)),
+  #                binwidth = 0.05, 
+  #                fill = "lightblue",
+  #                color = "black") +
+  stat_density(bw = 0.1,
+               size = 2,
+               geom = "line"
+               ) + 
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01))) +
+  theme(legend.position = "none")
+```
+
+## Additional resources 
+
+### Datacamp 
+
+- [Foundations of Inference](https://www.datacamp.com/courses/foundations-of-inference)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```

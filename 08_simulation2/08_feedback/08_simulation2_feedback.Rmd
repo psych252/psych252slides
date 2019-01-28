@@ -1,0 +1,49 @@
+---
+title: "08_Simulation2"
+author: "Tobias Gerstenberg"
+date: "1/25/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> Central limit theorem was a little bit confusing......
+
+> Good explanation. I haven't really understood the CLT before
+
+> I think you spent too long on CLT which isn't intuitively difficult and would like more time on the harder topics near the end
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-8.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+
+## What to do next time
+
+- this lecture needs some work 
+- drop the gender height example -- it's more confusing than helpful 
+- better introduce the three key distributions: sample distribution, sampling distribution, population distribution
+- visualization and examples for CLT work well otherwise
+- maybe: shift the balance (less time on CLT and more time on p-values and confidence intervals)
