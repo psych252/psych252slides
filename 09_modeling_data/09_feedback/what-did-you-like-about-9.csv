@@ -1,0 +1,25 @@
+Response,Created At
+On Homework: I really liked the datacamp class. I found that a different explanation for key concepts complemented your class well. It was very helpful. Do you have recommendations for other datacamp lessons we should take weekly?,2019-01-28 11:50:55
+"Nice class, really intuitive. I think it will be great if you can talk about the difference between sample distribution and sampling distribution. Also, it will be interesting to hear how CLT will violate under several conditions and etc. This will, I think, lead to the topics in next classes. For example, the importance of data screening (e.g., checking assumptions and etc). Overall, great course :-)",2019-01-28 11:50:36
+I think the contents are great and helpful to me. I do need to read more myself though. I feel like I'm lack of why we do certain things/ the background,2019-01-28 11:50:24
+Today was super helpful! It might've been helpful to walk us through creating the sampling distribution of the error terms but otherwise this was a super clear lecture!,2019-01-28 11:50:19
+"I would have liked some more clarity on what the purpose of the model is. Is it prediction or is it casual inference? Does anything change if it's one and not the other? Additionally, I think the lecture would have been easier to follow if you outlined the general procedure we will follow class after class and then dove in this lecture's specific example.",2019-01-28 11:50:15
+"I was a little confused at the end about how we got the distribution on possible values for the F statistic? I understand that we can generate the F statistic from our data, but then I don't understand how we knew that was an unlikely one.",2019-01-28 11:50:05
+I'm still a little confused I as to what an f statistic is definitionally.  how do we interpret it other than as the result of all this math we did?,2019-01-28 11:50:05
+I enjoyed going through the steps to arrive at the t-test. I've always found it intimidating to just try to figure out what tests I need to use given some data because I'm afraid I'm misinterpreting their use.,2019-01-28 11:49:55
+"I feel like it would've been helpful to connect the modelling explanation with the statistical tests we are familiar with in the beginning, because I found myself getting quite lost along the way of how it connected to inferential testing. Perhaps I need to go look at the material more closely too!",2019-01-28 11:49:53
+I liked the breakdown of understanding what is actually happening behind simple test functions in R. It helps in understanding when test are appropriate for which data.,2019-01-28 11:49:51
+"very clear walkthrough, simple to understand. it's evident you spend a lot of time making these slides, we appreciate it!!! <3",2019-01-28 11:49:50
+"Pace was great, example helped A LOT!",2019-01-28 11:49:47
+"How often do you use the absolute squared error or counting error? Might have been more helpful to skip this if it's not that common, I'm not really clear on when you would use this instead?",2019-01-28 11:49:46
+I greatly appreciate that you walk through our questions with us. Even more interaction: ask us to guess or calculate values given what you're working through.,2019-01-28 11:49:40
+"Some times the material can be hard to fully understand, but I thought you helped walk us through it. The gifs are great",2019-01-28 11:49:38
+I thought it was a good class; the two things that were hardest for me to grasp were 1) why the CLT justifies the assumption that the residuals are normally distributed and 2) why the F-statistic calculation at the end is a proxy for creating a sampling distribution on PRE.,2019-01-28 11:49:38
+"I liked the discussing what makes an augmented model worth it, as well as the ""proof"" of why use sum of squared error as the error term via central limit theorem and mean as best estimator.",2019-01-28 11:49:24
+I wish today class was thought entirely using R so we could tangibly see everything in action.,2019-01-28 11:49:24
+"Really enjoyed learning about this more flexible way of approaching frequentist statistics. So far, I feel like I understand it theoretically, but would really like to explore this further with specific examples to get a better intuition of how this works practically. Thank you!",2019-01-28 11:49:18
+"Overall the pass of the class was good, but a little bit fast at the end on F statistic at i-test.",2019-01-28 11:49:15
+"I would like more concrete examples on how to construct sampling distributions in the different cases, using visual aids such as concrete data, how you get from that to the distribution, and what you then do etc.",2019-01-28 11:49:14
+"I'm excited about the model comparison approach to hypothesis testing. Was a little confused as we were going through it what the point was, but it all clicked at the end.",2019-01-28 11:49:12
+Model comparison instead of cookbook approach. Have rarely seen it taught this way.,2019-01-28 11:49:01
+it was good!,2019-01-28 11:48:36
