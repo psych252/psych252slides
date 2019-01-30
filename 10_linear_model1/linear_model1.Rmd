@@ -1,0 +1,740 @@
+---
+title: "Class 10"
+author: "Tobias Gerstenberg"
+date: "January 30th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=9"]
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Linear model 1
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Things that came up in class 
+
+### Building a sampling distribution of PRE 
+
+```{r}
+# make example reproducible 
+# set.seed(1)
+
+sample_size = 50 
+
+df.sample = tibble(
+  observation = 1:sample_size,
+  value = 75 + rnorm(sample_size, mean = 0, sd = 5)
+)
+
+df.summary = df.sample %>% 
+  mutate(compact = 75,
+         augmented = mean(value)) %>% 
+  summarize(sse_compact = sum((value - compact)^2),
+            sse_augmented = sum((value - augmented)^2),
+            pre = 1 - (sse_augmented/sse_compact))
+```
+
+```{r}
+# simulation parameters
+n_samples = 1000
+sample_size = 50 
+mu = 75 # true mean of the distribution 
+sigma = 5 # true standard deviation of the errors 
+
+# function to draw samples from the population distribution 
+fun.draw_sample = function(sample_size, sigma){
+  sample = mu + rnorm(sample_size, mean = 0, sd = sigma)
+  return(sample)
+}
+
+# draw samples
+samples = n_samples %>% 
+  replicate(fun.draw_sample(sample_size, sigma)) %>% 
+  t() # transpose the resulting matrix (i.e. flip rows and columns)
+
+# put samples in data frame and compute PRE 
+df.samples = samples %>% 
+  as_tibble(.name_repair = "unique") %>% 
+  mutate(sample = 1:n()) %>% 
+  gather("index", "value", -sample) %>% 
+  mutate(compact = mu) %>% 
+  group_by(sample) %>% 
+  mutate(augmented = mean(value)) %>% 
+  summarize(sse_compact = sum((value - compact)^2),
+            sse_augmented = sum((value - augmented)^2),
+            pre = 1 - sse_augmented/sse_compact)
+            
+
+# sampling distribution for PRE 
+ggplot(data = df.samples,
+       mapping = aes(x = pre)) +
+  stat_density(geom = "line")
+
+# p-value for our sample 
+df.samples %>% 
+  summarize(p_value = sum(pre >= df.summary$pre)/n())
+
+```
+
+```{r}
+samples %>% 
+  as_tibble(.name_repair = "unique") %>% 
+  mutate(sample = 1:n()) %>% 
+  gather("index", "value", -sample) %>% 
+  mutate(compact = mu) %>% 
+  group_by(sample) %>% 
+  mutate(augmented = mean(value)) %>% 
+  ungroup() %>% 
+  mutate(index = str_extract(index, pattern = "\\-*\\d+\\.*\\d*"),
+         index = as.numeric(index)) %>% 
+  filter(index < 6) %>% 
+  arrange(sample, index) %>% 
+    head(15) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+### Correlation 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+n_samples = 20
+
+df.correlation = tibble(
+  x = runif(n_samples, min = 0, max = 100),
+  y = x + rnorm(n_samples, sd = 15)
+)
+
+ggplot(data = df.correlation,
+       mapping = aes(x = x,
+                     y = y)) + 
+  geom_point(size = 2) +
+  labs(x = "chocolate",
+       y = "happiness")
+```
+
+#### Variance 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+df.variance = tibble(
+  x = 1:10,
+  y = runif(10, min = 0, max = 1)
+)
+
+ggplot(data = df.variance,
+       mapping = aes(x = x,
+                     y = y)) + 
+  geom_segment(aes(x = x,
+                   xend = x,
+                   y = y,
+                   yend = mean(df.variance$y))) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = mean(df.variance$y),
+             color = "blue") +
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank()
+        )
+
+```
+
+## Covariance 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+df.covariance = tibble(
+  x = runif(20, min = 0, max = 1),
+  y = x + rnorm(x, mean = 0.5, sd = 0.25)
+)
+
+```
+
+```{r}
+ggplot(df.covariance,
+       aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank())
+```
+
+
+```{r}
+ggplot(df.covariance,
+       aes(x = x, y = y)) +
+  geom_hline(yintercept = mean(df.covariance$y),
+             color = "red",
+             size = 1) +
+  geom_vline(xintercept = mean(df.covariance$x),
+             color = "red",
+             size = 1) +
+  geom_point(size = 3) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank())
+```
+
+```{r}
+df.plot = df.covariance %>% 
+  mutate(covariance = (x-mean(x)) *( y-mean(y))) %>% 
+  arrange(abs(covariance)) %>% 
+  mutate(color = NA)
+
+mean_xy = c(mean(df.covariance$x), mean(df.covariance$y))
+
+df.plot$color[1] = 1
+df.plot$color[10] = 2
+df.plot$color[19] = 3
+
+ggplot(df.plot,
+       aes(x = x, y = y, color = as.factor(color))) +
+  geom_segment(data = df.plot %>% 
+                 filter(color == 1),
+               mapping = aes(x = x,
+                   xend = mean_xy[1],
+                   y = y,
+                   yend = y),
+               size = 1) + 
+  geom_segment(data = df.plot %>% 
+                 filter(color == 1),
+               mapping = aes(x = x,
+                   xend = x,
+                   y = y,
+                   yend = mean_xy[2]),
+               size = 1) + 
+  geom_segment(data = df.plot %>% 
+                 filter(color == 2),
+               mapping = aes(x = x,
+                   xend = mean_xy[1],
+                   y = y,
+                   yend = y),
+               size = 1) + 
+  geom_segment(data = df.plot %>% 
+                 filter(color == 2),
+               mapping = aes(x = x,
+                   xend = x,
+                   y = y,
+                   yend = mean_xy[2]),
+               size = 1) + 
+  geom_segment(data = df.plot %>% 
+                 filter(color == 3),
+               mapping = aes(x = x,
+                   xend = mean_xy[1],
+                   y = y,
+                   yend = y),
+               size = 1) + 
+  geom_segment(data = df.plot %>% 
+                 filter(color == 3),
+               mapping = aes(x = x,
+                   xend = x,
+                   y = y,
+                   yend = mean_xy[2]),
+               size = 1) + 
+  geom_hline(yintercept = mean_xy[2],
+             color = "red",
+             size = 1) +
+  geom_vline(xintercept = mean_xy[1],
+             color = "red",
+             size = 1) +
+  geom_point(size = 3) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        legend.position = "none")
+```
+
+
+```{r}
+# ranking example 
+
+df.ranking = tibble(
+  x = c(1.2, 2.5, 4.5),
+  y = c(2.2, 1, 3.3),
+  label = str_c("(", x, ", ", y, ")"),
+  x_rank = dense_rank(x),
+  y_rank = dense_rank(y),
+  label_rank = str_c("(", x_rank, ", ", y_rank, ")")
+)
+
+ggplot(df.ranking,
+       aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = label),
+            hjust = -0.2,
+            vjust = 0,
+            size = 6) +
+  geom_text(aes(label = label_rank),
+            hjust = -0.4,
+            vjust = 2,
+            size = 6,
+            color = "red") +
+  coord_cartesian(xlim = c(1, 6),
+                  ylim = c(0, 4))
+
+```
+
+
+```{r}
+
+# make example reproducible 
+set.seed(1)
+
+# data set
+df.correlation = tibble(
+  x = runif(20, min = 0, max = 1),
+  y = x + rnorm(x, mean = 0.5, sd = 0.25)
+)
+
+# correlation
+df.correlation %>% 
+  summarize(r = cor(x, y))
+
+# plot
+ggplot(df.correlation,
+       aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks = element_blank())
+
+```
+
+```{r}
+
+# data set
+df.spearman = df.correlation %>% 
+  mutate(x_rank = dense_rank(x),
+         y_rank = dense_rank(y))
+
+# correlation
+df.spearman %>% 
+  summarize(r = cor(x, y, method = "pearson"),
+            spearman = cor(x, y, method = "spearman"),
+            r_ranks = cor(x_rank, y_rank))
+
+# plot
+ggplot(df.spearman,
+       aes(x = x_rank, y = y_rank)) +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 1:20) +
+  scale_y_continuous(breaks = 1:20) +
+  theme(axis.text = element_text(size = 10))
+
+df.spearman %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+
+```
+
+```{r}
+# data set
+df.example = tibble(
+  x = 1:10,
+  y = c(-10, 2:9, 20)
+) %>% 
+  mutate(x_rank = dense_rank(x),
+         y_rank = dense_rank(y))
+
+# correlation
+df.example %>% 
+  summarize(r = cor(x, y, method = "pearson"),
+            spearman = cor(x, y, method = "spearman"),
+            r_ranks = cor(x_rank, y_rank))
+
+# plot
+ggplot(df.example,
+       aes(x = x_rank, y = y_rank)) +
+       # aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  theme(axis.text = element_text(size = 10))
+
+```
+
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# data set
+df.example2 = tibble(
+  x = c(1, rnorm(8, mean = 5, sd = 1),  10),
+  y = c(-10, rnorm(8, sd = 1), 20)
+) %>% 
+  mutate(x_rank = dense_rank(x),
+         y_rank = dense_rank(y))
+
+# correlation
+df.example2 %>% 
+  summarize(r = cor(x, y, method = "pearson"),
+            spearman = cor(x, y, method = "spearman"),
+            r_ranks = cor(x_rank, y_rank))
+
+# plot
+ggplot(df.example2,
+       aes(x = x_rank, y = y_rank)) +
+       # aes(x = x, y = y)) +
+  geom_point(size = 3) +
+  theme(axis.text = element_text(size = 10))
+
+```
+
+## Regression 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+n_samples = 10
+
+df.regression = tibble(
+  chocolate = runif(n_samples, min = 0, max = 100),
+  happiness = chocolate*0.5 + rnorm(n_samples, sd = 15)
+)
+```
+
+
+```{r}
+ggplot(data = df.regression,
+       aes(x = chocolate,
+           y = happiness)) +
+  geom_point(size = 3)
+```
+
+```{r}
+
+lm.compact = lm(happiness ~ 1, data = df.regression)
+df.compact = tidy(lm.compact)
+
+ggplot(data = df.regression,
+       aes(x = chocolate,
+           y = happiness)) +
+  geom_hline(yintercept = df.compact$estimate,
+             color = "blue",
+              size = 1) +
+  geom_point(size = 3) 
+
+
+```
+
+
+```{r}
+
+lm.augmented = lm(happiness ~ chocolate, data = df.regression)
+df.augmented = tidy(lm.augmented)
+
+ggplot(data = df.regression,
+       aes(x = chocolate,
+           y = happiness)) +
+  geom_abline(intercept = df.augmented$estimate[1],
+              slope = df.augmented$estimate[2],
+             color = "red",
+              size = 1) +
+  geom_point(size = 3) 
+```
+
+```{r}
+lm.compact = lm(happiness ~ 1, data = df.regression)
+df.compact_summary = tidy(lm.compact)
+df.compact_model = augment(lm.compact) %>% 
+  clean_names() %>% 
+  left_join(df.regression)
+
+ggplot(data = df.compact_model,
+       aes(x = chocolate,
+           y = happiness)) +
+  geom_hline(yintercept = df.compact_summary$estimate,
+             color = "blue",
+              size = 1) +
+  geom_segment(aes(xend = chocolate,
+                   yend = df.compact_summary$estimate),
+               color = "blue") + 
+  geom_point(size = 3) 
+
+df.compact_model %>% 
+  summarize(SSE = sum(resid^2))
+```
+
+
+```{r}
+
+lm.augmented = lm(happiness ~ chocolate, data = df.regression)
+df.augmented_summary = tidy(lm.augmented)
+df.augmented_model = augment(lm.augmented) %>% 
+  clean_names() %>% 
+  left_join(df.regression)
+
+ggplot(data = df.augmented_model,
+       aes(x = chocolate,
+           y = happiness)) +
+  geom_abline(intercept = df.augmented_summary$estimate[1],
+              slope = df.augmented_summary$estimate[2],
+             color = "red",
+              size = 1) +
+  geom_segment(aes(xend = chocolate,
+                   yend = fitted),
+               color = "red") + 
+  geom_point(size = 3) 
+
+df.augmented_model %>% 
+  summarize(SSE = sum(resid^2))
+
+```
+
+```{r}
+pa = 2
+pc = 1
+n = 10 
+
+sse_compact = df.compact_model %>% 
+  summarize(SSE = sum(resid^2))
+
+sse_augmented = df.augmented_model %>% 
+  summarize(SSE = sum(resid^2))
+
+pre = as.numeric(1 - (sse_augmented/sse_compact))
+
+f = (pre/(pa-pc))/((1-pre)/(n-pa))
+
+p_value = 1-pf(f, df1 = pa-pc, df2 = n-pa)
+
+```
+
+```{r}
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) +
+  stat_function(fun = "df",
+                args = list(df1 = pa-pc,
+                            df2 = n-pa),
+                size = 1)
+```
+
+
+```{r}
+
+anova(lm.compact, lm.augmented)
+
+```
+
+
+## Credit data
+
+```{r}
+df.credit = read_csv("data/credit.csv") %>% 
+  rename(index = X1) %>% 
+  clean_names()
+
+
+# df.credit %>% 
+#   head(10) %>% 
+#   kable(digits = 2) %>% 
+#   kable_styling(bootstrap_options = "striped",
+#               full_width = F)
+
+
+```
+
+
+```{r}
+
+tibble(
+  variable = c("income", "limit", "rating", "cards", "age", "education",
+               "gender", "student", "married", "ethnicity", "balance"),
+  description = c("in thousand dollars",
+                  "credit limit",
+                  "credit rating",
+                  "number of credit cards",
+                  "in years",
+                  "years of education",
+                  "male or female",
+                  "student or not",
+                  "married or not",
+                  "African American, Asian, Caucasian",
+                  "average credit card debt")
+) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+```{r}
+df.credit %>% 
+  select_if(is.numeric) %>% 
+  corrr::correlate()
+```
+
+
+
+
+```{r}
+ggplot(data = df.credit,
+       mapping = aes(x = income,
+                     y = balance)) + 
+  geom_point(alpha = 0.3) +
+  # geom_smooth(method = "lm", se = F) +
+  geom_smooth(method = "lm") +
+  # annotate(geom = "point",
+  #          color = "red",
+  #          size = 5,
+  #          x = 130,
+  #          y = predict(fit, newdata = tibble(income = 130))) +
+  coord_cartesian(xlim = c(0, max(df.credit$income)))
+```
+
+```{r}
+
+df.credit %>% 
+  mutate(income_centered = income - mean(income)) %>% 
+  select(balance, income, income_centered)
+
+fit = lm(balance ~ 1 + income_centered, data = df.plot)
+
+ggplot(data = df.plot,
+       mapping = aes(x = income_centered,
+                     y = balance)) + 
+  geom_vline(xintercept = 0,
+             linetype = 2,
+             color = "black") +
+  geom_hline(yintercept = mean(df.plot$balance),
+             color = "red") +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", se = F) +
+  scale_color_manual(values = c("black", "red"))
+  # coord_cartesian(xlim = c(0, max(df.plot$income_centered)))
+  
+```
+
+```{r}
+fit = lm(balance ~ 1 + income, data = df.credit) %>% 
+  summary()
+```
+
+```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  summarize(
+    min = min(resid),
+    first_quantile = quantile(resid, 0.25),
+    median = median(resid),
+    third_quantile = quantile(resid, 0.75),
+    max = max(resid),
+    rmse = sqrt(mean(resid^2))
+  )
+```
+
+```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(aes(x = fitted,
+             y = resid)) + 
+  geom_hline(yintercept = 0,
+             color = "blue") +
+  geom_point(alpha = 0.3)
+```
+
+```{r}
+fit %>% 
+  glance() %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+```{r}
+fit_c = lm(formula = balance ~ 1,
+           data = df.credit)
+fit_a = lm(formula = balance ~ 1 + income,
+           data = df.credit)
+
+anova(fit_c, fit_a)
+
+fit_a %>% 
+  tidy(conf.int = T) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+fit_c %>% 
+  augment() %>% 
+  clean_names() %>% 
+  summarize(SSE = sum(resid^2))
+
+df.credit %>% 
+  summarize(r = cor(income, balance))
+
+fit = lm(balance ~ 1 + income, data = df.credit)
+augment(fit, newdata = tibble(income = 130))
+
+```
+
+```{r}
+df.plot = fit_a %>% 
+  augment() %>% 
+  clean_names()
+
+ggplot(df.plot, aes(sample = resid)) +
+  geom_qq_line() +
+  geom_qq()
+
+ggplot(df.plot, aes(x = resid)) +
+  stat_density()
+```
+
+
+
+## Additional resources 
+
+### Datacamp 
+
+- [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
+- [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
+- [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```

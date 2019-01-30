@@ -26,6 +26,13 @@ theme_set(
 
 ## Student feedback 
 
+> On Homework: I really liked the datacamp class. I found that a different explanation for key concepts complemented your class well. It was very helpful. Do you have recommendations for other datacamp lessons we should take weekly?
+
+> I would have liked some more clarity on what the purpose of the model is. Is it prediction or is it casual inference? Does anything change if it's one and not the other? Additionally, I think the lecture would have been easier to follow if __you outlined the general procedure we will follow class after class__ and then dove in this lecture's specific example.
+
+> I'm still a little confused I as to what an f statistic is definitionally. how do we interpret it other than as the result of all this math we did?
+
+> Some times the material can be hard to fully understand, but I thought you helped walk us through it. The gifs are great
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-9.csv") %>% 
@@ -73,4 +80,8 @@ ggsave("overall.pdf", width = 8, height = 6)
 
 ## What to do next time
 
-- maybe: show how the sampling distribution for PRE is derived 
+- maybe: show how the sampling distribution for PRE is derived, and how it relates to the F-statistic 
+- keep recommending data camp courses that complement class
+- suggest more reading materials for background 
+- make sure to outline the general procedure we use in each class, and then show how it applies to this specific example 
+- keep using gifs :)

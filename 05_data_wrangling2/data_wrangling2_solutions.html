@@ -451,19 +451,19 @@ $(document).ready(function () {
 
 <div id="TOC">
 <ul>
-<li><a href="#data-wrangling-2-exercise-solutions"><span class="toc-section-number">1</span> Data wrangling 2: Exercise solutions</a><ul>
-<li><a href="#load-packages-and-data-set"><span class="toc-section-number">1.1</span> Load packages and data set</a></li>
-<li><a href="#practice-1"><span class="toc-section-number">1.2</span> Practice 1</a></li>
-<li><a href="#practice-2"><span class="toc-section-number">1.3</span> Practice 2</a></li>
-<li><a href="#practice-3"><span class="toc-section-number">1.4</span> Practice 3</a></li>
+<li><a href="#data-wrangling-2-exercise-solutions"><span class="toc-section-number">5</span> Data wrangling 2: Exercise solutions</a><ul>
+<li><a href="#load-packages-and-data-set"><span class="toc-section-number">5.1</span> Load packages and data set</a></li>
+<li><a href="#practice-1"><span class="toc-section-number">5.2</span> Practice 1</a></li>
+<li><a href="#practice-2"><span class="toc-section-number">5.3</span> Practice 2</a></li>
+<li><a href="#practice-3"><span class="toc-section-number">5.4</span> Practice 3</a></li>
 </ul></li>
 </ul>
 </div>
 
 <div id="data-wrangling-2-exercise-solutions" class="section level1">
-<h1><span class="header-section-number">1</span> Data wrangling 2: Exercise solutions</h1>
+<h1><span class="header-section-number">5</span> Data wrangling 2: Exercise solutions</h1>
 <div id="load-packages-and-data-set" class="section level2">
-<h2><span class="header-section-number">1.1</span> Load packages and data set</h2>
+<h2><span class="header-section-number">5.1</span> Load packages and data set</h2>
 <p>Let’s first load the packages that we need for this chapter.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span>
 <span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for data wrangling </span></code></pre>
@@ -471,7 +471,7 @@ $(document).ready(function () {
 <pre class="sourceCode r"><code class="sourceCode r">df.starwars =<span class="st"> </span>starwars</code></pre>
 </div>
 <div id="practice-1" class="section level2">
-<h2><span class="header-section-number">1.2</span> Practice 1</h2>
+<h2><span class="header-section-number">5.2</span> Practice 1</h2>
 <p>Find out what the average <code>height</code> and <code>mass</code> (as well as the standard deviation) is from different <code>species</code> in different <code>homeworld</code>s. Why is the standard deviation <code>NA</code> for many groups?</p>
 <pre class="sourceCode r"><code class="sourceCode r">df.starwars <span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">group_by</span>(species, homeworld) <span class="op">%&gt;%</span><span class="st"> </span>
@@ -520,7 +520,7 @@ $(document).ready(function () {
 # … with 28 more rows</code></pre>
 </div>
 <div id="practice-2" class="section level2">
-<h2><span class="header-section-number">1.3</span> Practice 2</h2>
+<h2><span class="header-section-number">5.3</span> Practice 2</h2>
 <p>Load this data frame first.</p>
 <pre class="sourceCode r"><code class="sourceCode r">df.practice2 =<span class="st"> </span><span class="kw">tibble</span>(
   <span class="dt">participant =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,
@@ -556,7 +556,7 @@ $(document).ready(function () {
 10          10 -7.40e-17 1    </code></pre>
 </div>
 <div id="practice-3" class="section level2">
-<h2><span class="header-section-number">1.4</span> Practice 3</h2>
+<h2><span class="header-section-number">5.4</span> Practice 3</h2>
 <p>Load these three data frames first:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1</span>)
 

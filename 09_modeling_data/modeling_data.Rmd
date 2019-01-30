@@ -21,26 +21,14 @@ knitr::opts_chunk$set(
 
 # Modeling data
 
-In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
-
-- Central limit theorem 
-- Sampling distributions 
-- p-value
-- Confidence interval
-
 ## Load packages and set plotting theme  
-
-```{r install-packages, include=FALSE, eval=FALSE}
-# run this code chunk once to install these packages
-install.packages(c("janitor", "NHANES"))
-```
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("magrittr")    # for wrangling
-library("patchwork")    # for making figure panels
+library("magrittr")   # for wrangling
+library("patchwork")  # for making figure panels
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
@@ -55,7 +43,9 @@ theme_set(
 
 ### Calculating RMSE using `magrittr` verbs
 
-```{r}
+Here is how we can calculate the root mean squared error using the pipe all the way through. Note that you have to load the `magrittr` package in order for this to work. 
+
+```{r rmse}
 data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
@@ -70,27 +60,65 @@ rmse = prediction %>%
 
 ### Relationship between probability and likelihood 
 
-```{r}
-p1 = ggplot(data = tibble(x = c(-3, 3)),
+```{r probability-likelihood1, fig.cap="Probability is the area under the curve of the density"}
+
+margin = 1
+point = 0
+
+ggplot(data = tibble(x = c(-3, 3)),
             mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point - margin, point + margin),
+                fill = "red", 
+                alpha = 0.5) + 
   stat_function(fun = "dnorm",
                 size = 1) +
   labs(y = "density") +
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1)))
-
-p2 = ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "pnorm",
-                size = 1) + 
-  labs(y = "cum prob") +
-  scale_y_continuous(breaks = c(0, 0.5, 1),
-                     expand = expand_scale(mult = c(0, 0.1)))
-
-p1 + p2 +
-  plot_layout(ncol = 1)
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
 ```
 
-```{r}
+
+```{r probability-likelihood2, fig.cap="Likelihood is a particular value."}
+point = 0
+param_mean = 1
+param_sd = 1
+
+ggplot(data = tibble(x = c(-3, 3)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                args = list(mean = param_mean,
+                            sd = param_sd)) +
+  geom_segment(aes(
+    x = point,
+    y = 0,
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1
+  ) +
+  geom_segment(aes(
+    x = -3, 
+    y = dnorm(point, mean = param_mean, sd = param_sd),
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1) +
+  geom_point(x = point,
+             y = dnorm(point, mean = param_mean, sd = param_sd),
+             shape = 21,
+             fill = "red",
+             size = 4) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+```
+
+```{r probability-likelihood3, fig.cap="Relationship between density and cumulative probability distribution."}
 
 point = 1
 
@@ -138,7 +166,7 @@ p1 + p2 +
   plot_layout(ncol = 1)
 ```
 
-```{r}
+```{r probability-likelihood4, fig.cap="The density is the first derivative of the cumulative probability distribution. The likelihood is the value of the slope in the cumulative probability distribution."}
 
 point = 0
 
@@ -185,8 +213,8 @@ p1 + p2 +
   plot_layout(ncol = 1)
 ```
 
-```{r}
-margin = 0
+```{r probability-likelihood5, fig.cap="The relative likelihood of two observations is the same as the relative probability of two areas under the curve as the margin of these areas goes to 0."}
+margin = 0.1
 point_blue = -1
 point_red = 0
 
@@ -237,75 +265,75 @@ ggplot(data = tibble(x = c(-3, 3)),
 dnorm(point_red) / dnorm(point_blue)
 ```
 
-
-```{r}
-margin = 1
-point = 0
-
-ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area", 
-                xlim = c(point - margin, point + margin),
-                fill = "red", 
-                alpha = 0.5) + 
-  stat_function(fun = "dnorm",
-                size = 1) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-```
-
-```{r}
-point = 0
-param_mean = 1
-param_sd = 1
-
-ggplot(data = tibble(x = c(-3, 3)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                size = 1,
-                args = list(mean = param_mean,
-                            sd = param_sd)) +
-  geom_segment(aes(
-    x = point,
-    y = 0,
-    xend = point,
-    yend = dnorm(point, mean = param_mean, sd = param_sd)),
-    color = "red",
-    size = 1
-  ) +
-  geom_segment(aes(
-    x = -3, 
-    y = dnorm(point, mean = param_mean, sd = param_sd),
-    xend = point,
-    yend = dnorm(point, mean = param_mean, sd = param_sd)),
-    color = "red",
-    size = 1) +
-  geom_point(x = point,
-             y = dnorm(point, mean = param_mean, sd = param_sd),
-             shape = 21,
-             fill = "red",
-             size = 4) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-
-dnorm(point, mean = param_mean, sd = param_sd)
-
-```
 ## Modeling data 
 
-```{r}
+### Simplicity vs. accuracy trade-off 
+
+```{r simplicity1, warning=F, fig.cap="Tradeoff between fit and model simplicity."}
+# make example reproducible 
+set.seed(1)
+
+n_samples = 20 # sample size 
+n_parameters = 15 # number of parameters in the polynomial regression
+
+# generate data 
+df.data = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
+)
+ 
+# plot a fit to the data
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.data$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, degree = n_parameters, raw = TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+```
+
+```{r simplicity2, fig.cap="Figure that I used to illustrate that fitting more data points with fewer parameter is more impressive."}
+# make example reproducible 
+set.seed(1)
+# n_samples = 20
+n_samples = 3
+
+df.pre = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 2 * x + rnorm(n_samples, sd = 1)
+)
+
+# plot a fit to the data
+ggplot(data = df.pre,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.pre$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, 1, raw=TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+
+```
+
+### Error definitions and best estimators
+
+Let's start with some simple data:
+
+```{r modeling1}
 df.data = tibble(
   observation = 1:5,
   value = c(1, 3, 5, 9, 14)
 )
 ```
 
-```{r}
+And plot the data
+
+```{r modeling2}
 ggplot(data = df.data,
        mapping = aes(x = "1",
                      y = value)) + 
@@ -318,9 +346,9 @@ ggplot(data = df.data,
         text = element_text(size = 24))
 ```
 
+This is what the sum of absolute errors looks like for a given `value_predicted`. 
 
-
-```{r, warnings=FALSE}
+```{r modeling3, warning=FALSE, fig.cap="Sum of absolute errors."}
 
 value_predicted = 7
 
@@ -377,9 +405,9 @@ ggplot(data = df.data,
         text = element_text(size = 24))
 ```
 
-Sum of absolute errors 
+Play around with the code below to see how using (1) the sum of absolute errors, or (2) the sum of squared errors affects what estimate minimizes the error. 
 
-```{r}
+```{r modeling4}
 
 value_predicted = seq(0, 50, 0.1)
 # value_predicted = seq(0, 10, 1)
@@ -414,14 +442,11 @@ ggplot(data = df.model,
                      # y = sum_absolute_error)) +
                      y = sum_squared_error)) +
   geom_line(size = 1) +
-  # scale_x_continuous(breaks = 0:10) +
-  # scale_y_continuous(breaks = seq(10, 40, 10),
-  #                    limits = c(10, 40)) +
   # labs(y = "Sum absolute error")
   labs(y = "Sum of squared errors")
 ```
 
-```{r}
+```{r modeling5, echo=F, fig.cap="Relationship between error definition and best estimators."}
 tibble(
   `Error definition` = c("Count of errors",
                          "Sum of absolute errors",
@@ -437,161 +462,7 @@ tibble(
   
 ```
 
-
-## Internet
-
-
-```{r}
-df.internet = read_table2(file = "data/internet_access.txt") %>% 
-  clean_names()
-```
-
-```{r}
-df.internet %>% 
-  mutate(i = 1:n()) %>% 
-  select(i, internet, everything()) %>% 
-  head(10) %>% 
-  kable(digits = 1) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-```
-
-
-```{r}
-pa = 1
-pc = 0 
-
-df.model = df.internet %>%
-  select(internet, state) %>% 
-  mutate(i = 1:n(),
-         compact_b = 75,
-         augmented_b = mean(internet),
-         compact_se = (internet-compact_b)^2,
-         augmented_se = (internet-augmented_b)^2) %>% 
-  select(i, state, internet, contains("compact"), contains("augmented"))
-  
-# df.model %>% 
-#   head(10) %>% 
-#   kable(digits = 2) %>% 
-#   kable_styling(bootstrap_options = "striped",
-#               full_width = F)
-
-df.model %>% 
-  summarize(augmented_sse = sum(augmented_se),
-            compact_sse = sum(compact_se),
-            pre = 1 - augmented_sse/compact_sse,
-            f = (pre/(pa-pc))/((1-pre)/(nrow(df.model)-pa)),
-            pvalue = 1-pf(f, pa-pc, nrow(df.model)-1),
-            mean = mean(internet),
-            sd = sd(internet)) %>% 
-              kable() %>% 
-              kable_styling(bootstrap_options = "striped",
-                          full_width = F)
-            
-
-m_c = lm(internet~-1+75, data = df.internet)
-m_a = lm(internet~1, data = df.internet)
-
-
-# anova(m_a, )
-
-
-tmp = t.test(df.internet$internet, mu = 75)
-tmp %>% 
-  tidy()
-
-```
-
-F-distribution 
-
-```{r}
-df1 = 1
-df2 = 49
-
-ggplot(data = tibble(x = c(0, 10)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "df",
-                geom = "area",
-                fill = "red",
-                alpha = 0.5,
-                args = list(df1 = df1,
-                            df2 = df2),
-                size = 1,
-                xlim = c(qf(0.95, df1 = df1, df2 = df2), 10)
-                ) + 
-  stat_function(fun = "df",
-                args = list(df1 = df1,
-                            df2 = df2),
-                size = 0.5) + 
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1))) +
-  labs(y = "density")
-```
-
-
-
-Simple model with internet access fixed to 75.
-
-```{r}
-# calculate the 
-
-```
-
-## Simplicity vs. accuracy trade-off 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-n_samples = 20
-
-df.data = tibble(
-  x = runif(n_samples, min = 0, max = 10), 
-  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
-)
- 
-# plot a fit to the data
-ggplot(data = df.data,
-       mapping = aes(x = x,
-                     y = y)) +
-  geom_point(size = 3) +
-  # geom_hline(yintercept = mean(df.data$y), color = "blue") +
-  geom_smooth(method = "lm", se = F,
-              formula = y ~ poly(x, 15, raw=TRUE)) +
-  theme(axis.ticks = element_blank(),
-        axis.title = element_blank(),
-        axis.text = element_blank())
-```
-
-## PRE per parameter for different n 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-# n_samples = 20
-n_samples = 3
-
-df.pre = tibble(
-  x = runif(n_samples, min = 0, max = 10), 
-  y = 2 * x + rnorm(n_samples, sd = 1)
-)
-
-# plot a fit to the data
-ggplot(data = df.pre,
-       mapping = aes(x = x,
-                     y = y)) +
-  geom_point(size = 3) +
-  # geom_hline(yintercept = mean(df.pre$y), color = "blue") +
-  geom_smooth(method = "lm", se = F,
-              formula = y ~ poly(x, 1, raw=TRUE)) +
-  theme(axis.ticks = element_blank(),
-        axis.title = element_blank(),
-        axis.text = element_blank())
-
-```
-
-## Mean, median, mode 
-
-```{r}
+```{r modeling6, fig.cap="Mean, median, and mode on the normal distribution."}
 
 mu = 0 
 sigma = 1
@@ -629,7 +500,7 @@ ggplot(data = tibble(x = c(-3, 3)),
 
 ```
 
-```{r}
+```{r modeling7, fig.cap="Mean, median, and mode on the exponential distribution."}
 rate = 1 
 
 mean = rate
@@ -665,9 +536,9 @@ ggplot(data = tibble(x = c(-0.1, 3)),
 
 ```
 
-## Sampling distributions for median and mean 
+### Sampling distributions for median and mean 
 
-```{r}
+```{r modeling8}
 # make example reproducible 
 set.seed(1)
 
@@ -686,7 +557,7 @@ samples = replicate(n = sample_n,
 
 # set up a data frame with samples 
 df.sampling_distribution = matrix(samples, ncol = sample_n) %>%
-  as_tibble() %>%
+  as_tibble(.name_repair = "minimal") %>%
   set_names(str_c(1:ncol(.))) %>%
   gather("sample", "number") %>% 
   mutate(sample = as.numeric(sample)) %>% 
@@ -707,23 +578,99 @@ df.sampling_distribution_means = df.sampling_distribution %>%
 
 And plot it: 
 
-```{r clt7}
+```{r modeling9}
 # plot a histogram of the means with density overlaid 
+
 ggplot(data = df.sampling_distribution_means,
        mapping = aes(x = value, color = index)) + 
-  # geom_histogram(aes(y = stat(density)),
-  #                binwidth = 0.05, 
-  #                fill = "lightblue",
-  #                color = "black") +
   stat_density(bw = 0.1,
                size = 2,
-               geom = "line"
-               ) + 
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01))) +
-  theme(legend.position = "none")
+               geom = "line") + 
+  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01)))
 ```
 
+## Hypothesis testing: "One-sample t-test" 
+
+```{r testing1, warning=F}
+df.internet = read_table2(file = "data/internet_access.txt") %>% 
+  clean_names()
+```
+
+```{r testing2, fig.cap="Selection of the data."}
+df.internet %>% 
+  mutate(i = 1:n()) %>% 
+  select(i, internet, everything()) %>% 
+  head(10) %>% 
+  kable(digits = 1) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+```
+
+
+```{r testing3, fig.cap="Sum of squared errors, proportional reduction in error (PRE), F statistic, p-value."}
+# parameters per model 
+pa = 1
+pc = 0 
+
+df.model = df.internet %>%
+  select(internet, state) %>% 
+  mutate(i = 1:n(),
+         compact_b = 75,
+         augmented_b = mean(internet),
+         compact_se = (internet-compact_b)^2,
+         augmented_se = (internet-augmented_b)^2) %>% 
+  select(i, state, internet, contains("compact"), contains("augmented"))
+  
+df.model %>% 
+  summarize(augmented_sse = sum(augmented_se),
+            compact_sse = sum(compact_se),
+            pre = 1 - augmented_sse/compact_sse,
+            f = (pre/(pa-pc))/((1-pre)/(nrow(df.model)-pa)),
+            p_value = 1-pf(f, pa-pc, nrow(df.model)-1),
+            mean = mean(internet),
+            sd = sd(internet)) %>% 
+              kable() %>% 
+              kable_styling(bootstrap_options = "striped",
+                          full_width = F)
+```
+
+
+```{r testing4, fig.cap="The F distribution"}
+df1 = 1
+df2 = 49
+
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) + 
+  # stat_function(fun = "df",
+  #               geom = "area",
+  #               fill = "red",
+  #               alpha = 0.5,
+  #               args = list(df1 = df1,
+  #                           df2 = df2),
+  #               size = 1,
+  #               xlim = c(qf(0.95, df1 = df1, df2 = df2), 10)
+  #               ) + 
+  stat_function(fun = "df",
+                args = list(df1 = df1,
+                            df2 = df2),
+                size = 0.5) + 
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1))) +
+  labs(y = "density")
+```
+
+We've implemented a one sample t-test (compare the p-value here to the one I computed above using PRE and the F statistic).
+
+```{r testing5}
+t.test(df.internet$internet, mu = 75)
+```
+
+
+
 ## Additional resources 
+
+### Reading 
+
+- Judd, C. M., McClelland, G. H., & Ryan, C. S. (2011). Data analysis: A model comparison approach. Routledge. --> Chapters 1--4
 
 ### Datacamp 
 

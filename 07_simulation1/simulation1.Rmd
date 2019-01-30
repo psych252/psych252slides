@@ -8,6 +8,7 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
+    pandoc_args: ["--number-offset=6"]
 ---
 
 ```{r setup, include=FALSE}
