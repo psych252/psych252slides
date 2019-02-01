@@ -1,0 +1,769 @@
+---
+title: "Class 10"
+author: "Tobias Gerstenberg"
+date: "January 30th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=9"]
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Linear model 1
+
+```{r install-packages, include=FALSE, eval=FALSE}
+install.packages(c("corrr", "GGally"))
+```
+
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("corrr")    # for calculating correlations between many variables
+library("corrplot")    # for plotting correlations
+library("GGally")    # for running ggpairs() function
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Things that came up in class
+
+Can the density at a given point be greater than 1? Yes, since it's the area under the curve that has to sum to 1. Here is the density plot for a uniform distribution (note that the density is 1 uniformly).
+
+```{r}
+tmp.max = 5
+
+ggplot(data = tibble(x = c(0, tmp.max)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dunif",
+                geom = "area",
+                fill = "lightblue",
+                size = 1,
+                args = list(min = 0,
+                            max = tmp.max)) +
+  stat_function(fun = "dunif",
+                size = 1,
+                args = list(min = 0,
+                            max = tmp.max)) +
+  coord_cartesian(xlim = c(0, tmp.max),
+                  ylim = c(0, 6),
+                  expand = F)
+```
+
+And here is the density plot for a beta distribution with 
+
+```{r}
+ggplot(data = tibble(x = c(0, 1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dbeta",
+                args = list(shape1 = 1,
+                            shape2 = 2),
+                geom = "area",
+                fill = "lightblue",
+                size = 1) +
+  stat_function(fun = "dbeta",
+                args = list(shape1 = 1,
+                            shape2 = 2),
+                size = 1) +
+  coord_cartesian(xlim = c(0, 1),
+                  ylim = c(0, 3),
+                  expand = F)
+```
+
+## Credit data
+
+```{r}
+df.credit = read_csv("data/credit.csv") %>% 
+  rename(index = X1) %>% 
+  clean_names()
+```
+
+
+```{r}
+
+tibble(
+  variable = c("income", "limit", "rating", "cards", "age", "education",
+               "gender", "student", "married", "ethnicity", "balance"),
+  description = c("in thousand dollars",
+                  "credit limit",
+                  "credit rating",
+                  "number of credit cards",
+                  "in years",
+                  "years of education",
+                  "male or female",
+                  "student or not",
+                  "married or not",
+                  "African American, Asian, Caucasian",
+                  "average credit card debt")
+) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+
+
+```{r}
+df.credit %>% 
+  select_if(is.numeric) %>%
+  correlate(quiet = T) %>%
+  select(rowname, income) %>% 
+  mutate(rowname = reorder(rowname, income)) %>%
+  drop_na() %>% 
+  ggplot(aes(x = rowname, 
+             y = income,
+             fill = income)) +
+  geom_hline(yintercept = 0) +
+  geom_col(color = "black",
+           show.legend = F) + 
+  scale_fill_gradient2(low = "indianred2",
+                       mid = "white",
+                       high = "skyblue1",
+                       limits = c(-1, 1)) + 
+  coord_flip() 
+```
+
+Another visualization (similar to the one that used rplot() above). 
+
+```{r}
+tmp = df.credit %>%
+  select_if(is.numeric) %>%
+  correlate(diagonal = 0,
+            quiet = T) %>%
+  rearrange() %>%
+  column_to_rownames() %>%
+  as.matrix() %>%
+  corrplot()
+```
+
+
+```{r}
+fit = df.credit %>% 
+  lm(balance ~ 1 + income, data = .)
+
+fit %>% 
+  summary()
+
+fit2 = df.credit %>% 
+  # mutate_at(vars(income, limit, education), funs(scale)) %>% 
+  # mutate_at(vars(income, limit, education), funs(scale)) %>% 
+  lm(balance ~ 1 + income + limit, data = .)
+
+fit2 %>% summary()
+
+fit = lm(balance ~ income + limit, data = df.credit)
+fit %>% summary()
+```
+
+Relationships between variables
+
+
+
+```{r}
+fit = lm(balance ~ 1 + limit, data = df.credit)
+
+df.fit = fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  bind_cols(df.credit %>% 
+              select(income))
+
+fit2 = lm(resid ~ 1 + income, data = df.fit)
+
+fit2 %>% summary()
+
+fit2 = lm(balance ~ 1 + limit, data = df.credit)
+
+df.fit2 = fit2 %>% 
+  augment() %>% 
+  clean_names()
+
+fit3 = lm(balance ~ 1 + income + limit, data = df.credit)
+
+df.fit3 = fit3 %>% 
+  augment() %>% 
+  clean_names()
+
+# ggplot(data = df.fit3,
+ggplot(data = df.fit2,
+       mapping = aes(x = fitted,
+                     y = resid)) + 
+  geom_point(alpha = 0.5)
+
+```
+
+
+```{r}
+df.plot = df.credit %>% 
+  mutate(income = cut(income,
+                      breaks = seq(min(income), max(income), length.out = 11),
+                      labels = 1:10),
+         limit = cut(limit,
+                      breaks = seq(min(limit), max(limit), length.out = 11),
+                      labels = 1:10)) %>% 
+  drop_na()
+
+ggplot(data = df.plot, 
+       mapping = aes(x = income,
+                     y = limit,
+                     fill = balance)) + 
+  geom_tile()
+```
+
+## Advertising 
+
+```{r}
+df.ads = read_csv("data/advertising.csv") %>% 
+  clean_names() %>% 
+  rename(index = x1)
+```
+
+```{r}
+df.ads %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+## Correlations between numeric variables 
+
+```{r}
+df.ads %>% 
+  select_if(is.numeric) %>%
+  correlate() %>%
+  rearrange() %>%
+  shave() %>%
+  fashion() %>%
+    kable(digits = 3) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+Useful functions in the `corrr` package. 
+
+```{r}
+df.ads %>% 
+  select_if(is.numeric) %>% 
+  correlate(quiet = T) %>% 
+  shave() %>%
+  fashion()
+```
+
+To find out more how `corrr` works, take a look at this vignette: 
+
+```{r eval=F}
+vignette(topic = "using-corrr",
+         package = "corrr")
+```
+
+### Visualizations 
+
+```{r}
+df.ads %>%
+  select(-index) %>% 
+  ggpairs()
+```
+
+
+With some customization: 
+
+```{r}
+df.ads %>% 
+  select(-index) %>%
+  ggpairs(lower = list(continuous = wrap("points",
+                                         alpha = 0.3)),
+          upper = list(continuous = wrap("cor", size = 8))) + 
+  theme(panel.grid.major = element_blank())
+```
+
+
+
+
+```{r}
+df.ads %>% 
+  select(-index) %>%
+  correlate() %>%
+  rearrange() %>%
+  shave() %>%
+  rplot(print_cor = T)
+```
+
+```{r}
+df.ads %>%
+  select(-index) %>%
+  correlate() %>%
+  column_to_rownames() %>%
+  as.matrix() %>%
+  corrplot(diag = F)
+```
+
+```{r}
+
+# tmp.x = "tv"
+# tmp.x = "radio"
+tmp.x = "newspaper"
+# tmp.y = "radio"
+# tmp.y = "radio"
+tmp.y = "tv"
+
+ggplot(df.ads, 
+       aes_string(x = tmp.x, y = tmp.y)) + 
+  stat_smooth(method = "lm",
+              color = "black",
+              fullrange = T) +
+  geom_point(alpha = 0.3) +
+  annotate(geom = "text",
+           x = -Inf, 
+           y = Inf,
+           hjust = -0.5,
+           vjust = 1.5,
+           label = str_c("r = ", cor(df.ads[[tmp.x]], df.ads[[tmp.y]]) %>% 
+                           round(2) %>%  # round 
+                           str_remove("^0+") # remove 0
+                         ),
+           size = 8) +
+  # scale_x_continuous(limits = c(0, 300)) +
+  # coord_cartesian(xlim = c(0, 300)) + 
+  theme(text = element_text(size = 30))
+```
+
+```{r}
+# fit the models 
+fit_c = lm(sales ~ 1 + tv, data = df.ads)
+fit_a = lm(sales ~ 1 + tv + radio, data = df.ads)
+
+# do the F test
+anova(fit_c, fit_a)
+```
+
+Evaluate the model 
+
+```{r}
+tmp.fit = lm(sales ~ 1 + tv + radio, data = df.ads)
+
+df.plot = tmp.fit %>% 
+  augment() %>% 
+  clean_names() 
+
+# residual plot
+ggplot(df.plot, 
+       aes(x = fitted, 
+           y = resid)) + 
+  geom_point()
+
+# density of residuals 
+ggplot(df.plot, 
+       aes(x = resid)) + 
+  stat_density(geom = "line")
+
+# QQ plot 
+ggplot(df.plot,
+       aes(sample = resid)) + 
+  geom_qq() + 
+  geom_qq_line() 
+
+```
+
+```{r}
+
+```
+
+
+
+Interpreting the results: 
+
+```{r}
+
+fit_a %>% 
+  tidy(conf.int = T) %>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+```{r}
+
+df.ads = df.ads %>% 
+  mutate_at(vars(tv, radio), funs(scaled = scale(.)[,]))
+  
+  df.ads %>% 
+    select(-newspaper) %>%
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+
+```
+
+
+```{r}
+
+# tmp.variable = "radio"
+tmp.variable = "tv"
+# tmp.variable = "radio_scaled"
+
+ggplot(df.ads,
+       aes_string(x = tmp.variable)) +
+  stat_density(geom = "line",
+               size = 1) + 
+  annotate(geom = "text", 
+           x = median(df.ads[[tmp.variable]]),
+           y = -Inf,
+           label = str_c("sd = ", sd(df.ads[[tmp.variable]]) %>% round(2)),
+           size = 10,
+           vjust = -1,
+           hjust = 0.5
+           ) + 
+annotate(geom = "text", 
+           x = median(df.ads[[tmp.variable]]),
+           y = -Inf,
+           label = str_c("mean = ", mean(df.ads[[tmp.variable]]) %>% round(2)),
+           size = 10,
+           vjust = -3,
+         hjust = 0.5
+           )
+
+```
+
+Evaluate the model: 
+
+```{r}
+fit_a %>% 
+  glance() %>% 
+    kable(digits = 3) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+```{r}
+lm(sales ~ 1 + tv + I(tv^2), data = df.ads) %>% 
+  tidy()
+
+ggplot(df.ads,
+       aes(x = tv,
+           y = sales)) +
+  geom_point() + 
+  stat_smooth(method = "lm",
+              formula = y ~ poly(x, 2),
+              se = F,
+              color = "red") +
+  stat_smooth(method = "lm",
+              se = F,
+              color = "blue") 
+
+```
+
+
+
+```{r}
+# visualize predictions 
+
+
+
+
+```
+
+
+Visualize the model's predictions 
+
+```{r}
+
+df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  augment() %>% 
+  clean_names()
+
+df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  tidy()
+
+# df.predict = augment(fit, newdata = tibble(radio = 10))
+
+ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
+  geom_point() +
+  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 200,
+  #             slope = df.tidy$estimate[3]) +
+  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 100,
+  #             slope = df.tidy$estimate[3]) +
+  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 0,
+  #             slope = df.tidy$estimate[3]) +
+  scale_color_gradient(low = "gray80", high = "black") +
+  theme(legend.position = c(0.1, 0.8))
+```
+
+
+
+```{r}
+fit_a_scaled = lm(formula = sales ~ 1 + tv_scaled + radio_scaled,
+                  data = df.ads)
+fit_a_scaled %>% 
+  tidy(conf.int = T) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+fit_a_scaled %>% summary()
+
+fit = lm(formula = sales ~ 1, data = df.ads)
+
+a = fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  summarize(SSE = sum(resid^2))
+
+b = fit_a_scaled %>% 
+  augment() %>% 
+  clean_names() %>% 
+  summarize(SSE = sum(resid^2))
+
+pre = 1 - b$SSE/a$SSE
+
+anova(fit, fit_a_scaled)
+
+  
+```
+
+What about newspapers? 
+
+```{r}
+# fit the models 
+fit_c = lm(sales ~ 1 + tv, data = df.ads)
+fit_a = lm(sales ~ 1 + tv + newspaper, data = df.ads)
+
+# do the F test
+anova(fit_c, fit_a)
+```
+
+```{r}
+fit1 = lm(sales ~ newspaper, df.ads)
+
+df.fit1 = fit1 %>% 
+  augment() %>% 
+  clean_names()
+
+ggplot(df.fit1, aes(fitted, resid)) + 
+  geom_point()
+```
+
+Credit data set 
+
+```{r}
+# fit the models
+fit_c = lm(balance ~ 1, data = df.credit)
+fit_a = lm(balance ~ student, data = df.credit)
+
+# run the F test 
+anova(fit_c, fit_a)
+
+fit_a %>% 
+  summary()
+```
+
+Model predictions
+
+```{r}
+
+ggplot(df.credit,
+       aes(x = index, 
+           y = balance)) +
+  geom_hline(yintercept = mean(df.credit$balance),
+             size = 1) +
+  geom_segment(aes(xend = index,
+                   yend = mean(df.credit$balance)),
+               alpha = 0.1) +
+  geom_point(alpha = 0.5) 
+```
+
+```{r}
+df.fit = fit_a %>% 
+  tidy() %>% 
+  mutate(estimate = round(estimate,2))
+
+ggplot(df.credit,
+       aes(x = index, 
+           y = balance,
+           color = student)) +
+  geom_hline(yintercept = df.fit$estimate[1],
+             size = 1,
+             color = "red") +
+  geom_hline(yintercept = df.fit$estimate[1] + df.fit$estimate[2],
+             size = 1,
+             color = "blue") +
+  geom_segment(data = df.credit %>%
+                 filter(student == "No"),
+                 aes(xend = index,
+                   yend = df.fit$estimate[1]),
+               alpha = 0.1,
+               color = "red") +
+  geom_segment(data = df.credit %>%
+                 filter(student == "Yes"),
+                 aes(xend = index,
+                   yend = df.fit$estimate[1] + df.fit$estimate[2]),
+               alpha = 0.1,
+               color = "blue") +
+  geom_point(alpha = 0.5) +
+  scale_color_brewer(palette = "Set1")
+```
+
+```{r}
+t.test(x = df.credit$balance[df.credit$student == "No"],
+       y = df.credit$balance[df.credit$student == "Yes"])
+```
+
+Dummy coding: 
+
+```{r}
+df.credit %>% 
+  select(income, student) %>% 
+  mutate(student_dummy = ifelse(student == "No", 0, 1))%>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+  
+```
+
+Reporting the results 
+
+```{r}
+df.plot = df.credit
+
+ggplot(df.plot,
+       aes(x = student,
+           y = balance)) +
+  geom_point(alpha = 0.1,
+             position = position_jitter(height = 0, width = 0.1)) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               size = 4)
+
+df.credit %>% 
+  group_by(student) %>% 
+  summarize(mean = mean(balance),
+            sd = sd(balance)) %>% 
+  mutate_if(is.numeric, funs(round(., 2)))
+
+```
+
+# One continuous and one categorical 
+
+```{r}
+# fit the models
+fit_c = lm(balance ~ 1 + income, df.credit)
+fit_a = lm(balance ~ 1 + income + student, df.credit)
+
+# run the F test 
+anova(fit_c, fit_a)
+```
+
+plot compact model 
+
+```{r}
+
+df.augment = fit_c %>% 
+  augment() %>% 
+  clean_names()
+
+ggplot(df.augment,
+       aes(x = income,
+           y = balance)) + 
+  geom_smooth(method = "lm", se = F, color = "black") +
+  geom_segment(aes(xend = income,
+                   yend = fitted),
+               alpha = 0.3) +
+  geom_point(alpha = 0.3)
+
+```
+
+
+```{r}
+
+df.tidy = fit_a %>% 
+  tidy() %>% 
+  mutate(estimate = round(estimate,2))
+
+df.augment = fit_a %>% 
+  augment() %>% 
+  clean_names()
+
+ggplot(df.augment,
+       aes(x = income,
+           y = balance,
+           group = student,
+           color = student)) + 
+  geom_segment(data = df.augment %>% 
+                 filter(student == "No"),
+    aes(xend = income,
+        yend = fitted),
+    color = "red",
+     alpha = 0.3
+  ) +
+  geom_segment(data = df.augment %>% 
+                 filter(student == "Yes"),
+    aes(xend = income,
+        yend = fitted),
+    color = "blue",
+     alpha = 0.3
+  ) +
+  geom_abline(intercept = df.tidy$estimate[1],
+              slope = df.tidy$estimate[2],
+              color = "red",
+              size = 1) +
+  geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[3],
+              slope = df.tidy$estimate[2],
+              color = "blue",
+              size = 1) +
+  geom_point(alpha = 0.3) +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = c(0.1, 0.9))
+
+```
+
+```{r}
+
+```
+
+
+## Additional resources 
+
+### Datacamp 
+
+- [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
+- [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
+- [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
