@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 # Linear model 1
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-install.packages(c("corrr", "GGally"))
+# install.packages(c("corrr", "GGally"))
 ```
 
 
@@ -748,8 +748,69 @@ ggplot(df.augment,
 ```
 
 ```{r}
+ggplot(df.augment,
+       aes(x = income,
+           y = balance,
+           group = student,
+           color = student)) +
+  geom_smooth(method = "lm", se = F) + 
+  geom_point(alpha = 0.3) +
+  scale_color_brewer(palette = "Set1") +
+  theme(legend.position = c(0.1, 0.9))
+```
+
+
+
+```{r}
+fit_1 = lm(sales ~ radio, df.ads)
+
+df.fit1 = fit_1 %>% 
+  augment() %>% 
+  clean_names() %>% 
+  select(resid) %>% 
+  bind_cols(df.ads)
+
+fit_2 = lm(resid ~ newspaper, df.fit1)
+
+fit_2 %>% summary()
+
+
+fit_1 = lm(sales ~ newspaper, df.ads)
+
+df.fit1 = fit_1 %>% 
+  augment() %>% 
+  clean_names() %>% 
+  select(resid) %>% 
+  bind_cols(df.ads)
+
+fit_2 = lm(resid ~ radio, df.fit1)
+
+fit_2 %>% summary()
+
+
 
 ```
+
+
+Interaction
+
+```{r}
+# fit models 
+fit_c = lm(formula = balance ~ income + student, data = df.credit)
+fit_a = lm(formula = balance ~ income * student, data = df.credit)
+
+
+fit_a %>% summary()
+
+fit_a %>% tidy %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+
+
+```
+
 
 
 ## Additional resources 
