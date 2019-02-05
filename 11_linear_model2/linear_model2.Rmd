@@ -167,7 +167,7 @@ fit %>%
 fit2 = df.credit %>% 
   # mutate_at(vars(income, limit, education), funs(scale)) %>% 
   # mutate_at(vars(income, limit, education), funs(scale)) %>% 
-  lm(balance ~ 1 + income + limit, data = .)
+  lm(balance ~ 1 + income + limit + education, data = .)
 
 fit2 %>% summary()
 
@@ -390,6 +390,7 @@ ggplot(df.plot,
 ```{r}
 
 ```
+
 
 
 
@@ -799,6 +800,22 @@ Interaction
 fit_c = lm(formula = balance ~ income + student, data = df.credit)
 fit_a = lm(formula = balance ~ income * student, data = df.credit)
 
+fit_a %>% 
+  summary()
+
+lm(formula = balance ~ income + student + income:student, data = df.credit) %>% 
+  summary()
+
+fit_c = lm(formula = balance ~ 1, data = df.credit)
+fit_a = lm(formula = incoem + balance ~ student + income:student, data = df.credit)
+
+anova(fit_c, fit_a)
+
+
+%>% tidy(conf.int = T)
+
+# F-test 
+anova(fit_c, fit_a)
 
 fit_a %>% summary()
 
@@ -807,6 +824,22 @@ fit_a %>% tidy %>%
   kable_styling(bootstrap_options = "striped",
               full_width = F)
 
+
+
+df.credit %>% 
+  mutate(student_dummy = ifelse(student == "No", 0, 1)) %>% 
+  mutate(income_student = income * student_dummy) %>% 
+  select(balance, income, student, student_dummy, income_student)
+
+df.credit %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+
+fit1 = lm(formula = balance ~ income + student + income_student, data = df.credit)
+fit2 = lm(formula = balance ~ income + student + income:student, data = df.credit)
 
 
 ```
