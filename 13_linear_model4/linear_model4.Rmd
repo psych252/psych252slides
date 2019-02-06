@@ -446,16 +446,21 @@ library("car")
 
 lm(formula = balance ~ hand + skill,
    data = df.poker,
-   contrasts = c("contr.sum", "contr.poly")) %>% 
+   contrasts = list(hand = "contr.sum", 
+                    skill = "contr.sum")) %>% 
   Anova(type = "3")
 ```
 
 ```{r}
 lm(formula = balance ~ skill + hand,
    data = df.poker,
-   contrasts = c("contr.sum", "contr.poly")) %>% 
+   contrasts = list(hand = "contr.sum", 
+                    skill = "contr.sum")) %>% 
   Anova(type = "3")
 ```
+
+
+
 
 
 
@@ -486,6 +491,18 @@ df.poker %>%
             variance_residual = variance_total - variance_skill - variance_hand
             )
 ```
+
+```{r}
+library("afex")
+
+fit = aov_ez(id = "participant",
+             dv = "balance",
+             data = df.poker,
+             between = c("hand", "skill"))
+fit$Anova
+```
+
+
 
 #### Two-way ANOVA (with interaction)
 
@@ -1211,6 +1228,15 @@ fit2$Anova
 
 ```
 
+```{r}
+library("car")
+
+lm(formula = balance ~ hand + skill,
+   data = df.poker,
+   contrasts = list(hand = "contr.sum", 
+                    skill = "contr.sum")) %>% 
+  Anova(type = "3")
+```
 
 
 ## Additional resources 

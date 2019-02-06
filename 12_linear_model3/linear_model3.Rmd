@@ -805,6 +805,7 @@ df.data = tibble(
 
 
 ```{r}
+# plot data
 ggplot(df.data,
        aes(x = condition,
            y = rating,
@@ -821,6 +822,26 @@ ggplot(df.data,
   scale_fill_brewer(palette = "Set1")
 ```
 
+```{r}
+# show data frame
+df.data %>% 
+  group_by(condition, treatment) %>% 
+  filter(row_number() < 3) %>% 
+  ungroup() %>% 
+    # head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+
+```{r}
+# infer parameters
+lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
+   data = df.data) %>% 
+  summary()
+```
 
 
 ## Additional resources 
