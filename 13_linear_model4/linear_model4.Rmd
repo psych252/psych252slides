@@ -1171,6 +1171,48 @@ ggplot(df.simpsons,
   theme(legend.position = "none")
 ```
 
+Residual plot 
+
+```{r}
+fit.simpson = lm(formula = y ~ x, data = df.simpsons)
+
+fit.simpson %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(aes(fitted, resid)) +
+  geom_smooth(method = "lm", se = F) +
+  geom_point()
+```
+
+## ANOVA afex 
+
+```{r}
+library("tidyverse")
+library("car")
+library("afex")
+
+df.cars = mtcars %>% 
+  mutate(index = 1:n()) %>% 
+  mutate_at(vars(vs, am), funs(as.factor))
+
+fit1 = lm(formula = mpg ~ vs * am,
+         data = df.cars,
+         contrasts = list(vs = "contr.sum",
+                          am = "contr.sum"))
+
+fit1 %>%
+  Anova(type = "3")
+
+fit2 = aov_ez(id = "index",
+       dv = "mpg",
+       data = df.cars,
+       between = c("vs", "am"))
+fit2$Anova
+
+```
+
+
+
 ## Additional resources 
 
 ### Datacamp 

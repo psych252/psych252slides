@@ -778,6 +778,50 @@ ggplot(df.data,
 ```
 
 
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# set parameters
+nsamples = 30
+
+b0 = 15
+b1 = 10 # main effect of condition
+b2 = 0 # main effect of treatment
+b1_2 = -20 # interaction effect
+sd = 5
+
+# generate data
+df.data = tibble(
+  condition = rep(c(0, 1), each = nsamples),
+  treatment = rep(c(0, 1), nsamples),
+  rating = b0 + 
+    b1 * condition + 
+    b2 * treatment + (b1_2 * condition * treatment) + 
+    rnorm(nsamples, sd = sd)) %>%
+  mutate(condition = factor(condition, labels = c("A", "B")),
+  treatment = factor(treatment, labels = c("1", "2")))
+```
+
+
+```{r}
+ggplot(df.data,
+       aes(x = condition,
+           y = rating,
+           group = treatment,
+           fill = treatment)) + 
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               position = position_dodge(0.9)) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1,
+               position = position_dodge(0.9)) +
+  scale_fill_brewer(palette = "Set1")
+```
+
+
 
 ## Additional resources 
 
