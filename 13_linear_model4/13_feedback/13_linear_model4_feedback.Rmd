@@ -104,7 +104,8 @@ df.hw4_hours = read.csv("how-many-hours-hw4.csv", header = F) %>%
   set_names(c("response", "date")) %>% 
   mutate(response = factor(response,
                            levels = c(1:9, "10 or more"))) %>% 
-  count(response)
+  count(response) %>% 
+  complete(response)
 
 ggplot(data = df.hw4_hours,
        mapping = aes(x = response, y = n)) + 

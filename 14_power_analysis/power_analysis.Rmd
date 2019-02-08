@@ -1,0 +1,335 @@
+---
+title: "Class 14"
+author: "Tobias Gerstenberg"
+date: "February 8th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=9"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Power analysis
+
+```{r install-packages, include=FALSE, eval=FALSE}
+# install.packages(c("lsr", "pwr"))
+```
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up model fits
+library("magrittr")    # for going all in with the pipe
+library("lsr") # for computing effect size measures
+library("pwr") # for power calculations
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Load data sets 
+
+```{r}
+df.poker = read_csv("data/poker.csv")
+
+df.credit = read_csv("data/credit.csv") %>% 
+  rename(index = X1) %>% 
+  clean_names()
+```
+
+
+## Decision-making 
+
+```{r}
+mu0 = 10
+mu1 = 18
+# mu0 = 8
+# mu1 = 20
+# sd0 = 3
+# sd1 = 3
+sd0 = 2
+sd1 = 2
+alpha = 0.05
+# alpha = 0.01
+
+ggplot(data = tibble(x = c(0, 30)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                color = "blue",
+                args = list(mean = mu0,
+                            sd = sd0)) +
+  stat_function(fun = "dnorm",
+                size = 1,
+                color = "red",
+                args = list(mean = mu1,
+                            sd = sd1)) +
+  stat_function(fun = "dnorm",
+                geom = "area",
+                size = 1,
+                fill = "blue",
+                alpha = 0.5,
+                args = list(mean = mu0,
+                            sd = sd0),
+                xlim = c(qnorm(1-alpha, mean = mu0, sd = sd0), 20)
+                ) +
+  stat_function(fun = "dnorm",
+                geom = "area",
+                size = 1,
+                fill = "red",
+                alpha = 0.5,
+                args = list(mean = mu1,
+                            sd = sd1),
+                xlim = c(0, c(qnorm(1-alpha, mean = mu0, sd = sd0)))
+                ) +
+  geom_vline(xintercept = qnorm(1-alpha, mean = mu0, sd = sd0),
+             size = 1) +
+  coord_cartesian(expand = F)
+
+```
+
+## Effect sizes
+
+### eta-squared 
+
+Read poker data set 
+
+
+One way ANOVA
+
+```{r}
+library("lsr")
+
+fit = lm(formula = balance ~ hand, 
+         data = df.poker)
+
+etaSquared(fit)
+
+# compute by hand 
+fit %>% 
+  anova %>% 
+  tidy() %>% 
+  pull(sumsq) %>% 
+  divide_by(sum(.)) %>% 
+  extract(1)
+```
+
+Two way ANOVA 
+
+```{r}
+library("lsr")
+
+fit = lm(formula = balance ~ hand * skill, 
+         data = df.poker)
+
+etaSquared(fit)
+
+# compute by hand 
+eta_squared = fit %>% 
+  anova %>% 
+  tidy() %>% 
+  pull(sumsq) %>% 
+  divide_by(sum(.)) %>% 
+  extract(1)
+
+eta_partial_squared = fit %>% 
+  anova %>% 
+  tidy() %>% 
+  filter(term %in% c("hand","Residuals")) %>% 
+  select(term, sumsq) %>% 
+  spread(term, sumsq) %>% 
+  summarize(eta_partial_squared = hand / (hand + Residuals)) %>% 
+  pull(eta_partial_squared)
+  
+```
+
+### cohen's d
+
+
+Cohen's $d$ is defined as: 
+
+$$
+d = \frac{\overline y_1 - \overline y_2}{s_p}
+$$
+
+where
+
+$$
+s_p = \sqrt\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}
+$$
+
+
+```{r}
+library("lsr")
+cohensD(x = balance ~ student,
+        data = df.credit)
+
+# let's double check 
+df.cohen = df.credit %>% 
+  group_by(student) %>% 
+  summarize(mean = mean(balance),
+            var = var(balance),
+            n = n()) %>% 
+  ungroup()
+
+n1 = df.cohen$n[1]
+n2 = df.cohen$n[2]
+var1 = df.cohen$var[1]
+var2 = df.cohen$var[2]
+mean1 = df.cohen$mean[1]
+mean2 = df.cohen$mean[2]
+
+sp = sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2))
+
+d = abs(mean1 - mean2) / sp
+print(d)
+
+```
+
+```{r}
+lm(formula = balance ~ student,
+   data = df.credit %>% 
+     mutate_at(vars(balance), funs(scale(.)[,]))) %>% 
+  summary()
+```
+
+
+## Determining sample size 
+
+### `pwr` package
+
+```{r}
+pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+           sig.level = 0.05, 
+           power = 0.80, 
+           alternative = "greater")
+```
+
+```{r}
+pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+           sig.level = 0.05, 
+           power = 0.80, 
+           alternative = "greater") %>% 
+  plot() +
+  theme(title = element_text(size = 16))
+```
+
+### simulation
+
+```{r}
+# number of simulations
+n_simulations = 1000
+
+# run simulation
+df.power = crossing(n = seq(10, 50, 1),
+                    simulation = 1:n_simulations,
+                    # p = c(0.75, 0.8, 0.85)) %>%
+                    p = 0.75) %>%
+  mutate(index = 1:n()) %>% # add an index column
+  group_by(index, n, simulation) %>% 
+  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
+  group_by(index, simulation, p) %>% 
+  nest() %>% # put data in list column
+  mutate(fit = map(data, 
+                   ~ binom.test(x = .$response, # define formula
+                          n = .$n,
+                          p = 0.5,
+                          alternative = "two.sided")),
+         p.value = map_dbl(fit, ~ .$p.value)) %>% # run binomial test and extract p-value
+  unnest(data) %>% 
+  select(-fit)
+
+# data frame for plot   
+df.plot = df.power %>% 
+  group_by(n, p) %>% 
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup() %>% 
+  mutate(p = as.factor(p))
+
+# plot data 
+ggplot(data = df.plot, 
+       mapping = aes(x = n, y = power, color = p, group = p)) +
+  geom_smooth(method = "loess")
+
+# based on simulations
+df.plot %>%
+  filter(p == 0.75, near(power, 0.8, tol = 0.02))
+  
+ 
+# analytic solution
+pwr.p.test(h = ES.h(0.5, 0.75),
+           power = 0.8,
+           alternative = "two.sided")
+```
+
+Step by step: 
+
+```{r}
+# number of simulations
+n_simulations = 10
+
+crossing(n = seq(10, 50, 1),
+                    simulation = 1:n_simulations,
+                    p = c(0.75, 0.8, 0.85)) %>% 
+  group_by(n, simulation, p) %>% 
+  mutate(index = 1:n()) %>% # add an index column
+  group_by(index, n, simulation) %>% 
+  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% 
+  filter(row_number() < 2) %>% 
+  head(10) %>% 
+                      kable(digits = 2) %>% 
+                      kable_styling(bootstrap_options = "striped",
+                                  full_width = F)
+                    
+```
+
+
+```{r}
+pwr.r.test(r = 0.1,
+           sig.level = 0.01,
+           power = 0.8,
+           alternative = "greater") %>% 
+  plot()
+```
+
+
+## Additional resources 
+
+- [Getting started with `pwr`](https://cran.r-project.org/web/packages/pwr/vignettes/pwr-vignette.html)
+- [Visualize power](https://rpsychologist.com/d3/NHST/)
+- [Calculating and reporting effect sizes to facilitate cumulative science: a practical primer for t-tests and ANOVAs](https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00863/full)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+
+## References 
+

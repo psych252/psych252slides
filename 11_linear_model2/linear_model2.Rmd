@@ -570,6 +570,8 @@ ggplot(df.fit1, aes(fitted, resid)) +
   geom_point()
 ```
 
+# One categorical variable
+
 Credit data set 
 
 ```{r}
@@ -629,6 +631,22 @@ ggplot(df.credit,
   geom_point(alpha = 0.5) +
   scale_color_brewer(palette = "Set1")
 ```
+
+Plot of mean differences 
+
+```{r}
+ggplot(data = df.credit,
+       mapping = aes(x = student, y = balance, fill = student)) + 
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               show.legend = F) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) +
+  scale_fill_brewer(palette = "Set1")
+```
+
 
 ```{r}
 t.test(x = df.credit$balance[df.credit$student == "No"],
