@@ -8,7 +8,9 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=9"]
+    pandoc_args: ["--number-offset=12"]
+bibliography: [packages.bib]
+nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
@@ -35,7 +37,10 @@ library("broom")    # for tidying up linear models
 library("afex")    # for running ANOVAs
 library("emmeans")    # for calculating constrasts
 library("car")    # for calculating ANOVAs
-library("tidyverse")  # for wrangling, plotting, etc. 
+library("tidyverse")  # for wrangling, plotting, etc.
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -1238,6 +1243,180 @@ lm(formula = balance ~ hand + skill,
   Anova(type = "3")
 ```
 
+## misc 
+
+### PLanned contrasts
+
+```{r}
+df.poker %>% 
+  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
+  select(participant, hand, hand_other, balance) %>% 
+  group_by(hand) %>%
+           top_n(3) %>% 
+           kable(digits = 3) %>% 
+           kable_styling(bootstrap_options = "striped",
+                       full_width = F) 
+  
+
+df.poker %>% 
+  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
+  lm(balance ~ 1 + hand_other, 
+     data = .) %>% 
+  summary()
+         
+# df.poker %>%
+#   group_by(hand) %>%
+#   summarize(mean = mean(balance)) %>%
+#   spread(hand, mean) %>%
+#     head(1) %>%
+#     kable(digits = 2) %>%
+#     kable_styling(bootstrap_options = "striped",
+#                 full_width = F)
+  
+df.poker %>% 
+  lm(balance ~ hand,
+     data = .,
+     contrasts = list(hand = contr.sum)) %>% 
+  summary()
+
+df.poker %>% 
+lm(balance ~ skill,
+     data = .) %>% 
+  summary()
+
+```
+
+```{r}
+library("emmeans")
+
+# make sure to check the order of levels
+df.poker$hand %>% levels()
+
+# define the contrasts of interest 
+contrasts = list(bad_rest = c(-1, 0.5, 0.5),
+                 neutral_vs_good = c(0, -1, 1))
+
+# compute estimated marginal means
+leastsquare = emmeans(fit_a, "hand")
+
+# run follow-up analyses
+contrast(leastsquare,
+         contrasts,
+         adjust = "bonferroni")
+  # tidy()%>% 
+  #   head(2) %>% 
+  #   kable(digits = 2) %>% 
+  #   kable_styling(bootstrap_options = "striped",
+  #               full_width = F)
+
+df.test = df.poker %>% 
+  mutate(code1 = ifelse(hand == "bad", -1, 0.5),
+         code2 = ifelse(hand == "bad", 0, NA),
+         code2 = ifelse(hand == "neutral", -1, code2),
+         code2 = ifelse(hand == "good", 1, code2))
+
+lm(formula = balance ~ code1 + code2,
+   data = df.test) %>% 
+  summary()
+
+
+
+```
+
+```{r}
+df.poker %>% 
+  group_by(hand) %>% 
+  summarize(mean = mean(balance)) %>% 
+  spread(hand, mean) %>% 
+  mutate(diff_bad_rest = (neutral + good) - bad)
+```
+
+
+```{r}
+# lm(formula = balance ~ code1 + code2,
+lm(formula = balance ~ hand,
+   data = df.poker,
+   contrasts = list(hand = "contr.sum")) %>% 
+  summary()
+```
+
+
+
+```{r}
+tibble(
+  contrast = c("AB vs CD",
+               "A vs B",
+               "C vs D"),
+  A = c(1, 1, 1),
+  B = c(1, -1, -1),
+  C = c(-1, 1, -1),
+  D = c(-1, -1, 1)
+) %>% 
+  mutate(sum = A + B + C + D) %>% 
+  head(3) %>% 
+  kable(digits = 1) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+
+```{r}
+tibble(
+  contrast = c("Bad vs Rest",
+               "Neutral vs Good"),
+  Bad = c(-2, 0),
+  Neutral = c(1, -1),
+  Good = c(1, 1)
+) %>% 
+  # mutate(sum = Bad + Neutral + Good) %>% 
+  head(3) %>% 
+  kable(digits = 1) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+```{r}
+df.poker %>% 
+  # mutate(hand = fct_relevel(hand, "neutral")) %>%
+  lm(formula = balance ~ hand * skill,
+     data = .,
+     contrast = list(hand = "contr.sum", 
+                     skill = "contr.sum")) %>% 
+  summary()
+```
+
+```{r}
+df.poker %>% 
+  # mutate(hand = fct_relevel(hand, "neutral")) %>%
+  lm(formula = balance ~ hand,
+     data = .,
+     contrast = list(hand = "contr.sum")) %>% 
+  summary()
+```
+
+
+```{r}
+df.poker %>% 
+  group_by(skill) %>% 
+  summarize(mean = mean(balance))
+```
+
+
+
+```{r}
+df.poker %>% 
+  # mutate(hand = fct_relevel(hand, "neutral")) %>%
+  lm(formula = balance ~ hand,
+    data = .) %>% 
+  summary()
+
+lm(formula = balance ~ hand * skill, data = df.poker,
+   contrasts = list(hand = "contr.sum", skill = "contr.sum"))
+```
+
+
 
 ## Additional resources 
 
@@ -1254,3 +1433,5 @@ Information about this R session including which version of R was used, and what
 ```{r session}
 sessionInfo()
 ```
+
+## References

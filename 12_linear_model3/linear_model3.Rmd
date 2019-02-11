@@ -8,7 +8,9 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=9"]
+    pandoc_args: ["--number-offset=11"]
+bibliography: [packages.bib]
+nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +24,7 @@ knitr::opts_chunk$set(
 # Linear model 3
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages("afex")
+install.packages(c("afex", "car"))
 ```
 
 ## Load packages and set plotting theme  
@@ -32,9 +34,13 @@ library("knitr")      # for knitting RMarkdown
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
-library("afex")    # for running ANOVAs
+library("car")    # for running ANOVAs
+library("afex")    # also for running ANOVAs
 library("emmeans")    # for calculating constrasts
 library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -44,11 +50,9 @@ theme_set(
 )
 ```
 
-## Poker data set 
+## Load data sets 
 
-Read in the data:
-
-```{r}
+```{r, message=F, warning=FALSE}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -62,10 +66,9 @@ df.poker = read_csv("data/poker.csv") %>%
                         labels = c("fixed", "none")),
          participant = 1:n()) %>% 
   select(participant, everything())
-
 ```
 
-Note that the balance is in Euros. 
+Selection of the data: 
 
 ```{r}
 df.poker %>% 
@@ -78,7 +81,9 @@ df.poker %>%
 
 ```
 
-Visualize the data 
+### One-way ANOVA
+
+#### Visualization 
 
 ```{r}
 df.poker %>% 
@@ -97,31 +102,21 @@ df.poker %>%
   labs(y = "final balance (in Euros)") + 
   scale_fill_manual(values = c("red", "orange", "green")) +
   theme(legend.position = "none")
-  
 ```
 
+#### Model fitting 
 
-### ANOVA on hand 
+We pass the result of the `lm()` function to `anova()` to calculate an analysis of variance like so: 
 
 ```{r}
-fit.anova = df.poker %>% 
-  aov_ez(id = "participant",
-         dv = "balance",
-         data = .,
-         between = "hand")
-
-fit.anova %>% summary()
-
+lm(formula = balance ~ hand, 
+   data = df.poker) %>% 
+  anova()
 ```
 
-```{r}
-fit.lm = lm(formula = balance ~ hand, 
-            data = df.poker)
+#### Hypothesis test 
 
-fit.lm %>% summary()
-```
-
-Model comparison 
+The F-test reported by the ANOVA compares the fitted model with a compact model that only predicts the grand mean: 
 
 ```{r}
 # fit the models 
@@ -130,17 +125,14 @@ fit_a = lm(formula = balance ~ hand, data = df.poker)
 
 # compare via F-test
 anova(fit_c, fit_a)
-
-fit_a %>% summary()
 ```
 
+#### Visualize the model's predictions 
 
-
-### Visualization
+Here is the model prediction of the compact model:
 
 ```{r}
 set.seed(1)
-
 
 df.plot = df.poker %>% 
   mutate(hand_jitter = 1 + runif(n(), min = -0.25, max = 0.25))
@@ -167,6 +159,9 @@ ggplot(data = df.plot,
 
 ```
 
+> Note that since we have a categorical variable here, we don't really have a continuous x-axis. I've just jittered the values so it's easier to show the residuals. 
+
+And here is the prediction of the augmented model (which predicts different means for each group).
 
 ```{r}
 set.seed(1)
@@ -227,6 +222,9 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
+The vertical lines illustrate the residual sum of squares. 
+
+We can illustrate the model sum of squares like so: 
 
 ```{r}
 set.seed(1)
@@ -288,25 +286,11 @@ ggplot(data = df.plot,
 
 ```
 
+This captures the variance in the data that is accounted for by the `hand` variable. 
 
-
-Augmented model coefficients: 
-
-```{r}
-fit_a %>% 
-  tidy() %>% 
-    head(4) %>% 
-    kable(digits = 3) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-```
-
-
-Calculate PRE
+Just for kicks, let's calculate our cherished proportion of reduction in error PRE:
 
 ```{r}
-
 df.c = fit_c %>% 
   augment() %>% 
   clean_names() %>% 
@@ -320,20 +304,24 @@ df.a = fit_a %>%
 pre = 1 - df.a$sse/df.c$sse
 print(pre %>% round(2))
 ```
-
-
-### Dummy coding
+Note that this is the same as the $R^2$ for the augmented model: 
 
 ```{r}
+fit_a %>% 
+  summary()
+```
+
+#### Dummy coding
+
+Let's check that we understand how dummy-coding works for a variable with more than 2 levels: 
+
+```{r}
+# dummy code the hand variable
 df.poker = df.poker %>% 
   mutate(hand_neutral = ifelse(hand == "neutral", 1, 0),
          hand_good = ifelse(hand == "good", 1, 0))
 
-fit.tmp = lm(balance ~ 1 + hand_neutral + hand_good, df.poker)
-
-fit.tmp %>% 
-  summary()
-
+# show the dummy coded variables 
 df.poker %>% 
   select(participant, contains("hand"), balance) %>% 
   group_by(hand) %>% 
@@ -343,33 +331,21 @@ df.poker %>%
   kable_styling(bootstrap_options = "striped",
               full_width = F)
 
+# fit the model
+fit.tmp = lm(balance ~ 1 + hand_neutral + hand_good, df.poker)
 
-
-```
-
-### Effect coding 
-
-```{r}
-df.poker %>% 
-  lm(balance ~ hand,
-     data = .,
-     contrasts = list(hand = contr.treatment)) %>% 
-  summary()
-```
-
-```{r}
-df.poker %>% 
-  lm(balance ~ hand,
-     data = .,
-     contrasts = list(hand = contr.sum)) %>% 
+# show the model summary 
+fit.tmp %>% 
   summary()
 
-df.poker %>% 
-  mutate(hand_neutral = ifelse(hand == "neutral", -1, 0),
-         hand_good = ifelse(hand == "good", 1, 0))
 ```
+Here, I've directly put the dummy-coded variables as predictors into the `lm()`. We get the same model as if we used the `hand` variable instead. 
 
-Follow-up questions:
+#### Follow up questions
+
+Here are some follow up questions we may ask about the data. 
+
+Are bad hands different from neutral hands? 
 
 ```{r}
 df.poker %>% 
@@ -379,6 +355,8 @@ df.poker %>%
   summary()
 ```
 
+Are neutral hands different from good hands? 
+
 ```{r}
 df.poker %>% 
   filter(hand %in% c("neutral", "good")) %>% 
@@ -386,6 +364,8 @@ df.poker %>%
      data = .) %>% 
   summary()
 ```
+
+Doing the same thing by recoding our hand factor and taking "neutral" to be the reference category:
 
 ```{r}
 df.poker %>% 
@@ -395,223 +375,38 @@ df.poker %>%
   summary()
 ```
 
-### PLanned contrasts
-
-```{r}
-df.poker %>% 
-  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
-  select(participant, hand, hand_other, balance) %>% 
-  group_by(hand) %>%
-           top_n(3) %>% 
-           kable(digits = 3) %>% 
-           kable_styling(bootstrap_options = "striped",
-                       full_width = F) 
-  
-
-df.poker %>% 
-  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
-  lm(balance ~ 1 + hand_other, 
-     data = .) %>% 
-  summary()
-         
-# df.poker %>%
-#   group_by(hand) %>%
-#   summarize(mean = mean(balance)) %>%
-#   spread(hand, mean) %>%
-#     head(1) %>%
-#     kable(digits = 2) %>%
-#     kable_styling(bootstrap_options = "striped",
-#                 full_width = F)
-  
-df.poker %>% 
-  lm(balance ~ hand,
-     data = .,
-     contrasts = list(hand = contr.sum)) %>% 
-  summary()
-
-df.poker %>% 
-lm(balance ~ skill,
-     data = .) %>% 
-  summary()
-
-```
-
-```{r}
-library("emmeans")
-
-# make sure to check the order of levels
-df.poker$hand %>% levels()
-
-# define the contrasts of interest 
-contrasts = list(bad_rest = c(-1, 0.5, 0.5),
-                 neutral_vs_good = c(0, -1, 1))
-
-# compute estimated marginal means
-leastsquare = emmeans(fit_a, "hand")
-
-# run follow-up analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
-  # tidy()%>% 
-  #   head(2) %>% 
-  #   kable(digits = 2) %>% 
-  #   kable_styling(bootstrap_options = "striped",
-  #               full_width = F)
-
-df.test = df.poker %>% 
-  mutate(code1 = ifelse(hand == "bad", -1, 0.5),
-         code2 = ifelse(hand == "bad", 0, NA),
-         code2 = ifelse(hand == "neutral", -1, code2),
-         code2 = ifelse(hand == "good", 1, code2))
-
-lm(formula = balance ~ code1 + code2,
-   data = df.test) %>% 
-  summary()
-
-
-
-```
-
-```{r}
-df.poker %>% 
-  group_by(hand) %>% 
-  summarize(mean = mean(balance)) %>% 
-  spread(hand, mean) %>% 
-  mutate(diff_bad_rest = (neutral + good) - bad)
-```
-
-
-```{r}
-# lm(formula = balance ~ code1 + code2,
-lm(formula = balance ~ hand,
-   data = df.poker,
-   contrasts = list(hand = "contr.sum")) %>% 
-  summary()
-```
-
-
-
-```{r}
-tibble(
-  contrast = c("AB vs CD",
-               "A vs B",
-               "C vs D"),
-  A = c(1, 1, 1),
-  B = c(1, -1, -1),
-  C = c(-1, 1, -1),
-  D = c(-1, -1, 1)
-) %>% 
-  mutate(sum = A + B + C + D) %>% 
-  head(3) %>% 
-  kable(digits = 1) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-```
-
-
-```{r}
-tibble(
-  contrast = c("Bad vs Rest",
-               "Neutral vs Good"),
-  Bad = c(-2, 0),
-  Neutral = c(1, -1),
-  Good = c(1, 1)
-) %>% 
-  # mutate(sum = Bad + Neutral + Good) %>% 
-  head(3) %>% 
-  kable(digits = 1) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-```
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand * skill,
-     data = .,
-     contrast = list(hand = "contr.sum", 
-                     skill = "contr.sum")) %>% 
-  summary()
-```
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand,
-     data = .,
-     contrast = list(hand = "contr.sum")) %>% 
-  summary()
-```
-
-
-```{r}
-df.poker %>% 
-  group_by(skill) %>% 
-  summarize(mean = mean(balance))
-```
-
-
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand,
-    data = .) %>% 
-  summary()
-
-lm(formula = balance ~ hand * skill, data = df.poker,
-   contrasts = list(hand = "contr.sum", skill = "contr.sum"))
-```
-
-
-
 ## Two-way ANOVA 
 
-### Group means
+Now let's take a look at a case where we have multiple categorical predictors. 
 
+### Visualization
+
+Let's look at the overall effect of skill: 
 
 ```{r}
-df.poker %>% 
-  group_by(skill) %>% 
-  summarize(mean = mean(balance),
-            sd = sd(balance)) %>% 
-    head(4) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
+ggplot(data = df.poker,
+       mapping = aes(x = skill,
+                     y = balance)) +
+  geom_point(position = position_jitter(width = 0.2,
+                                             height = 0),
+             alpha = 0.2) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               color = "black",
+               position = position_dodge(0.9)) + 
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               color = "black",
+               position = position_dodge(0.9),
+               aes(shape = skill),
+               size = 3,
+               fill = "black") +
+  scale_shape_manual(values = c(21, 22)) +
+  guides(shape = F)
   
 ```
 
-```{r}
-df.poker %>% 
-  group_by(hand) %>% 
-  summarize(mean = mean(balance)) %>% 
-  spread(hand, mean) %>% 
-    head(4) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-```
-
-
-
-
-```{r}
-df.poker %>% 
-  group_by(skill, hand) %>% 
-  summarize(mean = mean(balance)) %>% 
-  spread(hand, mean) %>% 
-    head(2) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-```
-
-
-### Plots 
+And now let's take a look at the means for the full the 3 (hand) x 2 (skill) design:
 
 ```{r}
 ggplot(data = df.poker,
@@ -639,44 +434,21 @@ ggplot(data = df.poker,
   
 ```
 
+### Model fitting
+
+For N-way ANOVAs, we need to be careful about what sums of squares we are using. The standard (based on the SPSS output) is to use type III sums of squares. We set this up in the following way: 
 
 ```{r}
-ggplot(data = df.poker,
-       mapping = aes(x = skill,
-                     y = balance)) +
-  geom_point(position = position_jitter(width = 0.2,
-                                             height = 0),
-             alpha = 0.2) + 
-  stat_summary(fun.data = "mean_cl_boot",
-               geom = "linerange",
-               color = "black",
-               position = position_dodge(0.9)) + 
-  stat_summary(fun.y = "mean",
-               geom = "point",
-               color = "black",
-               position = position_dodge(0.9),
-               aes(shape = skill),
-               size = 3,
-               fill = "black") +
-  # scale_fill_manual(values = c("red", "orange", "green")) +
-  scale_shape_manual(values = c(21, 22)) +
-  guides(shape = F)
-  
+lm(formula = balance ~ hand * skill,
+   data = df.poker,
+   contrasts = list(hand = "contr.sum",
+                    skill = "contr.sum")) %>% 
+  Anova(type = 3)
 ```
 
-### Analysis of variance
+So, we fit our linear model, but set the contrasts to "contr.sum" (which yields effect coding instead of dummy coding), and then specify the desired type of sums of squares in the `Anova()` function call.  
 
-
-```{r}
-lm(formula = balance ~ hand * skill, data = df.poker) %>% 
-  anova()
-  # tidy() %>% 
-  #   head(4) %>% 
-  #   kable(digits = 2) %>% 
-  #   kable_styling(bootstrap_options = "striped",
-  #               full_width = F)
-  
-```
+Alternatively, we could use the `afex` package and specify the ANOVA like so: 
 
 ```{r}
 aov_ez(id = "participant",
@@ -686,22 +458,11 @@ aov_ez(id = "participant",
 )
 ```
 
-```{r}
-aov(balance ~ hand * skill, data = df.poker)
-```
-
-
-
-```{r}
-lm(formula = balance ~ hand * skill,
-   data = df.poker,
-   contrasts = list(hand = contr.sum,
-                    skill = contr.sum)) %>% 
-  summary()
-
-```
+The `afex` package uses effect coding and type 3 sums of squares by default.
 
 ### Interpreting interactions 
+
+Code I've used to generate the different plots in the competition: 
 
 ```{r}
 set.seed(1)
@@ -710,17 +471,12 @@ b0 = 15
 nsamples = 30
 sd = 5
 
-b1 = 1
+# simple effect of condition
+b1 = 10
 b2 = 1
 b1_2 = 1
 
-
-# main effect of condition
-# b1 = 10 
-# b2 = 1 
-# b1_2 = 1
-
-# two main effects
+# two simple effects
 # b1 = 5
 # b2 = -5
 # b1_2 = 0
@@ -730,7 +486,7 @@ b1_2 = 1
 # b2 = 10
 # b1_2 = -20
 
-# interaction and main effect
+# interaction and simple effect
 # b1 = 10
 # b2 = 0
 # b1_2 = -20
@@ -761,22 +517,9 @@ ggplot(df.data,
                size = 1,
                position = position_dodge(0.9)) +
   scale_fill_brewer(palette = "Set1")
-
-# ggsave("figures/main_effect.png", width = 8, height = 6)
-# ggsave("figures/two_main_effects.png", width = 8, height = 6)
-# ggsave("figures/interaction.png", width = 8, height = 6)
-# ggsave("figures/all_three.png", width = 8, height = 6)
-# ggsave("figures/interaction_main.png", width = 8, height = 6)
-# ggsave("figures/no_effects.png", width = 8, height = 6)
-
-# lm(formula = rating ~ condition * treatment,
-#   data = df.data) %>%
-#   anova() %>%
-#   tidy() %>%
-#   mutate(significant = p.value < .01)
-
 ```
 
+And here is one specific example. Let's generate the data first: 
 
 ```{r}
 # make example reproducible 
@@ -786,8 +529,8 @@ set.seed(1)
 nsamples = 30
 
 b0 = 15
-b1 = 10 # main effect of condition
-b2 = 0 # main effect of treatment
+b1 = 10 # simple effect of condition
+b2 = 0 # simple effect of treatment
 b1_2 = -20 # interaction effect
 sd = 5
 
@@ -803,6 +546,21 @@ df.data = tibble(
   treatment = factor(treatment, labels = c("1", "2")))
 ```
 
+Show part of the generated data frame: 
+
+```{r}
+# show data frame
+df.data %>% 
+  group_by(condition, treatment) %>% 
+  filter(row_number() < 3) %>% 
+  ungroup() %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+Plot the data:
 
 ```{r}
 # plot data
@@ -822,19 +580,7 @@ ggplot(df.data,
   scale_fill_brewer(palette = "Set1")
 ```
 
-```{r}
-# show data frame
-df.data %>% 
-  group_by(condition, treatment) %>% 
-  filter(row_number() < 3) %>% 
-  ungroup() %>% 
-    # head(10) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-```
-
+And check whether we can successfully infer the parameters that we used to generate the data: 
 
 ```{r}
 # infer parameters
@@ -842,7 +588,6 @@ lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
    data = df.data) %>% 
   summary()
 ```
-
 
 ## Additional resources 
 
@@ -859,3 +604,5 @@ Information about this R session including which version of R was used, and what
 ```{r session}
 sessionInfo()
 ```
+
+## References

@@ -1,14 +1,16 @@
 ---
-title: "Class 10"
+title: "Class 11"
 author: "Tobias Gerstenberg"
-date: "January 30th, 2019"
+date: "February 1st, 2019"
 output:
   bookdown::html_document2:
     toc: true
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=9"]
+    pandoc_args: ["--number-offset=10"]
+bibliography: [packages.bib]
+nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
@@ -19,12 +21,11 @@ knitr::opts_chunk$set(
   fig.show = "hold")
 ```
 
-# Linear model 1
+# Linear model 2
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages(c("corrr", "GGally"))
+install.packages(c("corrr", "GGally"))
 ```
-
 
 ## Load packages and set plotting theme  
 
@@ -32,11 +33,14 @@ knitr::opts_chunk$set(
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("broom")    # for tidying up linear models 
-library("corrr")    # for calculating correlations between many variables
-library("corrplot")    # for plotting correlations
-library("GGally")    # for running ggpairs() function
+library("broom")      # for tidying up linear models 
+library("corrr")      # for calculating correlations between many variables
+library("corrplot")   # for plotting correlations
+library("GGally")     # for running ggpairs() function
 library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -46,61 +50,23 @@ theme_set(
 )
 ```
 
-## Things that came up in class
+## Load data sets 
 
-Can the density at a given point be greater than 1? Yes, since it's the area under the curve that has to sum to 1. Here is the density plot for a uniform distribution (note that the density is 1 uniformly).
+Let's load the data sets that we'll explore in this class: 
 
-```{r}
-tmp.max = 5
-
-ggplot(data = tibble(x = c(0, tmp.max)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dunif",
-                geom = "area",
-                fill = "lightblue",
-                size = 1,
-                args = list(min = 0,
-                            max = tmp.max)) +
-  stat_function(fun = "dunif",
-                size = 1,
-                args = list(min = 0,
-                            max = tmp.max)) +
-  coord_cartesian(xlim = c(0, tmp.max),
-                  ylim = c(0, 6),
-                  expand = F)
-```
-
-And here is the density plot for a beta distribution with 
-
-```{r}
-ggplot(data = tibble(x = c(0, 1)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dbeta",
-                args = list(shape1 = 1,
-                            shape2 = 2),
-                geom = "area",
-                fill = "lightblue",
-                size = 1) +
-  stat_function(fun = "dbeta",
-                args = list(shape1 = 1,
-                            shape2 = 2),
-                size = 1) +
-  coord_cartesian(xlim = c(0, 1),
-                  ylim = c(0, 3),
-                  expand = F)
-```
-
-## Credit data
-
-```{r}
+```{r linear-model2-1, warning=F, message=FALSE}
+# credit data set
 df.credit = read_csv("data/credit.csv") %>% 
   rename(index = X1) %>% 
   clean_names()
+
+# advertising data set 
+df.ads = read_csv("data/advertising.csv") %>% 
+  clean_names() %>% 
+  rename(index = x1)
 ```
 
-
-```{r}
-
+```{r linear-model2-2, echo=F, fig.cap="Description of the different variables in the df.credit data set."}
 tibble(
   variable = c("income", "limit", "rating", "cards", "age", "education",
                "gender", "student", "married", "ethnicity", "balance"),
@@ -121,9 +87,83 @@ tibble(
                 full_width = F)
 ```
 
+## Things that came up in class
 
+Can the density at a given point be greater than 1? Yes, since it's the area under the curve that has to sum to 1. Here is the density plot for a uniform distribution (note that the density is 1 uniformly).
 
-```{r}
+```{r linear-model2-3}
+# play around with this value to see how the density changes
+tmp.max = 5
+
+ggplot(data = tibble(x = c(0, tmp.max)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dunif",
+                geom = "area",
+                fill = "lightblue",
+                size = 1,
+                args = list(min = 0,
+                            max = tmp.max)) +
+  stat_function(fun = "dunif",
+                size = 1,
+                args = list(min = 0,
+                            max = tmp.max)) +
+  coord_cartesian(xlim = c(0, tmp.max),
+                  ylim = c(0, 6),
+                  expand = F)
+```
+
+And here is the density plot for a beta distribution:
+
+```{r linear-model2-4}
+# play around with these parameters
+tmp.shape1 = 1
+tmp.shape2 = 2
+
+ggplot(data = tibble(x = c(0, 1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dbeta",
+                args = list(shape1 = tmp.shape1,
+                            shape2 = tmp.shape2),
+                geom = "area",
+                fill = "lightblue",
+                size = 1) +
+  stat_function(fun = "dbeta",
+                args = list(shape1 = tmp.shape1,
+                            shape2 = tmp.shape2),
+                size = 1) +
+  coord_cartesian(xlim = c(0, 1),
+                  ylim = c(0, 3),
+                  expand = F)
+```
+
+## Multiple continuous variables 
+
+Let's take a look at a case where we have multiple continuous predictor variables. In this case, we want to make sure that our predictors are not too highly correlated with each other (as this makes the interpration of how much each variable explains the outcome difficult). So we first need to explore the pairwise correlations between variables. 
+
+### Explore correlations 
+
+The `corrr` package is great for exploring correlations between variables. To find out more how `corrr` works, take a look at this vignette: 
+
+```{r linear-model2-5, eval=F}
+vignette(topic = "using-corrr",
+         package = "corrr")
+```
+
+Here is an example that illustrates some of the key functions in the `corrr` package (using the advertisement data): 
+
+```{r linear-model2-6}
+df.ads %>% 
+  select_if(is.numeric) %>% 
+  correlate(quiet = T) %>% 
+  shave() %>%
+  fashion()
+```
+
+#### Visualize correlations
+
+##### Correlations with the dependent variable
+
+```{r linear-model2-7, fig.cap="Bar plot illustrating how strongly different variables correlate with income."}
 df.credit %>% 
   select_if(is.numeric) %>%
   correlate(quiet = T) %>%
@@ -140,12 +180,13 @@ df.credit %>%
                        mid = "white",
                        high = "skyblue1",
                        limits = c(-1, 1)) + 
-  coord_flip() 
+  coord_flip() +
+  theme(axis.title.y = element_blank())
 ```
 
-Another visualization (similar to the one that used rplot() above). 
+##### All pairwise correlations
 
-```{r}
+```{r linear-model2-8, fig.caption = "Correlation plot showing the pairwise correlations between different variables."}
 tmp = df.credit %>%
   select_if(is.numeric) %>%
   correlate(diagonal = 0,
@@ -156,141 +197,15 @@ tmp = df.credit %>%
   corrplot()
 ```
 
-
-```{r}
-fit = df.credit %>% 
-  lm(balance ~ 1 + income, data = .)
-
-fit %>% 
-  summary()
-
-fit2 = df.credit %>% 
-  # mutate_at(vars(income, limit, education), funs(scale)) %>% 
-  # mutate_at(vars(income, limit, education), funs(scale)) %>% 
-  lm(balance ~ 1 + income + limit + education, data = .)
-
-fit2 %>% summary()
-
-fit = lm(balance ~ income + limit, data = df.credit)
-fit %>% summary()
-```
-
-Relationships between variables
-
-
-
-```{r}
-fit = lm(balance ~ 1 + limit, data = df.credit)
-
-df.fit = fit %>% 
-  augment() %>% 
-  clean_names() %>% 
-  bind_cols(df.credit %>% 
-              select(income))
-
-fit2 = lm(resid ~ 1 + income, data = df.fit)
-
-fit2 %>% summary()
-
-fit2 = lm(balance ~ 1 + limit, data = df.credit)
-
-df.fit2 = fit2 %>% 
-  augment() %>% 
-  clean_names()
-
-fit3 = lm(balance ~ 1 + income + limit, data = df.credit)
-
-df.fit3 = fit3 %>% 
-  augment() %>% 
-  clean_names()
-
-# ggplot(data = df.fit3,
-ggplot(data = df.fit2,
-       mapping = aes(x = fitted,
-                     y = resid)) + 
-  geom_point(alpha = 0.5)
-
-```
-
-
-```{r}
-df.plot = df.credit %>% 
-  mutate(income = cut(income,
-                      breaks = seq(min(income), max(income), length.out = 11),
-                      labels = 1:10),
-         limit = cut(limit,
-                      breaks = seq(min(limit), max(limit), length.out = 11),
-                      labels = 1:10)) %>% 
-  drop_na()
-
-ggplot(data = df.plot, 
-       mapping = aes(x = income,
-                     y = limit,
-                     fill = balance)) + 
-  geom_tile()
-```
-
-## Advertising 
-
-```{r}
-df.ads = read_csv("data/advertising.csv") %>% 
-  clean_names() %>% 
-  rename(index = x1)
-```
-
-```{r}
-df.ads %>% 
-  head(10) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-```
-
-## Correlations between numeric variables 
-
-```{r}
-df.ads %>% 
-  select_if(is.numeric) %>%
-  correlate() %>%
-  rearrange() %>%
-  shave() %>%
-  fashion() %>%
-    kable(digits = 3) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-```
-
-Useful functions in the `corrr` package. 
-
-```{r}
-df.ads %>% 
-  select_if(is.numeric) %>% 
-  correlate(quiet = T) %>% 
-  shave() %>%
-  fashion()
-```
-
-To find out more how `corrr` works, take a look at this vignette: 
-
-```{r eval=F}
-vignette(topic = "using-corrr",
-         package = "corrr")
-```
-
-### Visualizations 
-
-```{r}
+```{r linear-model2-9, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal."}
 df.ads %>%
   select(-index) %>% 
   ggpairs()
 ```
 
-
 With some customization: 
 
-```{r}
+```{r linear-model2-10, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal (customized)."}
 df.ads %>% 
   select(-index) %>%
   ggpairs(lower = list(continuous = wrap("points",
@@ -299,35 +214,21 @@ df.ads %>%
   theme(panel.grid.major = element_blank())
 ```
 
+### Multipe regression
 
+Now that we've explored the correlations, let's have a go at the multiple regression. 
 
+#### Visualization
 
-```{r}
-df.ads %>% 
-  select(-index) %>%
-  correlate() %>%
-  rearrange() %>%
-  shave() %>%
-  rplot(print_cor = T)
-```
+We'll first take another look at the pairwise relationships: 
 
-```{r}
-df.ads %>%
-  select(-index) %>%
-  correlate() %>%
-  column_to_rownames() %>%
-  as.matrix() %>%
-  corrplot(diag = F)
-```
-
-```{r}
-
-# tmp.x = "tv"
+```{r linear-model2-11}
+tmp.x = "tv"
 # tmp.x = "radio"
-tmp.x = "newspaper"
+# tmp.x = "newspaper"
 # tmp.y = "radio"
-# tmp.y = "radio"
-tmp.y = "tv"
+tmp.y = "radio"
+# tmp.y = "tv"
 
 ggplot(df.ads, 
        aes_string(x = tmp.x, y = tmp.y)) + 
@@ -345,12 +246,16 @@ ggplot(df.ads,
                            str_remove("^0+") # remove 0
                          ),
            size = 8) +
-  # scale_x_continuous(limits = c(0, 300)) +
-  # coord_cartesian(xlim = c(0, 300)) + 
   theme(text = element_text(size = 30))
 ```
 
-```{r}
+TV ads and radio ads aren't correlated. Yay! 
+
+#### Fitting, hypothesis testing, evaluation
+
+Let's see whether adding radio ads is worth it (over and above having TV ads).
+
+```{r linear-model2-12}
 # fit the models 
 fit_c = lm(sales ~ 1 + tv, data = df.ads)
 fit_a = lm(sales ~ 1 + tv + radio, data = df.ads)
@@ -359,9 +264,11 @@ fit_a = lm(sales ~ 1 + tv + radio, data = df.ads)
 anova(fit_c, fit_a)
 ```
 
-Evaluate the model 
+It's worth it! 
 
-```{r}
+Let's evaluate how well the model actually does. We do this by taking a look at the residual plot, and check whether the residuals are normally distributed.
+
+```{r linear-model2-13}
 tmp.fit = lm(sales ~ 1 + tv + radio, data = df.ads)
 
 df.plot = tmp.fit %>% 
@@ -387,17 +294,67 @@ ggplot(df.plot,
 
 ```
 
-```{r}
+There is a slight non-linear trend in the residuals. We can also see that the residuals aren't perfectly normally distributed. We'll see later what we can do about this ... 
 
+Let's see how well the model does overall: 
+
+```{r linear-model2-14}
+fit_a %>% 
+  glance() %>% 
+    kable(digits = 3) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
 ```
 
+As we can see, the model almost explains 90% of the variance. That's very decent! 
 
+#### Visualizing the model fits 
 
+Here is a way of visualizing how both tv ads and radio ads affect sales: 
 
-Interpreting the results: 
+```{r linear-model2-15}
+df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  augment() %>% 
+  clean_names()
 
-```{r}
+df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  tidy()
 
+ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
+  geom_point() +
+  scale_color_gradient(low = "gray80", high = "black") +
+  theme(legend.position = c(0.1, 0.8))
+```
+
+We used color here to encode TV ads (and the x-axis for the radio ads). 
+
+In addition, we might want to illustrate what relationship between radio ads and sales the model predicts for three distinct values for TV ads. Like so: 
+
+```{r linear-model2-16}
+df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  augment() %>% 
+  clean_names()
+
+df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+  tidy()
+
+ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
+  geom_point() +
+  geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 200,
+              slope = df.tidy$estimate[3]) +
+  geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 100,
+              slope = df.tidy$estimate[3]) +
+  geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 0,
+              slope = df.tidy$estimate[3]) +
+  scale_color_gradient(low = "gray80", high = "black") +
+  theme(legend.position = c(0.1, 0.8))
+```
+
+#### Interpreting the model fits
+
+Fitting the augmented model yields the following estimates for the coefficients in the model: 
+
+```{r linear-model2-17}
 fit_a %>% 
   tidy(conf.int = T) %>% 
     head(10) %>% 
@@ -407,27 +364,28 @@ fit_a %>%
   
 ```
 
-```{r}
+#### Standardizing the predictors
 
+One thing we can do to make different predictors more comparable is to standardize them. 
+
+```{r linear-model2-18}
 df.ads = df.ads %>% 
   mutate_at(vars(tv, radio), funs(scaled = scale(.)[,]))
   
-  df.ads %>% 
-    select(-newspaper) %>%
+df.ads %>% 
+  select(-newspaper) %>%
   head(10) %>% 
   kable(digits = 2) %>% 
   kable_styling(bootstrap_options = "striped",
                 full_width = F)
-  
 
 ```
 
+We can standardize (z-score) variables using the `scale()` function.
 
-```{r}
-
-# tmp.variable = "radio"
-tmp.variable = "tv"
-# tmp.variable = "radio_scaled"
+```{r linear-model2-19}
+# tmp.variable = "tv"
+tmp.variable = "tv_scaled" 
 
 ggplot(df.ads,
        aes_string(x = tmp.variable)) +
@@ -452,132 +410,16 @@ annotate(geom = "text",
 
 ```
 
-Evaluate the model: 
+Scaling a variable leaves the distribution intact, but changes the mean to 0 and the SD to 1. 
 
-```{r}
-fit_a %>% 
-  glance() %>% 
-    kable(digits = 3) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-```
+## One categorical variable
 
-```{r}
-lm(sales ~ 1 + tv + I(tv^2), data = df.ads) %>% 
-  tidy()
+Let's compare a compact model that only predicts the mean, with a model that uses the student variable as an additional predictor. 
 
-ggplot(df.ads,
-       aes(x = tv,
-           y = sales)) +
-  geom_point() + 
-  stat_smooth(method = "lm",
-              formula = y ~ poly(x, 2),
-              se = F,
-              color = "red") +
-  stat_smooth(method = "lm",
-              se = F,
-              color = "blue") 
-
-```
-
-
-
-```{r}
-# visualize predictions 
-
-
-
-
-```
-
-
-Visualize the model's predictions 
-
-```{r}
-
-df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
-  augment() %>% 
-  clean_names()
-
-df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
-  tidy()
-
-# df.predict = augment(fit, newdata = tibble(radio = 10))
-
-ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
-  geom_point() +
-  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 200,
-  #             slope = df.tidy$estimate[3]) +
-  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 100,
-  #             slope = df.tidy$estimate[3]) +
-  # geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 0,
-  #             slope = df.tidy$estimate[3]) +
-  scale_color_gradient(low = "gray80", high = "black") +
-  theme(legend.position = c(0.1, 0.8))
-```
-
-
-
-```{r}
-fit_a_scaled = lm(formula = sales ~ 1 + tv_scaled + radio_scaled,
-                  data = df.ads)
-fit_a_scaled %>% 
-  tidy(conf.int = T) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-
-fit_a_scaled %>% summary()
-
-fit = lm(formula = sales ~ 1, data = df.ads)
-
-a = fit %>% 
-  augment() %>% 
-  clean_names() %>% 
-  summarize(SSE = sum(resid^2))
-
-b = fit_a_scaled %>% 
-  augment() %>% 
-  clean_names() %>% 
-  summarize(SSE = sum(resid^2))
-
-pre = 1 - b$SSE/a$SSE
-
-anova(fit, fit_a_scaled)
-
-  
-```
-
-What about newspapers? 
-
-```{r}
-# fit the models 
-fit_c = lm(sales ~ 1 + tv, data = df.ads)
-fit_a = lm(sales ~ 1 + tv + newspaper, data = df.ads)
-
-# do the F test
-anova(fit_c, fit_a)
-```
-
-```{r}
-fit1 = lm(sales ~ newspaper, df.ads)
-
-df.fit1 = fit1 %>% 
-  augment() %>% 
-  clean_names()
-
-ggplot(df.fit1, aes(fitted, resid)) + 
-  geom_point()
-```
-
-# One categorical variable
-
-Credit data set 
-
-```{r}
+```{r linear-model2-20}
 # fit the models
 fit_c = lm(balance ~ 1, data = df.credit)
-fit_a = lm(balance ~ student, data = df.credit)
+fit_a = lm(balance ~ 1 + student, data = df.credit)
 
 # run the F test 
 anova(fit_c, fit_a)
@@ -586,10 +428,13 @@ fit_a %>%
   summary()
 ```
 
-Model predictions
+The `summary()` shows that it's worth it: the augmented model explains a signifcant amount of the variance (i.e. it significantly reduces the proportion in error PRE). 
 
-```{r}
+### Visualization of the model predictions
 
+Let's visualize the model predictions. Here is the compact model: 
+
+```{r linear-model2-21}
 ggplot(df.credit,
        aes(x = index, 
            y = balance)) +
@@ -601,7 +446,11 @@ ggplot(df.credit,
   geom_point(alpha = 0.5) 
 ```
 
-```{r}
+It just predicts the mean (the horizontal black line). The vertical lines from each data point to the mean illustrate the residuals. 
+
+And here is the augmented model:
+
+```{r linear-model2-22}
 df.fit = fit_a %>% 
   tidy() %>% 
   mutate(estimate = round(estimate,2))
@@ -612,29 +461,32 @@ ggplot(df.credit,
            color = student)) +
   geom_hline(yintercept = df.fit$estimate[1],
              size = 1,
-             color = "red") +
+             color = "#E41A1C") +
   geom_hline(yintercept = df.fit$estimate[1] + df.fit$estimate[2],
              size = 1,
-             color = "blue") +
+             color = "#377EB8") +
   geom_segment(data = df.credit %>%
                  filter(student == "No"),
                  aes(xend = index,
                    yend = df.fit$estimate[1]),
                alpha = 0.1,
-               color = "red") +
+               color = "#E41A1C") +
   geom_segment(data = df.credit %>%
                  filter(student == "Yes"),
                  aes(xend = index,
                    yend = df.fit$estimate[1] + df.fit$estimate[2]),
                alpha = 0.1,
-               color = "blue") +
+               color = "#377EB8") +
   geom_point(alpha = 0.5) +
-  scale_color_brewer(palette = "Set1")
+  scale_color_brewer(palette = "Set1") +
+  guides(color = guide_legend(reverse = T))
 ```
 
-Plot of mean differences 
+Note that this model predicts two horizontal lines. One for students, and one for non-students. 
 
-```{r}
+Let's make simple plot that shows the means of both groups with bootstrapped confidence intervals. 
+
+```{r linear-model2-23}
 ggplot(data = df.credit,
        mapping = aes(x = student, y = balance, fill = student)) + 
   stat_summary(fun.y = "mean",
@@ -647,15 +499,18 @@ ggplot(data = df.credit,
   scale_fill_brewer(palette = "Set1")
 ```
 
+And let's double check that we also get a signifcant result when we run a t-test instead of our model comparison procedure: 
 
-```{r}
+```{r linear-model2-24}
 t.test(x = df.credit$balance[df.credit$student == "No"],
        y = df.credit$balance[df.credit$student == "Yes"])
 ```
 
-Dummy coding: 
+### Dummy coding 
 
-```{r}
+When we put a variable in a linear model that is coded as a character or as a factor, R automatically recodes this variable using dummy coding. It uses level 1 as the reference category for factors, or the value that comes first in the alphabet for characters. 
+
+```{r linear-model2-25}
 df.credit %>% 
   select(income, student) %>% 
   mutate(student_dummy = ifelse(student == "No", 0, 1))%>% 
@@ -663,13 +518,13 @@ df.credit %>%
     kable(digits = 2) %>% 
     kable_styling(bootstrap_options = "striped",
                 full_width = F)
-  
-  
 ```
 
-Reporting the results 
+### Reporting the results
 
-```{r}
+To report the results, we could show a plot like this:  
+
+```{r linear-model2-26}
 df.plot = df.credit
 
 ggplot(df.plot,
@@ -683,18 +538,23 @@ ggplot(df.plot,
   stat_summary(fun.y = "mean",
                geom = "point",
                size = 4)
+```
 
+And then report the means and standard deviations together with the result of our signifance test: 
+
+```{r linear-model2-27}
 df.credit %>% 
   group_by(student) %>% 
   summarize(mean = mean(balance),
             sd = sd(balance)) %>% 
   mutate_if(is.numeric, funs(round(., 2)))
-
 ```
 
-# One continuous and one categorical 
+## One continuous and one categorical variable
 
-```{r}
+Now let's take a look at a case where we have one continuous and one categorical predictor variable. Let's first formulate and fit our models: 
+
+```{r linear-model2-28}
 # fit the models
 fit_c = lm(balance ~ 1 + income, df.credit)
 fit_a = lm(balance ~ 1 + income + student, df.credit)
@@ -703,10 +563,13 @@ fit_a = lm(balance ~ 1 + income + student, df.credit)
 anova(fit_c, fit_a)
 ```
 
-plot compact model 
+We see again that it's worth it. The augmented model explains significantly more variance than the compact model. 
 
-```{r}
+### Visualization of the model predictions
 
+Let's visualize the model predictions again. Let's start with the compact model: 
+
+```{r linear-model2-29}
 df.augment = fit_c %>% 
   augment() %>% 
   clean_names()
@@ -722,9 +585,9 @@ ggplot(df.augment,
 
 ```
 
+This time, the compact model still predicts just one line (like above) but note that this line is not horizontal anymore. 
 
-```{r}
-
+```{r linear-model2-30}
 df.tidy = fit_a %>% 
   tidy() %>% 
   mutate(estimate = round(estimate,2))
@@ -740,129 +603,72 @@ ggplot(df.augment,
            color = student)) + 
   geom_segment(data = df.augment %>% 
                  filter(student == "No"),
-    aes(xend = income,
-        yend = fitted),
-    color = "red",
-     alpha = 0.3
-  ) +
+               aes(xend = income,
+                   yend = fitted),
+               color = "#E41A1C",
+               alpha = 0.3) +
   geom_segment(data = df.augment %>% 
                  filter(student == "Yes"),
-    aes(xend = income,
-        yend = fitted),
-    color = "blue",
-     alpha = 0.3
-  ) +
+               aes(xend = income,
+                   yend = fitted),
+               color = "#377EB8",
+               alpha = 0.3) +
   geom_abline(intercept = df.tidy$estimate[1],
               slope = df.tidy$estimate[2],
-              color = "red",
+              color = "#E41A1C",
               size = 1) +
   geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[3],
               slope = df.tidy$estimate[2],
-              color = "blue",
+              color = "#377EB8",
               size = 1) +
   geom_point(alpha = 0.3) +
   scale_color_brewer(palette = "Set1") +
-  theme(legend.position = c(0.1, 0.9))
+  theme(legend.position = c(0.1, 0.9)) +
+  guides(color = guide_legend(reverse = T))
 
 ```
 
-```{r}
-ggplot(df.augment,
-       aes(x = income,
-           y = balance,
-           group = student,
-           color = student)) +
+The augmented model predicts two lines again, each with the same slope (but the intercept differs).
+
+## Interactions
+
+Let's check whether there is an interaction between how income affects balance for students vs. non-students. 
+
+### Visualization
+
+Let's take a look at the data first. 
+
+```{r linear-model2-31}
+ggplot(data = df.credit,
+       mapping = aes(x = income,
+                     y = balance,
+                     group = student,
+                     color = student)) +
   geom_smooth(method = "lm", se = F) + 
   geom_point(alpha = 0.3) +
   scale_color_brewer(palette = "Set1") +
-  theme(legend.position = c(0.1, 0.9))
+  theme(legend.position = c(0.1, 0.9)) +
+  guides(color = guide_legend(reverse = T))
 ```
 
+Note that we just specified here that we want to have a linear model (via `geom_smooth(method = "lm")`). By default, `ggplot2` assumes that we want a model that includes interactions. We can see this by the fact that two fitted lines are not parallel. 
 
+But is the interaction in the model worth it? That is, does a model that includes an interaction explain significantly more variance in the data, than a model that does not have an interaction. 
 
-```{r}
-fit_1 = lm(sales ~ radio, df.ads)
+### Hypothesis test 
 
-df.fit1 = fit_1 %>% 
-  augment() %>% 
-  clean_names() %>% 
-  select(resid) %>% 
-  bind_cols(df.ads)
+Let's check: 
 
-fit_2 = lm(resid ~ newspaper, df.fit1)
-
-fit_2 %>% summary()
-
-
-fit_1 = lm(sales ~ newspaper, df.ads)
-
-df.fit1 = fit_1 %>% 
-  augment() %>% 
-  clean_names() %>% 
-  select(resid) %>% 
-  bind_cols(df.ads)
-
-fit_2 = lm(resid ~ radio, df.fit1)
-
-fit_2 %>% summary()
-
-
-
-```
-
-
-Interaction
-
-```{r}
+```{r linear-model2-32}
 # fit models 
 fit_c = lm(formula = balance ~ income + student, data = df.credit)
 fit_a = lm(formula = balance ~ income * student, data = df.credit)
 
-fit_a %>% 
-  summary()
-
-lm(formula = balance ~ income + student + income:student, data = df.credit) %>% 
-  summary()
-
-fit_c = lm(formula = balance ~ 1, data = df.credit)
-fit_a = lm(formula = incoem + balance ~ student + income:student, data = df.credit)
-
-anova(fit_c, fit_a)
-
-
-%>% tidy(conf.int = T)
-
 # F-test 
 anova(fit_c, fit_a)
-
-fit_a %>% summary()
-
-fit_a %>% tidy %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-
-
-df.credit %>% 
-  mutate(student_dummy = ifelse(student == "No", 0, 1)) %>% 
-  mutate(income_student = income * student_dummy) %>% 
-  select(balance, income, student, student_dummy, income_student)
-
-df.credit %>% 
-  head(10) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-
-fit1 = lm(formula = balance ~ income + student + income_student, data = df.credit)
-fit2 = lm(formula = balance ~ income + student + income:student, data = df.credit)
-
-
 ```
 
-
+Nope, not worth it! The F-test comes out non-significant. 
 
 ## Additional resources 
 
@@ -879,3 +685,5 @@ Information about this R session including which version of R was used, and what
 ```{r session}
 sessionInfo()
 ```
+
+## References
