@@ -8,7 +8,7 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=9"]
+    pandoc_args: ["--number-offset=13"]
 bibliography: [packages.bib]
 nocite: '@*'
 ---
@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 # Power analysis
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages(c("lsr", "pwr"))
+install.packages(c("lsr", "pwr"))
 ```
 
 ## Load packages and set plotting theme  
@@ -33,10 +33,10 @@ knitr::opts_chunk$set(
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("broom")    # for tidying up model fits
-library("magrittr")    # for going all in with the pipe
-library("lsr") # for computing effect size measures
-library("pwr") # for power calculations
+library("broom")      # for tidying up model fits
+library("magrittr")   # for going all in with the pipe
+library("lsr")        # for computing effect size measures
+library("pwr")        # for power calculations
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -60,8 +60,9 @@ df.credit = read_csv("data/credit.csv") %>%
   clean_names()
 ```
 
-
 ## Decision-making 
+
+Figures to illustrate power: 
 
 ```{r}
 mu0 = 10
@@ -113,19 +114,15 @@ ggplot(data = tibble(x = c(0, 30)),
 
 ## Effect sizes
 
-### eta-squared 
+### eta-squared and partial eta-squared
 
-Read poker data set 
-
-
-One way ANOVA
+One-way ANOVA: 
 
 ```{r}
-library("lsr")
-
 fit = lm(formula = balance ~ hand, 
          data = df.poker)
 
+# use function
 etaSquared(fit)
 
 # compute by hand 
@@ -134,17 +131,16 @@ fit %>%
   tidy() %>% 
   pull(sumsq) %>% 
   divide_by(sum(.)) %>% 
-  extract(1)
+  magrittr::extract(1)
 ```
 
-Two way ANOVA 
+Two-way ANOVA: 
 
 ```{r}
-library("lsr")
-
 fit = lm(formula = balance ~ hand * skill, 
          data = df.poker)
 
+# use function
 etaSquared(fit)
 
 # compute by hand 
@@ -153,8 +149,9 @@ eta_squared = fit %>%
   tidy() %>% 
   pull(sumsq) %>% 
   divide_by(sum(.)) %>% 
-  extract(1)
+  magrittr::extract(1)
 
+# compute partial eta squared by hand
 eta_partial_squared = fit %>% 
   anova %>% 
   tidy() %>% 
@@ -166,8 +163,7 @@ eta_partial_squared = fit %>%
   
 ```
 
-### cohen's d
-
+### Cohen's d
 
 Cohen's $d$ is defined as: 
 
@@ -183,11 +179,11 @@ $$
 
 
 ```{r}
-library("lsr")
+# use function from "lsr" package
 cohensD(x = balance ~ student,
         data = df.credit)
 
-# let's double check 
+# compute by hand
 df.cohen = df.credit %>% 
   group_by(student) %>% 
   summarize(mean = mean(balance),
@@ -209,14 +205,6 @@ print(d)
 
 ```
 
-```{r}
-lm(formula = balance ~ student,
-   data = df.credit %>% 
-     mutate_at(vars(balance), funs(scale(.)[,]))) %>% 
-  summary()
-```
-
-
 ## Determining sample size 
 
 ### `pwr` package
@@ -237,17 +225,19 @@ pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50),
   theme(title = element_text(size = 16))
 ```
 
-### simulation
+### Simulation
 
 ```{r}
+# make reproducible 
+set.seed(1)
+
 # number of simulations
-n_simulations = 1000
+n_simulations = 100
 
 # run simulation
 df.power = crossing(n = seq(10, 50, 1),
                     simulation = 1:n_simulations,
-                    # p = c(0.75, 0.8, 0.85)) %>%
-                    p = 0.75) %>%
+                    p = c(0.75, 0.8, 0.85)) %>%
   mutate(index = 1:n()) %>% # add an index column
   group_by(index, n, simulation) %>% 
   mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
@@ -283,36 +273,6 @@ df.plot %>%
 pwr.p.test(h = ES.h(0.5, 0.75),
            power = 0.8,
            alternative = "two.sided")
-```
-
-Step by step: 
-
-```{r}
-# number of simulations
-n_simulations = 10
-
-crossing(n = seq(10, 50, 1),
-                    simulation = 1:n_simulations,
-                    p = c(0.75, 0.8, 0.85)) %>% 
-  group_by(n, simulation, p) %>% 
-  mutate(index = 1:n()) %>% # add an index column
-  group_by(index, n, simulation) %>% 
-  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% 
-  filter(row_number() < 2) %>% 
-  head(10) %>% 
-                      kable(digits = 2) %>% 
-                      kable_styling(bootstrap_options = "striped",
-                                  full_width = F)
-                    
-```
-
-
-```{r}
-pwr.r.test(r = 0.1,
-           sig.level = 0.01,
-           power = 0.8,
-           alternative = "greater") %>% 
-  plot()
 ```
 
 

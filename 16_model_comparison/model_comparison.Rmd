@@ -1,0 +1,195 @@
+---
+title: "Class 16"
+author: "Tobias Gerstenberg"
+date: "February 15th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=15"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Model comparison
+
+```{r install-packages, include=FALSE, eval=FALSE}
+# install.packages(c("afex", "car"))
+```
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("car")    # for running ANOVAs
+library("afex")    # also for running ANOVAs
+library("emmeans")    # for calculating constrasts
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Model assumptions 
+
+### Distribution of errors 
+
+#### Data set
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 40
+
+b0 = 1
+b1 = 5
+b2 = 4
+sd = 30
+
+df.growth = tibble(
+  time = runif(sample_size, min = 0, max = 10),
+  growth = b0 + b1*time + b2*time^2 + rnorm(sample_size, sd = sd)
+)
+
+```
+
+#### Visualization
+
+Linear model
+
+```{r}
+ggplot(df.growth,
+       aes(time, growth)) + 
+  geom_smooth(method = "lm") + 
+  geom_point()
+```
+
+
+```{r}
+fit = lm(formula = growth ~ 1 + time, data = df.growth)
+```
+
+
+Linear model with quadratic term 
+
+```{r}
+ggplot(df.growth,
+       aes(time, growth)) + 
+  geom_smooth(method = "lm",
+              formula = y ~ x + I(x^2)) + 
+  geom_point()
+```
+
+```{r}
+fit = lm(formula = growth ~ 1 + time + I(time^2), data = df.growth)
+fit %>% summary()
+```
+
+##### Residual plot
+
+```{r}
+
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(aes(fitted, resid)) + 
+  geom_smooth(method = "lm",
+              se = F) +
+  geom_point()
+```
+
+### Simpsons paradox 
+
+```{r}
+
+b0 = c(1000, 250)
+b1 = c(-5, -3)
+sample_size = 30
+sd = 30
+
+df.simpsons = tibble(
+  x = runif(sample_size, min = 75, max = 100),
+  y = b0[1] + b1[1] * x + rnorm(sample_size, sd = sd),
+  group = 1
+) %>% 
+  bind_rows(
+    tibble(x = runif(sample_size, min = 25, max = 50),
+           y = b0[2] + b1[2] * x + rnorm(sample_size, sd = sd),
+           group = 2)
+  )
+
+```
+
+```{r}
+fit.simpson = lm(formula = y ~ x, data = df.simpsons) %>% 
+  summary()
+```
+
+
+Plot
+
+```{r}
+ggplot(df.simpsons,
+       aes(x = x,
+           y = y)) +
+  geom_smooth(method = "lm") + 
+  geom_point()
+```
+
+```{r}
+ggplot(df.simpsons,
+       aes(x = x,
+           y = y)) +
+  geom_smooth(method = "lm") + 
+  geom_smooth(method = "lm",
+              aes(group = group,
+           color = as.factor(group))) + 
+  geom_point() +
+  theme(legend.position = "none")
+```
+
+Residual plot 
+
+```{r}
+fit.simpson = lm(formula = y ~ x, data = df.simpsons)
+
+fit.simpson %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(aes(fitted, resid)) +
+  geom_smooth(method = "lm", se = F) +
+  geom_point()
+```
+
+## Additional resources 
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+## References

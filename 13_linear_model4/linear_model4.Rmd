@@ -50,13 +50,11 @@ theme_set(
 )
 ```
 
-## Understanding variance
-
-### Poker data set 
+## Load data sets
 
 Read in the data:
 
-```{r}
+```{r linear-model4-1}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -69,34 +67,29 @@ df.poker = read_csv("data/poker.csv") %>%
                         levels = 1:2,
                         labels = c("fixed", "none")),
          participant = 1:n()) %>% 
-  select(participant, everything()) %>% 
-  filter(!participant %in% 1:10) %>%
-  identity()
+  select(participant, everything())
+
+df.poker.unbalanced = df.poker %>% 
+  filter(!participant %in% 1:10)
 ```
 
-### One-way ANOVA
+## Variance decomposition in one-way ANOVA
 
-Run the model:
+Let's first run the model 
 
-```{r}
-fit1 = lm(formula = balance ~ hand, 
+```{r linear-model4-2}
+fit = lm(formula = balance ~ hand, 
          data = df.poker)
 
-fit1 %>%
-  anova()
-
-lm(formula = balance ~ hand, 
-   data = df.poker) %>% 
+fit %>%
   anova()
 ```
 
-#### Variance decomposition
+### Calculate sums of squares
 
-##### Calculation
+And then let's make sure that we understand how the variance is broken down:  
 
-Understand how the variance is broken down:  
-
-```{r}
+```{r linear-model4-3}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(hand) %>% 
@@ -107,44 +100,11 @@ df.poker %>%
             variance_residual = variance_total - variance_model)
 ```
 
-Data frame to show: 
+### Visualize model predictions 
 
-```{r}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(hand) %>% 
-  mutate(mean_group = mean(balance)) %>% 
-  group_by(hand) %>% 
-  filter(row_number() < 4) %>% 
-  select(participant, hand, balance, contains("mean")) %>% 
-    head(10) %>% 
-    kable(digits = 3) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-```
+#### Total variance
 
-
-```{r}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(hand) %>% 
-  mutate(mean_group = mean(balance)) %>% 
-  ungroup() %>% 
-  summarize(variance_total = sum((balance - mean_grand)^2),
-            variance_model = sum((mean_group - mean_grand)^2),
-            variance_residual = variance_total - variance_model)%>% 
-              head(10) %>% 
-              kable(digits = 0) %>% 
-              kable_styling(bootstrap_options = "striped",
-                          full_width = F)
-            
-```
-
-##### Visualization
-
-Total variance
-
-```{r}
+```{r linear-model4-4}
 set.seed(1)
 
 fit_c = lm(formula = balance ~ 1,
@@ -175,9 +135,9 @@ ggplot(data = df.plot,
 
 ```
 
-Model variance
+#### Model variance
 
-```{r}
+```{r linear-model4-5}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -237,9 +197,9 @@ ggplot(data = df.plot,
 
 ```
 
-Residual variance 
+#### Residual variance 
 
-```{r}
+```{r linear-model4-6}
 set.seed(1)
 
 fit_a = lm(formula = balance ~ hand,
@@ -300,23 +260,22 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
+## Two-way ANOVA (linear model)
 
-#### Two-way ANOVA (linear model)
+Let's fit the model first:
 
-```{r}
-fit2 = lm(formula = balance ~ hand + skill, 
+```{r linear-model4-7}
+fit = lm(formula = balance ~ hand + skill, 
          data = df.poker)
 
-fit2 %>%
+fit %>%
   anova()
 
-# lm(formula = balance ~ hand + skill, data = df.poker) %>% 
-#   anova()
 ```
 
-##### Calculation 
+### Calculate sums of squares
 
-```{r}
+```{r linear-model4-8}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(skill) %>% 
@@ -330,49 +289,11 @@ df.poker %>%
             variance_residual = variance_total - variance_skill - variance_hand)
 ```
 
-Data frame to show: 
+### Visualize model predictions
 
-```{r}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(skill) %>% 
-  mutate(mean_skill = mean(balance)) %>%
-  group_by(hand) %>% 
-  mutate(mean_hand = mean(balance)) %>%
-  group_by(hand, skill) %>% 
-  filter(row_number() < 3) %>% 
-  select(participant, skill, hand, balance, contains("mean")) %>% 
-    head(10) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-```
+#### `Skill` factor
 
-```{r}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(skill) %>% 
-  mutate(mean_skill = mean(balance)) %>%
-  group_by(hand) %>% 
-  mutate(mean_hand = mean(balance)) %>%
-  ungroup() %>%
-  summarize(variance_total = sum((balance - mean_grand)^2),
-            variance_skill = sum((mean_skill - mean_grand)^2),
-            variance_hand = sum((mean_hand - mean_grand)^2),
-            variance_residual = variance_total - variance_skill - variance_hand
-            ) %>% 
-              head(1) %>% 
-              kable(digits = 0) %>% 
-              kable_styling(bootstrap_options = "striped",
-                          full_width = F)
-            
-```
-
-##### Visualization
-
-Model skill: 
-
-```{r}
+```{r linear-model4-9}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -424,39 +345,33 @@ ggplot(data = df.plot,
 
 ```
 
+## ANOVA with unbalanced design
 
-##### Unequal cell sizes  
+For the standard `anova()` function, the order of the independent predictors matters when the design is unbalanced. 
 
-order dependence of independent variables (when the IVs are correlated): 
-
-```{r}
-fit2 = lm(formula = balance ~ skill + hand, 
-         data = df.poker)
-
-fit2 %>%
+```{r linear-model4-10}
+# one order 
+lm(formula = balance ~ skill + hand, 
+         data = df.poker.unbalanced) %>% 
   anova()
 
-# fit2 %>%
-#   Anova(type = "3")
-```
-
-
-```{r}
-lm(formula = balance ~ hand + skill, data = df.poker) %>% 
+# another order 
+lm(formula = balance ~ hand + skill, 
+         data = df.poker.unbalanced) %>% 
   anova()
 ```
 
-```{r}
-library("car")
+For unbalanced designs, we should compute an ANOVA with type 3 sums of squares. 
 
+```{r linear-model4-11}
+# one order
 lm(formula = balance ~ hand + skill,
    data = df.poker,
    contrasts = list(hand = "contr.sum", 
                     skill = "contr.sum")) %>% 
   Anova(type = "3")
-```
 
-```{r}
+# another order
 lm(formula = balance ~ skill + hand,
    data = df.poker,
    contrasts = list(hand = "contr.sum", 
@@ -464,42 +379,11 @@ lm(formula = balance ~ skill + hand,
   Anova(type = "3")
 ```
 
+Now, the order of the independent variables doesn't matter anymore. 
 
+We can also use the `aov_ez()` function from the `afex` package. 
 
-
-
-
-```{r}
-fit2 = lm(formula = balance ~ hand + skill, 
-         data = df.poker)
-
-# fit2 %>%
-#   anova()
-
-fit2 %>%
-  Anova(type = "3")
-```
-
-Unequal group sizes
-
-```{r}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(skill) %>% 
-  mutate(size_skill = n(),
-    mean_skill = sum(balance)/n()) %>%
-  group_by(hand) %>% 
-  ungroup() %>%
-  summarize(variance_total = sum((balance - mean_grand)^2),
-            variance_skill = sum((mean_skill - mean_grand)^2),
-            variance_hand = sum((mean_hand - mean_grand)^2),
-            variance_residual = variance_total - variance_skill - variance_hand
-            )
-```
-
-```{r}
-library("afex")
-
+```{r linear-model4-12}
 fit = aov_ez(id = "participant",
              dv = "balance",
              data = df.poker,
@@ -507,17 +391,19 @@ fit = aov_ez(id = "participant",
 fit$Anova
 ```
 
+## Two-way ANOVA (with interaction)
 
+Let's firt a two-way ANOVA with the interaction term. 
 
-#### Two-way ANOVA (with interaction)
-
-```{r}
-fit3 = lm(formula = balance ~ hand * skill, data = df.poker)
-fit3 %>% 
+```{r linear-model4-13}
+fit = lm(formula = balance ~ hand * skill, data = df.poker)
+fit %>% 
   anova()
 ```
 
-```{r}
+And let's compute how the the sums of squares are decomposed:
+
+```{r linear-model4-14}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(skill) %>% 
@@ -535,64 +421,12 @@ df.poker %>%
             )
 ```
 
-```{r}
-fit3 = lm(formula = balance ~ hand * skill,
-         data = df.poker,
-         contrasts = c("contr.sum", "contr.sum"))
 
-# fit3 = lm(formula = balance ~ hand * skill,
-#          data = df.poker)
-# 
+## Planned contrasts 
 
-fit3 %>%
-  Anova(type = "3")
+Here is a planned contrast that assumes that there is a linear relationship between the quality of one's hand, and the final balance.  
 
-# fit3 %>%
-#   anova()
-```
-
-```{r}
-fit3 = lm(formula = balance ~ skill * hand,
-         data = df.poker,
-         # contrasts = c("contr.sum","contr.poly"))
-         contrasts = c("contr.sum", "contr.poly"))
-
-# fit3 = lm(formula = balance ~ hand * skill,
-#          data = df.poker)
-# 
-
-fit3 %>%
-  Anova(type = "3")
-```
-
-MWE of difference between car and afex. 
-
-```{r}
-library("tidyverse")
-library("car")
-library("afex")
-
-df.cars = mtcars %>% 
-  mutate(index = 1:n()) %>% 
-  mutate_at(vars(vs, am), funs(as.factor))
-
-fit1 = lm(formula = mpg ~ vs * am,
-         data = df.cars,
-         contrasts = c("contr.sum", "contr.poly"))
-
-fit1 %>%
-  Anova(type = "3")
-
-fit2 = aov_ez(id = "index",
-       dv = "mpg",
-       data = df.cars,
-       between = c("vs", "am"))
-fit2$Anova
-```
-
-### Contrasts 
-
-```{r}
+```{r linear-model4-15}
 df.poker = df.poker %>% 
   mutate(hand_contrast = factor(hand,
                                 levels = c("bad", "neutral", "good"),
@@ -605,24 +439,9 @@ fit.contrast = lm(formula = balance ~ hand_contrast,
 fit.contrast %>% summary()
 ```
 
-```{r}
-df.poker %>% 
-  mutate(hand_contrast = factor(hand,
-                                levels = c("bad", "neutral", "good"),
-                                labels = c(-1, 0, 1)),
-         hand_contrast = hand_contrast %>% as.character() %>% as.numeric()) %>% 
-  select(participant, hand, balance, contains("_")) %>% 
-  group_by(hand) %>% 
-  filter(row_number() < 4) %>% 
-           # head(n) %>% 
-           kable(digits = 2) %>% 
-           kable_styling(bootstrap_options = "striped",
-                       full_width = F)
-```
+Here is a visualization of the model prediction together with the residuals. 
 
-Prediction by linear contrast 
-
-```{r}
+```{r linear-model4-16}
 df.plot = df.poker %>% 
   mutate(hand_jitter = hand %>% as.numeric(),
          hand_jitter = hand_jitter + runif(n(), min = -0.4, max = 0.4))
@@ -678,26 +497,11 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
+### Hypothetical data 
 
-```{r}
-fit.contrast %>% 
-  tidy() %>% 
-  select_if(is.numeric) %>% 
-  mutate_all(funs(round, .args = list(digits = 2))) %>% 
-  mutate(name = c("intercept", "contrast")) %>% 
-  select(name, everything()) %>% 
-    head(10) %>% 
-    kable(digits = 3) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
+Here is some code to generate a hypothetical developmental data set. 
 
-```
-
-
-#### Hypothetical data 
-
-```{r}
+```{r linear-model4-17}
 # make example reproducible 
 set.seed(1)
 
@@ -710,52 +514,43 @@ sample_size = 20
 
 # generate data 
 df.contrast = tibble(
-  group = rep(c("3-4", "5-6", "10+"), each = sample_size),
+  group = rep(c("3-4", "5-6", "7-8"), each = sample_size),
   performance = NA) %>% 
   mutate(performance = ifelse(group == "3-4",
                               rnorm(sample_size,
                                     mean = means[1],
                                     sd = sd),
                               performance),
-         
          performance = ifelse(group == "5-6",
                               rnorm(sample_size,
                                     mean = means[2],
                                     sd = sd),
                               performance),
-         performance = ifelse(group == "10+",
+         performance = ifelse(group == "7-8",
                               rnorm(sample_size,
                                     mean = means[3],
                                     sd = sd),
                               performance),
-         group = factor(group, levels = c("3-4", "5-6", "10+")),
+         group = factor(group, levels = c("3-4", "5-6", "7-8")),
          group_contrast = group %>% 
            fct_recode(`-1` = "3-4",
                       `0` = "5-6",
-                      `1` = "10+") %>% 
+                      `1` = "7-8") %>% 
            as.character() %>%
            as.numeric())
 ```
 
+Let's define a linear contrast, and test whether it's significant. 
 
-```{r}
-# lm(formula = performance ~ group,
-lm(formula = performance ~ group_contrast,
-   data = df.contrast) %>% 
-  summary()
-```
-
-Linear contrast
-
-```{r}
-fit5 = lm(formula = performance ~ group,
+```{r linear-model4-18}
+fit = lm(formula = performance ~ group,
    data = df.contrast)
 
 # define the contrasts of interest 
 contrasts = list(linear = c(-1, 0, 1))
 
 # compute estimated marginal means
-leastsquare = emmeans(fit5, "group")
+leastsquare = emmeans(fit, "group")
 
 # run follow-up analyses
 contrast(leastsquare,
@@ -763,35 +558,11 @@ contrast(leastsquare,
          adjust = "bonferroni")
 ```
 
+### Visualization
 
+Total variance: 
 
-Linear and exponential contrast 
-
-```{r}
-fit6 = lm(formula = performance ~ group_contrast + I(group_contrast^2),
-   data = df.contrast)
-
-fit6 %>% 
-  augment(newdata = tibble(group_contrast = c(-1, 0, 1)))
-
-# define the contrasts of interest 
-contrasts = list(linear = c(-1, 0, 1),
-                 quadratic = c(1, 0, 1))
-
-# compute estimated marginal means
-leastsquare = emmeans(fit5, "group")
-
-# run follow-up analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
-```
-
-#### Visualization
-
-Total variance 
-
-```{r}
+```{r linear-model4-19}
 set.seed(1)
 
 fit_c = lm(formula = performance ~ 1,
@@ -822,16 +593,13 @@ ggplot(data = df.plot,
 
 ```
 
-
 With contrast
 
-```{r}
+```{r linear-model4-20}
 # make example reproducible 
 set.seed(1)
 
-# fit = lm(formula = performance ~ group_contrast,
-# fit = lm(formula = performance ~ I(group_contrast^2),
-fit = lm(formula = performance ~ group_contrast + I(group_contrast^2),
+fit = lm(formula = performance ~ group_contrast,
          data = df.contrast)
 
 df.plot = df.contrast %>% 
@@ -858,8 +626,6 @@ ggplot(data = df.plot,
                    xend = 1.4,
                    y = df.tidy$estimate[1]-df.tidy$estimate[2],
                    yend = df.tidy$estimate[1]-df.tidy$estimate[2]
-                   # y = df.tidy$estimate[1]+df.tidy$estimate[2],
-                   # yend = df.tidy$estimate[1]+df.tidy$estimate[2]
                    ),
                color = "red",
                size = 1) +
@@ -891,144 +657,22 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-df.contrast = df.contrast %>% 
-  mutate(age = factor(group, labels = c(3.5, 4.5, 11)) %>% as.character() %>% as.numeric())
-
-fit = lm(formula = performance ~ group_contrast + I(group_contrast^2),
-# fit = lm(formula = performance ~ age,
-# fit = lm(formula = performance ~ I(group_contrast^2),
-         data = df.contrast)
-
-fit %>% summary()
-
-df.plot = df.contrast %>% 
-  mutate(group_jitter = group %>% as.numeric(),
-         group_jitter = group_jitter + runif(n(), min = -0.4, max = 0.4))
-
-df.prediction = fit %>% 
-  # augment(newdata = tibble(group_contrast = c(-1, 0, 1))) %>% 
-  augment(newdata = tibble(age = c(3.5, 4.5, 11))) %>% 
-  clean_names()
-
-df.augment = fit %>% 
-  augment() %>%
-  clean_names() %>% 
-  # bind_cols(df.plot %>% select(group_jitter, group_contrast))
-  bind_cols(df.plot %>% select(group_jitter, group_contrast, age))
-
-ggplot(data = df.plot,
-       mapping = aes(x = group_jitter,
-                       y = performance,
-                       color = as.factor(group_contrast))) + 
-  geom_point(alpha = 0.8) +
-  geom_segment(data = NULL,
-               aes(x = 0.6,
-                   xend = 1.4,
-                   y = df.prediction$fitted[1],
-                   yend = df.prediction$fitted[1]
-                   ),
-               color = "red",
-               size = 1) +
-  geom_segment(data = NULL,
-               aes(x = 1.6,
-                   xend = 2.4,
-                   y = df.prediction$fitted[2],
-                   yend = df.prediction$fitted[2]
-                   ),
-               color = "orange",
-               size = 1) +
-  geom_segment(data = NULL,
-               aes(x = 2.6,
-                   xend = 3.4,
-                   y = df.prediction$fitted[3],
-                   yend = df.prediction$fitted[3]
-                   ),
-               color = "green",
-               size = 1) +
-  geom_segment(data = df.augment,
-               aes(xend = group_jitter,
-                   y = performance,
-                   yend = fitted),
-               alpha = 0.3) +
-  labs(y = "balance") + 
-  scale_color_manual(values = c("red", "orange", "green")) + 
-  scale_x_continuous(breaks = 1:3, labels = levels(df.contrast$group)) +
-  theme(legend.position = "none",
-        axis.title.x = element_blank())
-```
-
-```{r}
-
-lm(formula = performance ~ group_contrast + I(group_contrast^2),
-         data = df.contrast) %>% 
-  tidy() %>% 
-    head(12) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-```
-
-parameter estimates 
-
-```{r}
-df.contrast %>% 
-  mutate(group_contrast2 = group_contrast^2) %>% 
-  group_by(group) %>% 
-  filter(row_number() < 4) %>% 
-    head(12) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-```
-
-constrasts 
-
-```{r}
-
-tibble(
-  group = factor(c("3-4", "5-6", "10+"), levels = c("3-4", "5-6", "10+")),
-  group_contrast = c(-1, 0, 1),
-  group_contrast2 = c(1, 0, 1)
-) %>% 
-  gather("contrast", "value", -group) %>% 
-  spread(group, value) %>% 
-    head(10) %>% 
-    kable(digits = 0) %>% 
-    kable_styling(bootstrap_options = "striped",
-                full_width = F)
-  
-lm(formula = performance ~ group_contrast + I(group_contrast^2), 
-    data = df.contrast)
-
-```
-
 Results figure
 
-```{r}
+```{r linear-model4-21}
 df.contrast %>% 
   ggplot(aes(x = group, y = performance)) + 
   geom_point(alpha = 0.3, position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1) + 
   stat_summary(fun.y = "mean", geom = "point", shape = 21, fill = "white", size = 3)
-  
-
 ```
 
-#### Emmeans 
+### Constrasts 
 
-Planned contrasts: 
+Estimated marginal means: 
 
-```{r}
+```{r linear-model4-22}
 df.development = df.contrast
-
-library("emmeans")
 
 fit = lm(formula = performance ~ group,
          data = df.development)
@@ -1049,11 +693,11 @@ contrast(leastsquare,
          adjust = "bonferroni")
 ```
 
-Post-hoc tests (all pairwise comparisons: 
+### Post-hoc tests
 
-```{r}
-library("emmeans")
+Post-hoc tests for a single predictor:
 
+```{r linear-model4-23}
 fit = lm(formula = performance ~ group,
          data = df.development)
 
@@ -1063,7 +707,9 @@ pairs(leastsquare,
       adjust = "bonferroni")
 ```
 
-```{r}
+Post-hoc tests for two predictors:
+
+```{r linear-model4-24}
 # fit the model
 fit = lm(formula = balance ~ hand + skill,
          data = df.poker)
@@ -1073,358 +719,6 @@ leastsquare = emmeans(fit, c("hand", "skill"))
 pairs(leastsquare,
       adjust = "bonferroni")
 ```
-
-## Model assumptions 
-
-### Distribution of errors 
-
-#### Data set
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-sample_size = 40
-
-b0 = 1
-b1 = 5
-b2 = 4
-sd = 30
-
-df.growth = tibble(
-  time = runif(sample_size, min = 0, max = 10),
-  growth = b0 + b1*time + b2*time^2 + rnorm(sample_size, sd = sd)
-)
-
-```
-
-#### Visualization
-
-Linear model
-
-```{r}
-ggplot(df.growth,
-       aes(time, growth)) + 
-  geom_smooth(method = "lm") + 
-  geom_point()
-```
-
-
-```{r}
-fit = lm(formula = growth ~ 1 + time, data = df.growth)
-```
-
-
-Linear model with quadratic term 
-
-```{r}
-ggplot(df.growth,
-       aes(time, growth)) + 
-  geom_smooth(method = "lm",
-              formula = y ~ x + I(x^2)) + 
-  geom_point()
-```
-
-```{r}
-fit = lm(formula = growth ~ 1 + time + I(time^2), data = df.growth)
-fit %>% summary()
-```
-
-##### Residual plot
-
-```{r}
-
-fit %>% 
-  augment() %>% 
-  clean_names() %>% 
-ggplot(aes(fitted, resid)) + 
-  geom_smooth(method = "lm",
-              se = F) +
-  geom_point()
-```
-
-### Simpsons paradox 
-
-```{r}
-
-b0 = c(1000, 250)
-b1 = c(-5, -3)
-sample_size = 30
-sd = 30
-
-df.simpsons = tibble(
-  x = runif(sample_size, min = 75, max = 100),
-  y = b0[1] + b1[1] * x + rnorm(sample_size, sd = sd),
-  group = 1
-) %>% 
-  bind_rows(
-    tibble(x = runif(sample_size, min = 25, max = 50),
-           y = b0[2] + b1[2] * x + rnorm(sample_size, sd = sd),
-           group = 2)
-  )
-
-```
-
-```{r}
-fit.simpson = lm(formula = y ~ x, data = df.simpsons) %>% 
-  summary()
-```
-
-
-Plot
-
-```{r}
-ggplot(df.simpsons,
-       aes(x = x,
-           y = y)) +
-  geom_smooth(method = "lm") + 
-  geom_point()
-```
-
-```{r}
-ggplot(df.simpsons,
-       aes(x = x,
-           y = y)) +
-  geom_smooth(method = "lm") + 
-  geom_smooth(method = "lm",
-              aes(group = group,
-           color = as.factor(group))) + 
-  geom_point() +
-  theme(legend.position = "none")
-```
-
-Residual plot 
-
-```{r}
-fit.simpson = lm(formula = y ~ x, data = df.simpsons)
-
-fit.simpson %>% 
-  augment() %>% 
-  clean_names() %>% 
-  ggplot(aes(fitted, resid)) +
-  geom_smooth(method = "lm", se = F) +
-  geom_point()
-```
-
-## ANOVA afex 
-
-```{r}
-library("tidyverse")
-library("car")
-library("afex")
-
-df.cars = mtcars %>% 
-  mutate(index = 1:n()) %>% 
-  mutate_at(vars(vs, am), funs(as.factor))
-
-fit1 = lm(formula = mpg ~ vs * am,
-         data = df.cars,
-         contrasts = list(vs = "contr.sum",
-                          am = "contr.sum"))
-
-fit1 %>%
-  Anova(type = "3")
-
-fit2 = aov_ez(id = "index",
-       dv = "mpg",
-       data = df.cars,
-       between = c("vs", "am"))
-fit2$Anova
-
-```
-
-```{r}
-library("car")
-
-lm(formula = balance ~ hand + skill,
-   data = df.poker,
-   contrasts = list(hand = "contr.sum", 
-                    skill = "contr.sum")) %>% 
-  Anova(type = "3")
-```
-
-## misc 
-
-### PLanned contrasts
-
-```{r}
-df.poker %>% 
-  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
-  select(participant, hand, hand_other, balance) %>% 
-  group_by(hand) %>%
-           top_n(3) %>% 
-           kable(digits = 3) %>% 
-           kable_styling(bootstrap_options = "striped",
-                       full_width = F) 
-  
-
-df.poker %>% 
-  mutate(hand_other = ifelse(hand %in% c("neutral", "good"), 1, 0)) %>% 
-  lm(balance ~ 1 + hand_other, 
-     data = .) %>% 
-  summary()
-         
-# df.poker %>%
-#   group_by(hand) %>%
-#   summarize(mean = mean(balance)) %>%
-#   spread(hand, mean) %>%
-#     head(1) %>%
-#     kable(digits = 2) %>%
-#     kable_styling(bootstrap_options = "striped",
-#                 full_width = F)
-  
-df.poker %>% 
-  lm(balance ~ hand,
-     data = .,
-     contrasts = list(hand = contr.sum)) %>% 
-  summary()
-
-df.poker %>% 
-lm(balance ~ skill,
-     data = .) %>% 
-  summary()
-
-```
-
-```{r}
-library("emmeans")
-
-# make sure to check the order of levels
-df.poker$hand %>% levels()
-
-# define the contrasts of interest 
-contrasts = list(bad_rest = c(-1, 0.5, 0.5),
-                 neutral_vs_good = c(0, -1, 1))
-
-# compute estimated marginal means
-leastsquare = emmeans(fit_a, "hand")
-
-# run follow-up analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
-  # tidy()%>% 
-  #   head(2) %>% 
-  #   kable(digits = 2) %>% 
-  #   kable_styling(bootstrap_options = "striped",
-  #               full_width = F)
-
-df.test = df.poker %>% 
-  mutate(code1 = ifelse(hand == "bad", -1, 0.5),
-         code2 = ifelse(hand == "bad", 0, NA),
-         code2 = ifelse(hand == "neutral", -1, code2),
-         code2 = ifelse(hand == "good", 1, code2))
-
-lm(formula = balance ~ code1 + code2,
-   data = df.test) %>% 
-  summary()
-
-
-
-```
-
-```{r}
-df.poker %>% 
-  group_by(hand) %>% 
-  summarize(mean = mean(balance)) %>% 
-  spread(hand, mean) %>% 
-  mutate(diff_bad_rest = (neutral + good) - bad)
-```
-
-
-```{r}
-# lm(formula = balance ~ code1 + code2,
-lm(formula = balance ~ hand,
-   data = df.poker,
-   contrasts = list(hand = "contr.sum")) %>% 
-  summary()
-```
-
-
-
-```{r}
-tibble(
-  contrast = c("AB vs CD",
-               "A vs B",
-               "C vs D"),
-  A = c(1, 1, 1),
-  B = c(1, -1, -1),
-  C = c(-1, 1, -1),
-  D = c(-1, -1, 1)
-) %>% 
-  mutate(sum = A + B + C + D) %>% 
-  head(3) %>% 
-  kable(digits = 1) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-```
-
-
-```{r}
-tibble(
-  contrast = c("Bad vs Rest",
-               "Neutral vs Good"),
-  Bad = c(-2, 0),
-  Neutral = c(1, -1),
-  Good = c(1, 1)
-) %>% 
-  # mutate(sum = Bad + Neutral + Good) %>% 
-  head(3) %>% 
-  kable(digits = 1) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
-```
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand * skill,
-     data = .,
-     contrast = list(hand = "contr.sum", 
-                     skill = "contr.sum")) %>% 
-  summary()
-```
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand,
-     data = .,
-     contrast = list(hand = "contr.sum")) %>% 
-  summary()
-```
-
-
-```{r}
-df.poker %>% 
-  group_by(skill) %>% 
-  summarize(mean = mean(balance))
-```
-
-
-
-```{r}
-df.poker %>% 
-  # mutate(hand = fct_relevel(hand, "neutral")) %>%
-  lm(formula = balance ~ hand,
-    data = .) %>% 
-  summary()
-
-lm(formula = balance ~ hand * skill, data = df.poker,
-   contrasts = list(hand = "contr.sum", skill = "contr.sum"))
-```
-
-
-
-## Additional resources 
-
-### Datacamp 
-
-- [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
-- [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
-- [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
 ## Session info 
 
