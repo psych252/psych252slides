@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 # Model comparison
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages(c("afex", "car"))
+install.packages(c("furrr", "pwr", "tictoc"))
 ```
 
 ## Load packages and set plotting theme  
@@ -34,9 +34,12 @@ library("knitr")      # for knitting RMarkdown
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
-library("car")    # for running ANOVAs
-library("afex")    # also for running ANOVAs
-library("emmeans")    # for calculating constrasts
+library("furrr")    # for parllelized computing  
+library("pwr")    # for power analysis 
+library("tictoc")    # for timing things
+library("emmeans")    # for estimated marginal means 
+library("patchwork")    # for figure panels
+library("modelr")    # for cross-validation
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -49,6 +52,731 @@ theme_set(
     theme(text = element_text(size = 20)) #set the default text size
 )
 ```
+
+## Load data sets 
+
+```{r}
+df.movies = read_csv("data/movies.csv")
+```
+
+
+## Things that came up in class 
+
+### Estimated marginal means for unbalanced designs 
+
+```{r}
+df.poker = read_csv("data/poker.csv") %>% 
+  mutate(skill = factor(skill,
+                        levels = 1:2,
+                        labels = c("expert", "average")),
+         skill = fct_relevel(skill, "average", "expert"),
+         hand = factor(hand,
+                       levels = 1:3,
+                       labels = c("bad", "neutral", "good")),
+         limit = factor(limit,
+                        levels = 1:2,
+                        labels = c("fixed", "none")),
+         participant = 1:n()) %>% 
+  select(participant, everything())
+
+df.poker.unbalanced = df.poker %>% 
+  filter(!participant %in% 1:10)
+```
+
+```{r}
+
+fit = lm(formula = balance ~ skill * hand, 
+         # data = df.poker.unbalanced) 
+         data = df.poker) 
+
+emmeans(fit, "skill")
+
+```
+
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# generate some unbalanced data 
+n_group1 = 20
+n_group2 = 5
+beta0_group1 = 2
+beta0_group2 = 2
+beta1_group1 = 5
+beta1_group2 = 20
+sd_group1 = 3
+sd_group2 = 3
+
+df.data = tibble(
+  group = c(rep("1", n_group1), rep("2", n_group2)),
+  x = runif(n_group1 + n_group2, min = 0, max = 1)
+  ) %>% 
+  group_by(group) %>% 
+  mutate(rating = ifelse(group == "1",
+                  beta0_group1 + beta1_group1 * x + rnorm(n_group1, sd = sd_group1),
+                  beta0_group2 + beta1_group2 * x + rnorm(n_group2, sd = sd_group2))) %>% 
+  ungroup()
+
+# fit linear model 
+fit = lm(formula = rating ~ 1 + group,
+         data = df.data)
+
+# model summary 
+fit %>% 
+  summary()
+
+# get means and sds 
+df.data %>%
+  group_by(group) %>% 
+  summarize(mean = mean(rating),
+            sd = sd(rating))
+
+# estimate marginal means 
+emmeans(fit, specs = "group")
+
+
+
+```
+
+
+
+## Determining sample size 
+
+### `pwr` package
+
+```{r}
+pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+           sig.level = 0.05, 
+           power = 0.80, 
+           alternative = "greater")
+```
+
+```{r}
+pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+           sig.level = 0.05, 
+           power = 0.80, 
+           alternative = "greater") %>% 
+  plot() +
+  theme(title = element_text(size = 16))
+```
+
+### `map()`
+
+Some examples of how `map()` works: 
+
+```{r}
+# using the formula notation with ~ 
+map(.x = 1:3, .f = ~ .x^2)
+
+# the same computation using an anonymous function
+map(.x = 1:3, .f = function(.x) .x^2)
+
+# outputs a vector
+map_dbl(.x = 1:3, .f = ~ .x^2)
+
+# using a function
+square = function(x){x^2}
+map_dbl(1:3, square)
+
+# with multiple arguments
+map2_dbl(.x = 1:3, .y = 1:3, .f = ~ .x * .y)
+```
+
+### Simulation
+
+```{r}
+# make reproducible 
+set.seed(1)
+
+# number of simulations
+n_simulations = 10
+
+# run simulation
+df.power = crossing(n = seq(10, 50, 1),
+                    simulation = 1:n_simulations,
+                    p = c(0.75, 0.8, 0.85)) %>%
+  mutate(index = 1:n()) %>% # add an index column
+  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
+  group_by(index, simulation, p) %>% 
+  nest() %>% # put data in list column
+  mutate(fit = map(data, 
+                   ~ binom.test(x = .$response, # define formula
+                          n = .$n,
+                          p = 0.5,
+                          alternative = "two.sided")),
+         p.value = map_dbl(fit, ~ .$p.value)) %>% # run binomial test and extract p-value
+  unnest(data) %>% 
+  select(-fit)
+
+# data frame for plot   
+df.plot = df.power %>% 
+  group_by(n, p) %>% 
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup() %>% 
+  mutate(p = as.factor(p))
+
+# plot data 
+ggplot(data = df.plot, 
+       mapping = aes(x = n, y = power, color = p, group = p)) +
+  geom_smooth(method = "loess")
+
+# based on simulations
+df.plot %>%
+  filter(p == 0.75, near(power, 0.8, tol = 0.02))
+  
+ 
+# analytic solution
+pwr.p.test(h = ES.h(0.5, 0.75),
+           power = 0.8,
+           alternative = "two.sided")
+```
+
+
+```{r}
+# make reproducible 
+set.seed(1)
+
+plan(multiprocess) # works slow the first time but then faster ... 
+
+tic()
+# number of simulations
+n_simulations = 100
+
+# run simulation
+df.power = crossing(n = seq(10, 50, 1),
+                    simulation = 1:n_simulations,
+                    p = c(0.75, 0.8, 0.85)) %>%
+  mutate(index = 1:n()) %>% # add an index column
+  group_by(index, n, simulation) %>% 
+  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
+  group_by(index, simulation, p) %>% 
+  nest() %>% # put data in list column
+  mutate(fit = future_map(data, 
+                   ~ binom.test(x = .$response, # define formula
+                          n = .$n,
+                          p = 0.5,
+                          alternative = "two.sided")),
+         p.value = future_map_dbl(fit, ~ .$p.value)) %>% # run binomial test and extract p-value
+  unnest(data) %>% 
+  select(-fit)
+
+# data frame for plot   
+df.plot = df.power %>% 
+  group_by(n, p) %>% 
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup() %>% 
+  mutate(p = as.factor(p))
+
+# plot data 
+ggplot(data = df.plot, 
+       mapping = aes(x = n, y = power, color = p, group = p)) +
+  geom_smooth(method = "loess")
+
+# based on simulations
+df.plot %>%
+  filter(p == 0.75, near(power, 0.8, tol = 0.02))
+  
+ 
+# analytic solution
+pwr.p.test(h = ES.h(0.5, 0.75),
+           power = 0.8,
+           alternative = "two.sided")
+toc()
+```
+
+## Model comparison 
+
+### Fitting vs. predicting
+
+```{r}
+set.seed(1)
+
+n_plots = 3
+n_samples = 20 # sample size 
+n_parameters = c(1:4, seq(7, 19, length.out = 5)) # number of parameters in the polynomial regression
+
+# generate data 
+df.data = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
+)
+
+# list for plots 
+l.p = list()
+
+# plotting function
+plot_fit = function(i){
+  ggplot(data = df.data,
+             mapping = aes(x = x,
+                           y = y)) +
+    geom_point(size = 2) +
+    geom_smooth(method = "lm", se = F,
+                formula = y ~ poly(x, degree = i, raw = TRUE)) +
+    theme(axis.ticks = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank())
+}
+
+# map over the parameters
+l.p = map(n_parameters, plot_fit)
+
+# make figure panel 
+l.p[[1]] + 
+  l.p[[2]] +
+  l.p[[3]] +
+  l.p[[4]] +
+  l.p[[5]] +
+  l.p[[6]] +
+  l.p[[7]] +
+  l.p[[8]] +
+  l.p[[9]] +
+  plot_layout(ncol = 3)
+```
+
+
+```{r}
+set.seed(1)
+
+n_plots = 3
+n_samples = 20 # sample size 
+n_parameters = c(1:4, seq(7, 19, length.out = 5)) # number of parameters in the polynomial regression
+
+# generate data 
+df.data = tibble(
+  x = runif(n_samples, min = 0, max = 10), 
+  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
+)
+
+# generate some more data 
+df.more_data = tibble(
+  x = runif(50, min = 0, max = 10), 
+  y = 10 + 3 * x + 3 * x^2 + rnorm(50, sd = 20)
+)
+
+# list for plots 
+l.p = list()
+
+# plotting function
+plot_fit = function(i){
+  ggplot(data = df.data,
+             mapping = aes(x = x,
+                           y = y)) +
+    geom_point(size = 2) +
+    geom_smooth(method = "lm", se = F,
+                formula = y ~ poly(x, degree = i, raw = TRUE)) +
+    geom_point(data = df.more_data,
+               size = 2,
+               color = "red") +
+    theme(axis.ticks = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank())
+}
+
+# map over the parameters
+l.p = map(n_parameters, plot_fit)
+
+# make figure panel 
+l.p[[1]] + 
+  l.p[[2]] +
+  l.p[[3]] +
+  l.p[[4]] +
+  l.p[[5]] +
+  l.p[[6]] +
+  l.p[[7]] +
+  l.p[[8]] +
+  l.p[[9]] +
+  plot_layout(ncol = 3)
+```
+
+```{r}
+# calculate rmse for old data vs. new data 
+
+df.data %>% 
+  nest() %>% 
+  bind_cols(df.more_data %>% 
+              nest(.key = "new_data")) %>% 
+  mutate(poly1 = map(data, ~ lm(formula = y ~ poly(x, degree = 1, raw = TRUE), data = .)),
+         poly2 = map(data, ~ lm(formula = y ~ poly(x, degree = 2, raw = TRUE), data = .)),
+         poly3 = map(data, ~ lm(formula = y ~ poly(x, degree = 3, raw = TRUE), data = .)),
+         poly16 = map(data, ~ lm(formula = y ~ poly(x, degree = 16, raw = TRUE), data = .)),
+         poly19 = map(data, ~ lm(formula = y ~ poly(x, degree = 19, raw = TRUE), data = .))) %>% 
+  gather("model", "fit", -c(data, new_data)) %>% 
+  mutate(rmse_old = map2_dbl(fit, data, rmse),
+         rmse_new = map2_dbl(fit, new_data, rmse)) %>% 
+  mutate_at(vars(contains("rmse")), funs(round(., 2)))
+
+```
+
+### Bootstrap 
+
+```{r}
+sample_size = 10 
+
+# sample
+df.data = tibble(
+  participant = 1:sample_size,
+  x = runif(sample_size, min = 0, max = 1)
+) 
+mean(df.data$x)
+
+# bootstrap 
+df.data %>%
+  bootstrap(n = 50) %>% 
+  mutate(fit = map(strap, ~ lm(x ~ 1, data = .)),
+         mean = map(fit, tidy)) %>% 
+  unnest(mean) %>% 
+  summarize(mean = mean(estimate),
+            low = quantile(estimate, 0.025),
+            high = quantile(estimate, 0.975))
+```
+
+
+### Cross-validation 
+
+Let's generate a data set first: 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 100
+b0 = 1
+b1 = 2
+b2 = 3
+sd = 0.5
+
+# sample
+df.data = tibble(
+  participant = 1:sample_size,
+  x = runif(sample_size, min = 0, max = 1),
+  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)
+) 
+```
+
+Plot the data:
+
+```{r}
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                    y = y)) + 
+  geom_smooth(method = "lm",
+              formula = y ~ x + I(x^2)) +
+  geom_point()
+```
+
+#### F-test 
+
+```{r}
+fit_simple = lm(y ~ 1 + x, data = df.data)
+fit_correct = lm(y ~ 1 + x + I(x^2), data = df.data)
+fit_complex = lm(y ~ 1 + x + I(x^2) + I(x^3), data = df.data)
+
+anova(fit_simple, fit_correct)
+anova(fit_correct, fit_complex)
+```
+
+#### Leave-one-out cross-validation 
+
+```{r}
+# crossvalidation scheme 
+library("modelr")
+
+df.cross = df.data %>% 
+  crossv_loo() %>% 
+  mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
+         model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
+         model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+  gather("model", "fit", contains("model")) %>% 
+  mutate(rmse = map2_dbl(fit, train, rmse))
+
+df.cross %>% 
+  mutate(model = factor(model,
+                        levels = str_c("model_", c("simple", "correct", "complex")),
+                        labels = c("simple", "correct", "complex"))) %>% 
+  group_by(model) %>% 
+  summarize(mean_rmse = mean(rmse) %>% round(3)) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+##### Illustration 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 100
+b0 = 1
+b1 = 2
+b2 = 3
+sd = 0.5
+
+# sample
+df.loo = tibble(
+  participant = 1:sample_size,
+  x = runif(sample_size, min = 0, max = 1),
+  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)
+) 
+
+df.loo_cross = df.loo %>% 
+  crossv_loo() %>% 
+  mutate(fit = map(train, ~ lm(y ~ x, data = .)),
+         tidy = map(fit, tidy)) %>% 
+  unnest(tidy)
+
+# original plot 
+df.plot = df.loo %>% 
+  mutate(color = 1)
+
+df.plot$color[7] = 2
+
+# fit 
+df.fit = df.plot %>% 
+  filter(color != 2) %>% 
+  lm(y ~ x, data = .) %>% 
+  augment(newdata = df.plot[df.plot$color == 2,]) %>% 
+  clean_names()
+
+ggplot(df.plot,
+       aes(x, y, color = as.factor(color))) + 
+  geom_segment(aes(xend = x,
+                   yend = fitted),
+               data = df.fit,
+               color = "red",
+               size = 1) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = F, color = "black", fullrange = T,
+              data = df.plot %>% filter(color != 2))  +
+  scale_color_manual(values = c("black", "red")) + 
+  coord_cartesian(xlim = c(0, 1),
+                  ylim = c(0, 6)) +
+  theme(legend.position = "none")
+
+
+```
+
+
+
+#### K-fold cross-validation 
+
+```{r}
+# crossvalidation scheme 
+df.cross = df.data %>% 
+  crossv_kfold(k = 10) %>% 
+  mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
+         model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
+         model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+  gather("model", "fit", contains("model")) %>% 
+  mutate(rsquare = map2_dbl(fit, test, rsquare))
+
+df.cross %>% 
+  mutate(model = factor(model,
+                        levels = str_c("model_", c("simple", "correct", "complex")),
+                        labels = c("simple", "correct", "complex"))) %>% 
+  group_by(model) %>% 
+  summarize(median_rsquare = median(rsquare))%>% 
+  kable(digits = 3) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+#### General cross-validation 
+
+```{r}
+# crossvalidation scheme 
+df.cross = df.data %>% 
+  crossv_mc(n = 50, test = 0.2) %>% # number of samples, and percentage of test 
+  mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .x)),
+         model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .x)),
+         model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+  gather("model", "fit", contains("model")) %>% 
+  mutate(rmse = map2_dbl(fit, test, rmse))
+
+df.cross %>% 
+  group_by(model) %>% 
+  summarize(mean_rmse = mean(rmse))
+```
+
+
+### AIC and BIC 
+
+The Akaike Information Criterion (AIC) and the Bayesian Information Criterion (BIC) are defined as follows: 
+
+$$
+\text{AIC} = 2k-2\ln(\hat L)
+$$
+
+$$
+\text{BIC} = \ln(n)k-2\ln(\hat L)
+$$
+
+where $k$ is the number of parameters in the model, $n$ is the number of observations, and $\hat L$ is the maximized value of the likelihood function of the model. 
+
+Calculating AIC and BIC in R is straightforward. We simply need to fit a linear model, and then call the `AIC()` or `BIC()` functions on the fitted model like so: 
+
+```{r}
+
+df.movies_subset = df.movies %>% 
+  filter(row_number() <= 100)
+
+fit1 = lm(formula = gross ~ budget + rating,
+         data = df.movies_subset)
+
+fit2 = lm(formula = gross ~ budget * rating,
+         data = df.movies_subset)
+
+fit2 %>% summary()
+AIC(fit1, fit2)
+BIC(fit1, fit2)
+```
+
+```{r}
+set.seed(0)
+
+df.example = tibble(
+  x = runif(20, min = 0, max = 1),
+  y = 1 + 3 * x + rnorm(20, sd = 2)
+)
+
+# lm 
+ggplot(df.example,
+       aes(x, y)) + 
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", color = "black")
+  
+# residual plot 
+df.plot = df.example %>% 
+  lm(y ~ x, data = .) %>% 
+  augment() %>% 
+  clean_names()
+
+df.normal = tibble(
+  y = seq(-7.5, 7.5, 0.1),
+  x = dnorm(y, sd = 2) + 3.9
+)
+
+df.plot %>% 
+  ggplot(aes(x = fitted, y = resid)) + 
+  geom_point() +
+  geom_path(data = df.normal,
+            aes(x = x, y = y),
+            size = 2)
+
+```
+
+```{r}
+
+# generate some data 
+df.like = tibble(
+  x = runif(20, min = 0, max = 1),
+  y = 1 + 3 * x + rnorm(20, sd = 2)
+)
+
+# fit the model
+fit = lm(formula = y ~ x,
+         data = df.like)
+
+# model summary
+fit %>% 
+  glance() %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+```
+
+Calculate AIC and BIC by hand:
+
+```{r}
+sigma = fit %>% 
+  glance() %>% 
+  pull(sigma)
+
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  mutate(likelihood = dnorm(resid, sd = sigma)) %>% 
+  summarize(logLik = sum(log(likelihood)))
+
+fit %>% 
+  glance() %>% 
+  mutate(aic = 2*(df+1) - 2 * logLik,
+         bic = log(nrow(df.like)) * (df+1) - 2 * logLik)
+```
+
+
+
+```{r}
+df.movies_subset = df.movies %>% 
+  filter(row_number() <= 100)
+
+fit1 = lm(formula = gross ~ budget + rating,
+         data = df.movies_subset)
+
+sigma = fit1 %>% 
+  glance() %>% 
+  pull(sigma)
+
+df.fit1 = fit1 %>% 
+  augment() %>% 
+  clean_names() %>% 
+  select(gross, budget, rating, fitted, resid) %>% 
+  mutate(likelihood = dnorm(resid, mean = 0, sd = sigma),
+         log_likelihood = log(likelihood))
+
+fit1 %>% glance() 
+df.fit1$log_likelihood %>% sum()
+
+```
+
+```{r}
+df.movies_model = df.movies %>% 
+  # filter(row_number() <= 100) %>% 
+  nest() %>% 
+  mutate(budget = map(data, ~ lm(gross ~ budget, data = .)),
+         budget_plus_rating = map(data, ~ lm(gross ~ budget + rating, data = .)),
+         budget_times_rating = map(data, ~ lm(gross ~ budget * rating, data = .))
+         ) %>% 
+  gather("model", "fit", -data) %>% 
+  mutate(summary = map(fit, glance)) %>% 
+  unnest(summary) %>% 
+  select(model, AIC, BIC, r.squared)
+```
+
+run separate models by genre: 
+
+```{r}
+df.movies_model = df.movies %>% 
+  group_by(genre) %>% 
+  nest() %>% 
+  mutate(budget = map(data, ~ lm(gross ~ budget, data = .)),
+         budget_plus_rating = map(data, ~ lm(gross ~ budget + rating, data = .)),
+         budget_times_rating = map(data, ~ lm(gross ~ budget * rating, data = .))
+         ) %>% 
+  ungroup() %>% 
+  gather("model", "fit", -c(data, genre)) %>% 
+  mutate(summary = map(fit, glance),
+         n = map(data, nrow)) %>% 
+  unnest(summary) %>%
+  select(genre, n, model, AIC, BIC, r.squared) %>% 
+  arrange(genre, model) %>% 
+  group_by(genre) %>% 
+  mutate(best = which.min(AIC))
+```
+
+calculate AIC by hand:
+
+```{r}
+
+```
+
+
 
 ## Model assumptions 
 
@@ -182,7 +910,25 @@ fit.simpson %>%
   geom_point()
 ```
 
+
+
 ## Additional resources 
+
+### Cheatsheet 
+
+- [purrr]("figures/purrr.pdf")
+
+### Datacamp course
+
+- [Foundations of Functional Programming with purrr](https://www.datacamp.com/courses/foundations-of-functional-programming-with-purrr)
+
+### Reading 
+
+- [R for Data Science: Chapter 25](https://r4ds.had.co.nz/many-models.html)
+
+### Misc 
+
+- [G*Power 3.1](http://www.gpower.hhu.de/): Software for power calculations
 
 ## Session info 
 
