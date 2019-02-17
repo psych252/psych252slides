@@ -1,0 +1,135 @@
+---
+title: "Class 16"
+author: "Tobias Gerstenberg"
+date: "February 15th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=15"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Model comparison
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("pwr")    # for power analysis 
+library("tictoc")    # for timing things
+library("emmeans")    # for estimated marginal means 
+library("patchwork")    # for figure panels
+library("modelr")    # for cross-validation
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+
+## Power simulation
+
+```{r}
+# make reproducible 
+set.seed(1)
+
+# number of simulations
+n_simulations = 10
+
+# run simulation
+df.power = crossing(n = seq(10, 50, 1),
+                    simulation = 1:n_simulations,
+                    p = c(0.1, 0.8, 0.85)) %>%
+  mutate(index = 1:n()) %>% # add an index column
+  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
+  group_by(index, simulation, p) %>% 
+  nest() %>% # put data in list column
+  mutate(fit = map(data, 
+                   ~ binom.test(x = .$response, # define formula
+                          n = .$n,
+                          p = 0.5,
+                          alternative = "greater")),
+         p.value = map_dbl(fit, ~ .$p.value)) %>% # run binomial test and extract p-value
+  unnest(data) %>% 
+  select(-fit)
+
+# data frame for plot   
+df.plot = df.power %>% 
+  group_by(n, p) %>% 
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup() %>% 
+  mutate(p = as.factor(p))
+
+# plot data 
+ggplot(data = df.plot, 
+       mapping = aes(x = n, y = power, color = p, group = p)) +
+  geom_smooth(method = "loess")
+
+# based on simulations
+df.plot %>%
+  filter(p == 0.75, near(power, 0.8, tol = 0.02))
+  
+# analytic solution
+pwr.p.test(h = ES.h(0.5, 0.75),
+           power = 0.8,
+           alternative = "two.sided")
+```
+
+## LOO crossvalidation
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 100
+b0 = 1
+b1 = 2
+b2 = 3
+sd = 0.5
+
+# sample
+df.data = tibble(
+  participant = 1:sample_size,
+  x = runif(sample_size, min = 0, max = 1),
+  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)
+) 
+```
+
+
+```{r}
+df.cross = df.data %>% 
+  crossv_mc(n = 50, test = 0.5) %>% 
+  mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
+         model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
+         model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+  gather("model", "fit", contains("model")) %>% 
+  mutate(rmse = map2_dbl(.x = fit, .y = test, ~ rmse(.x, .y)))
+
+df.cross %>% 
+  group_by(model) %>% 
+  summarize(mean_rmse = mean(rmse))
+```
+

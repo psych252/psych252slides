@@ -1,0 +1,158 @@
+---
+title: "Class 17"
+author: "Tobias Gerstenberg"
+date: "February 20th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=16"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Model comparison
+
+```{r install-packages, include=FALSE, eval=FALSE}
+# install.packages(c("pwr", "tictoc"))
+```
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+# Linear mixed effects models 1 
+
+## Things that came up in class 
+
+### Comparing t-test with F-test in `lm()`
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 100
+b0 = 1
+b1 = 0.5
+b2 = 0.5
+sd = 0.5
+
+# sample
+df.data = tibble(
+  participant = 1:sample_size,
+  x1 = runif(sample_size, min = 0, max = 1),
+  x2 = runif(sample_size, min = 0, max = 1),
+  # simple additive model
+  y = b0 + b1 * x1 + b2 * x2 + rnorm(sample_size, sd = sd) 
+) 
+
+# fit linear model 
+fit = lm(formula = y ~ 1 + x1 + x2,
+   data = df.data)
+
+# print model summary 
+fit %>% summary()
+```
+
+The global F-test which is shown by the F-statistic at the bottom of the `summary()` output compares the full model with a  model that only has an intercept. So, to use our model comparison approach, we would compare the following two models 
+
+```{r}
+# fit models 
+model_compact = lm(formula = y ~ 1,
+                   data = df.data)
+
+model_augmented = lm(formula = y ~ 1 + x1 + x2,
+                     data = df.data)
+
+# compare models using the F-test
+anova(model_compact, model_augmented)
+
+```
+
+Note how the result of the F-test using the `anova()` function which compares the two models is identical to the F-statistic reported at the end of the `summary` function.
+
+To test for individual parameters in the model, we compare two models, a compact model without that parameter, and an augmented model with that parameter. Let's test the significance of `x1`. 
+
+```{r}
+# fit models 
+model_compact = lm(formula = y ~ 1 + x2,
+                   data = df.data)
+
+model_augmented = lm(formula = y ~ 1 + x1 + x2,
+                     data = df.data)
+
+# compare models using the F-test
+anova(model_compact, model_augmented)
+```
+
+Note how the p-value that we get from the F-test is equivalent to the one that we get from the t-test reported in the `summary()` function. The F-test statistic (in the `anova()` result) and the t-value (in the `summary()` of the linear model) are deterministically related. In fact, the relationship is just: 
+
+$$
+t = \sqrt{F}
+$$
+
+Let's check that that's correct: 
+
+```{r, warning=FALSE}
+# get the t-value from the fitted lm
+t_value = fit %>% 
+  tidy() %>% 
+  filter(term == "x1") %>% 
+  pull(statistic)
+
+# get the F-value from comparing the compact model (without x1) with the 
+# augmented model (with x1)
+
+f_value = anova(model_compact, model_augmented) %>% 
+  tidy() %>% 
+  pull(statistic) %>% 
+  .[2]
+
+# t-value 
+print(str_c("t_value: ", t_value))
+
+# square root of f_value 
+print(str_c("sqrt of f_value: ", sqrt(f_value)))
+```
+
+Yip, they are the same. 
+
+## Additional resources 
+
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+## References

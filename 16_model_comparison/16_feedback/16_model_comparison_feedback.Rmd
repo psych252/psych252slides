@@ -1,0 +1,113 @@
+---
+title: "16 Model comparison"
+author: "Tobias Gerstenberg"
+date: "2/15/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> I can see how much you put in the class. I think the class is ambitious to teach students (who don't really have a lot of programming skills) simulations. There are way too much information over there, in addition to the goal of teaching students other important concepts. I completely failed to follow the simulation r code. __On the other hand, I also failed to understand other concepts, such as the leave-one-out approach. Perhaps you need to explain much more clearly why this can help to solve the problems of the "anova()" in r.__ I can understand what it is doing but I can't understand why it solves the problems of comparing two models with "non-overlapped" predictors.
+
+> The midterm took me 18 hours to finish, but I actually appreciate it! I reviewed and learned so much in the process of finishing the midterm. This is the only midterm that I would save a copy as a reference of R codes for future data analysis.
+
+> the midterm was really too long. it also felt long for no reason, eg __questions tested redundant knowledge (and it felt like the hws in that it was really testing if I could find the relevant R code in the rmd files uploaded with lecture instead of testing more independent problem solving)__. I hope future students get to take a more concise one.
+
+> __A little too much of reciting code in class today__, I think (as opposed to more conceptual content). You lost me a bit. One thing that did come up in the midterm though: why does lm() output a t value and anova output an F value. __And what's the difference/relationship between the two.__
+
+> You need to give us a chance to discuss feedback on the midterm. Clearly, it was not a 6-hour exam (please report the mean length), and even if it was, you should not have assigned a 6-hour exam to begin with. The purpose of the take-home exam is to offer an exam in a more flexible format. __Stanford's exam policy specifies that (final!) exams fit within a 3-hour slot.__ Unless you have a substantial reason why you cannot evaluate your course material in such a format, you should not use the take-home option as a mechanism to simply assign a longer exam (Stanford even has formal channels for students to bring such practices to the attention of University administrators). Moreover, the exam clearly did not need to be so long, as its length was not due to challenging questions but rather to a great deal of repetitive material. If we can interpret coefficients in a linear regression once, we don't need to do it 3 times more. The classmates with which I spoke shared the sentiment that the midterm was disrespectful of our time (in a fashion similar to that of HW2).
+
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-16.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-16.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+ggsave("pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-16.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+ggsave("overall.pdf", width = 8, height = 6)
+```
+
+## Midterm
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
+df.hw4_hours = read.csv("how-many-hours-midterm.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response,
+                           levels = c(1:14, "15 or more"),
+                           labels = c(1:14, "15\nor more"))) %>% 
+  count(response) %>% 
+  complete(response)
+
+ggplot(data = df.hw4_hours,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How many hours did you spend on the midterm?") +
+  theme(title = element_text(size = 16),
+        plot.margin = margin(r = 1, unit = "cm"))
+ggsave("midterm_hours.pdf", width = 8, height = 6)
+```
+
+```
+
+## What to do next time
+
+- shorten midterm considerably 
+- introduce simulating power based on a more straightforward example before showing the more involved simulation (that manipulates n and effect size)
+- maybe have some practical exercises with map() before going into the simulation 
+- both the power and the cross-validation code examples are very heavy; maybe only introduce one in class; or focus more on the conceptual part, and have students go through the R code in sections and for the homework
+- better motivate the need for model comparison that goes beyond the F-test that we've used in class so far  
