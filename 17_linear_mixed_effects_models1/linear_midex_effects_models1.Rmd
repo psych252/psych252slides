@@ -34,6 +34,8 @@ library("knitr")      # for knitting RMarkdown
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
+library("patchwork")    # for making figure panels
+library("lme4")    # for linear mixed effects models
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -144,8 +146,263 @@ print(str_c("sqrt of f_value: ", sqrt(f_value)))
 
 Yip, they are the same. 
 
+## Dependence 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+df.dependence = data_frame(
+  participant = 1:20,
+  condition1 = rnorm(20),
+  condition2 = condition1 + rnorm(20, mean = 0.2, sd = 0.1)
+) %>% 
+  mutate(condition2shuffled = sample(condition2))
+
+df.plot = df.dependence %>% 
+  gather("condition", "value", -participant) %>% 
+  mutate(condition = str_replace(condition, "condition", ""))
+
+p1 = ggplot(data = df.plot %>% filter(condition != "2shuffled"), 
+            mapping = aes(x = condition, y = value)) +
+  geom_line(aes(group = participant), alpha = 0.3) +
+  geom_point() +
+  stat_summary(fun.y = "mean", 
+               geom = "point",
+               shape = 21, 
+               fill = "red",
+               size = 4) +
+  labs(title = "original",
+       tag = "a)")
+  
+p2 = ggplot(data = df.plot %>% filter(condition != "2"), 
+            mapping = aes(x = condition, y = value)) +
+  geom_line(aes(group = participant), alpha = 0.3) +
+  geom_point() +
+  stat_summary(fun.y = "mean", 
+               geom = "point",
+               shape = 21, 
+               fill = "red",
+               size = 4) +
+  labs(title = "shuffled",
+       tag = "b)")
+
+p1 + p2 
+
+```
+
+```{r}
+# separate the data sets 
+df.original = df.dependence %>% 
+  gather("condition", "value", -participant) %>% 
+  mutate(condition = str_replace(condition, "condition", "")) %>% 
+  filter(condition != "2shuffled")
+  
+df.shuffled = df.dependence %>% 
+  gather("condition", "value", -participant) %>% 
+  mutate(condition = str_replace(condition, "condition", "")) %>% 
+  filter(condition != "2")
+```
+
+```{r}
+# linear model (assuming independent samples)
+lm(formula = value ~ condition,
+   data = df.original) %>% 
+  summary() 
+
+t.test(df.original$value[df.original$condition == "1"],
+       df.original$value[df.original$condition == "2"],
+       alternative = "two.sided",
+       paired = F
+       )
+```
+
+The mean difference between the conditions is very small 
+
+```{r}
+# fit a linear mixed effects model 
+lmer(formula = value ~ condition + (1 | participant),
+                 data = df.original) %>% 
+  summary()
+```
+
+
+```{r}
+# fit models
+fit.compact = lmer(formula = value ~ 1 + (1 | participant),
+                 data = df.original)
+fit.augmented = lmer(formula = value ~ condition + (1 | participant),
+                 data = df.original)
+
+# compare via Chisq-test
+anova(fit.compact, fit.augmented)
+
+t.test(df.original$value[df.original$condition == "1"],
+       df.original$value[df.original$condition == "2"],
+       alternative = "two.sided",
+       paired = T
+       )
+```
+
+Visualize model predictions: 
+
+```{r}
+# model assuming independence
+fit.independent = lm(formula = value ~ 1 + condition,
+                     data = df.original)
+
+# model assuming dependence
+fit.dependent = lmer(formula = value ~ 1 + condition + (1 | participant),
+                     data = df.original)
+```
+
+Model predictions:
+
+```{r}
+# plot with predictions by fit.independent 
+fit.independent %>% 
+  augment() %>% 
+  bind_cols(df.original %>% select(participant)) %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+```
+
+Illustrate residuals: 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+fit.independent %>% 
+  augment() %>% 
+  bind_cols(df.original %>% select(participant)) %>% 
+  clean_names() %>% 
+  mutate(index = as.numeric(condition),
+         index = index + runif(n(), min = -0.3, max = 0.3)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = index,
+                       y = value,
+                       group = participant,
+                       color = condition)) +
+  geom_point() + 
+  geom_smooth(method = "lm",
+              se = F,
+              formula = "y ~ 1",
+              aes(group = condition)) +
+  geom_segment(aes(xend = index,
+                   yend = fitted),
+               alpha = 0.5) +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_continuous(breaks = 1:2, 
+                     labels = 1:2) +
+  labs(x = "condition") +
+  theme(legend.position = "none")
+
+```
+
+
+```{r}
+# plot with predictions by fit.independent 
+fit.dependent %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+```
+
+Residual plots
+
+```{r}
+fit.independent %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = fitted,
+                       y = resid)) +
+  geom_point() +
+  coord_cartesian(ylim = c(-2.5, 2.5))
+
+```
+
+```{r}
+fit.dependent %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = fitted,
+                       y = resid)) +
+  geom_point() + 
+  coord_cartesian(ylim = c(-2.5, 2.5))
+```
+
+Compare whether accounting for dependence is worth it: 
+
+```{r}
+# fit models (without and with dependence)
+fit.compact = lm(formula = value ~ 1 + condition,
+                 data = df.original)
+
+fit.augmented = lmer(formula = value ~ 1 + condition + (1 | participant),
+                     data = df.original)
+
+# compare models
+# note: the lmer model has to be supplied first 
+anova(fit.augmented, fit.compact) 
+```
+
+
+Explore lmer() object: 
+
+```{r}
+fit.augmented %>% 
+  summary()
+```
+
+
+```{r}
+fit.augmented %>% 
+  tidy()
+```
+
+
+
+```{r}
+# dependent samples: shuffled data set
+fit.lmer1 = lmer(value ~ condition + (1 | participant), data = df.shuffled)
+fit.lmer2 = lmer(value ~ 1 + (1 | participant), data = df.shuffled)
+
+anova(fit.lmer1, fit.lmer2)
+
+t.test(df.shuffled$value[df.shuffled$condition == "1"],
+       df.shuffled$value[df.shuffled$condition == "2"],
+       alternative = "two.sided",
+       paired = T
+       )
+```
+
+
 ## Additional resources 
 
+### Readings 
+
+- [Linear mixed effects models tutorial by Bodo Winter](https://arxiv.org/pdf/1308.5499.pdf)
 
 ## Session info 
 
