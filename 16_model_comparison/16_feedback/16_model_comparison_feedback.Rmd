@@ -59,7 +59,7 @@ ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-ggsave("pace.pdf", width = 8, height = 6)
+# ggsave("pace.pdf", width = 8, height = 6)
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
@@ -78,13 +78,13 @@ ggplot(data = df.overall,
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
-ggsave("overall.pdf", width = 8, height = 6)
+# ggsave("overall.pdf", width = 8, height = 6)
 ```
 
 ## Midterm
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
-df.hw4_hours = read.csv("how-many-hours-midterm.csv", header = F) %>%
+df.midterm_hours = read.csv("how-many-hours-midterm.csv", header = F) %>%
   filter(row_number() > which(.$V2 == "Created At")) %>% 
   set_names(c("response", "date")) %>% 
   mutate(response = factor(response,
@@ -93,16 +93,15 @@ df.hw4_hours = read.csv("how-many-hours-midterm.csv", header = F) %>%
   count(response) %>% 
   complete(response)
 
-ggplot(data = df.hw4_hours,
+ggplot(data = df.midterm_hours,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How many hours did you spend on the midterm?") +
   theme(title = element_text(size = 16),
         plot.margin = margin(r = 1, unit = "cm"))
-ggsave("midterm_hours.pdf", width = 8, height = 6)
+# ggsave("midterm_hours.pdf", width = 8, height = 6)
 ```
 
-```
 
 ## What to do next time
 

@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 # Model comparison
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages(c("pwr", "tictoc"))
+install.packages(c("lme4", "lmerTest", "pbkrtest"))
 ```
 
 ## Load packages and set plotting theme  
@@ -36,6 +36,8 @@ library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
 library("patchwork")    # for making figure panels
 library("lme4")    # for linear mixed effects models
+# library("lmerTest")    # provides p-values for lmers
+library("pbkrtest")    # for testing lmers, parametric bootstrap and modified F-test
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -82,6 +84,21 @@ fit = lm(formula = y ~ 1 + x1 + x2,
 # print model summary 
 fit %>% summary()
 ```
+
+Let's visualize the data: 
+
+```{r}
+df.data %>% 
+  ggplot(data = .,
+         mapping = aes(x = x1,
+                       y = y,
+                       color = x2)) +
+  geom_smooth(method = "lm",
+              color = "black") + 
+  geom_point()
+  
+```
+
 
 The global F-test which is shown by the F-statistic at the bottom of the `summary()` output compares the full model with a  model that only has an intercept. So, to use our model comparison approach, we would compare the following two models 
 
@@ -381,21 +398,336 @@ fit.augmented %>%
   tidy()
 ```
 
+## Explore stuff
 
+### No correlation between fixed effects when predictor is effect coded
 
 ```{r}
-# dependent samples: shuffled data set
-fit.lmer1 = lmer(value ~ condition + (1 | participant), data = df.shuffled)
-fit.lmer2 = lmer(value ~ 1 + (1 | participant), data = df.shuffled)
+df.test = df.original %>% 
+  mutate(condition = as.factor(condition))
+  
+contrasts(df.test$condition) = "contr.sum"
 
-anova(fit.lmer1, fit.lmer2)
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                     data = df.test)
 
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+```
+
+### no correlation when effect of condition doesn't vary 
+
+- no correlation but also fails to converge 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+tmp = rnorm(n = 20)
+
+df.test = tibble(
+  condition = rep(1:2, each = 20), 
+  participant = rep(1:20, 2),
+  value = ifelse(condition == 1, tmp,
+                 tmp + 3)
+)
+
+lmer(formula = value ~ condition + (1 | participant),
+     data = df.test) %>% 
+  summary()
+```
+
+### regression to the mean example 
+
+- lmer() with random intercepts not better than lm() even though there is individual variation
+- 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+tmp = rnorm(n = 20)
+
+df.test = tibble(
+  condition = rep(1:2, each = 20), 
+  participant = rep(1:20, 2),
+  value = ifelse(condition == 1, tmp,
+                 mean(tmp) + rnorm(n = 20, sd = 0.3))
+                 # tmp + rnorm(n = 20, sd = 0.3))
+) %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.test)
+
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  bind_cols(df.test %>% select(participant)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+```
+
+### fixed effects factor not worth it 
+
+- little variance between individual participants 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters 
+sample_size = 100
+b0 = 1
+b1 = 2
+sd_residual = 1
+sd_participant = 0.5
+
+# randomly draw intercepts for each participant
+intercepts = rnorm(sample_size, sd = sd_participant)
+
+# generate the data 
+df.test = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.test)
+
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  bind_cols(df.test %>% select(participant)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+
+# fit linear model 
+fit.lm = lm(formula = value ~ 1 + condition,
+            data = df.test)
+
+# chisq test 
+anova(fit.test, fit.lm) 
+
+fit.test %>% 
+  glance()
+
+fit.test %>% 
+  tidy()
+
+fit.lm %>% 
+  glance()
+```
+
+
+
+### Compare lmerTest with chisq test: 
+
+```{r}
+# using lmerTest
+fit.lmer = lmerTest::lmer(formula = value ~ condition + (1 | participant),
+                data = df.original)
+
+fit.lmer %>% 
+  summary()
+
+# using chisq test
+fit.compact = lm(formula = value ~ 1 +  condition,
+                data = df.original)
+
+fit.augmented = lmer(formula = value ~ 1 + condition +  (1 | participant),
+                data = df.original)
+
+anova(fit.augmented, fit.compact)
+
+# similar method 
+lmerTest::rand(fit.lmer)
+
+```
+
+### coefficients 
+
+```{r}
+
+```
+
+
+### outlier
+
+- sensitivity to outliers 
+- strongly affects predictions (simulated data)
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 100
+b0 = 1
+b1 = 2
+sd_residual = 1
+sd_participant = 0.5
+
+# randomly draw intercepts for each participant
+intercepts = rnorm(sample_size, sd = sd_participant)
+
+df.test = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+# df.test = df.test %>% 
+#   mutate(value = ifelse(participant == 20, value + 30, value))
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                     data = df.test)
+
+# fit.test %>% 
+#   augment() %>% 
+#   clean_names() %>% 
+#   ggplot(data = .,
+#          mapping = aes(x = condition,
+#                        y = value,
+#                        group = participant)) +
+#   geom_point(alpha = 0.5) +
+#   geom_line(alpha = 0.5) +
+#   geom_point(aes(y = fitted),
+#              color = "red") + 
+#   geom_line(aes(y = fitted),
+#              color = "red")
+# 
+fit.test %>% summary()
+
+# simulated data 
+fit.test %>% 
+  simulate() %>% 
+  bind_cols(df.test) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = sim_1,
+                       group = participant)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5)
+
+```
+
+
+### predict and simulate from lmer 
+
+```{r}
+fit.lmer = lmer(formula = value ~ condition + (1 | participant),
+                data = df.original)
+
+# # deterministic 
+fit.lmer %>%
+  predict(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
+                           participant = rep(10:22, 2)),
+          allow.new.levels = T)
+
+# condition on the fit random effects (or not)
+fit.lmer %>%
+  simulate(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
+                           participant = rep(10:22, 2)),
+          allow.new.levels = T,
+          re.form = NULL)
+
+fit.lmer %>% 
+  simulate(nsim = 100) %>% 
+  bind_cols(df.original) %>% 
+  # filter(participant == 1) %>% 
+  filter(participant == 14) %>% 
+  gather("simulation", "prediction", -c(participant, condition, value)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = prediction,
+                       group = simulation)) +
+  geom_line(alpha = 0.5) + 
+  geom_line(aes(y = value), 
+            color = "red",
+            size = 2)
+
+tmp = fit.lmer %>% 
+  simulate(nsim = 100)
+  
+```
+### paired t-test 
+
+```{r}
+# original data set 
+t.test(df.original$value[df.original$condition == "1"],
+       df.original$value[df.original$condition == "2"],
+       alternative = "two.sided",
+       paired = T)
+
+# equivalent: t-test on the differences 
+df.original %>% 
+  spread(condition, value) %>% 
+  mutate(diff = `1` - `2`) %>% 
+  pull(diff) %>% 
+  t.test()
+  
+# shuffled data set 
 t.test(df.shuffled$value[df.shuffled$condition == "1"],
        df.shuffled$value[df.shuffled$condition == "2"],
        alternative = "two.sided",
        paired = T
        )
 ```
+
+### lm on differences 
+
+```{r}
+df.original %>% 
+  spread(condition, value) %>% 
+  mutate(diff = `1` - `2`) %>% 
+  lm(formula = diff ~ 1,
+     data = .) %>% 
+  summary()
+```
+
+- can't generate new data from this approach (since the interindividual variation is not modeled)
+
 
 
 ## Additional resources 

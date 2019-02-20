@@ -483,7 +483,10 @@ fun.cv_plot = function(data_point){
     geom_smooth(method = "lm", se = F, color = "black", fullrange = T,
                 data = df.plot %>% filter(color != 2))  +
     scale_color_manual(values = c("black", "red")) + 
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank())
   return(p)
 }
 
@@ -718,6 +721,20 @@ fit %>%
   glance() %>% 
   select(AIC, BIC)
 ```
+
+#### log() is your friend 
+
+```{r}
+ggplot(data = tibble(x = c(0, 1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "log",
+                size = 1) +
+  labs(x = "probability",
+       y = "log(probability)") +
+  theme(axis.text = element_text(size = 24),
+        axis.title = element_text(size = 26))
+```
+
 
 ## Additional resources 
 
