@@ -599,10 +599,10 @@ lmerTest::rand(fit.lmer)
 # make example reproducible 
 set.seed(1)
 
-sample_size = 100
+sample_size = 20
 b0 = 1
 b1 = 2
-sd_residual = 1
+sd_residual = 0.5
 sd_participant = 0.5
 
 # randomly draw intercepts for each participant
@@ -617,26 +617,27 @@ df.test = tibble(
   mutate(condition = as.factor(condition),
          participant = as.factor(participant))
 
-# df.test = df.test %>% 
-#   mutate(value = ifelse(participant == 20, value + 30, value))
+df.test = df.test %>%
+  mutate(value = ifelse(participant == 20, value + 30, value))
 
+# fit model
 fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
-                     data = df.test)
+                data = df.test)
 
-# fit.test %>% 
-#   augment() %>% 
-#   clean_names() %>% 
-#   ggplot(data = .,
-#          mapping = aes(x = condition,
-#                        y = value,
-#                        group = participant)) +
-#   geom_point(alpha = 0.5) +
-#   geom_line(alpha = 0.5) +
-#   geom_point(aes(y = fitted),
-#              color = "red") + 
-#   geom_line(aes(y = fitted),
-#              color = "red")
-# 
+fit.test %>%
+  augment() %>%
+  clean_names() %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
 fit.test %>% summary()
 
 # simulated data 
@@ -714,6 +715,16 @@ t.test(df.shuffled$value[df.shuffled$condition == "1"],
        paired = T
        )
 ```
+
+### model coefficients 
+
+```{r}
+fit.independent %>% coef()
+
+fit.dependent %>% coef()
+fit.dependent %>% ranef()
+```
+
 
 ### lm on differences 
 
