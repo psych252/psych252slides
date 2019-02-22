@@ -54,3 +54,4 @@ read_csv("what-did-you-like-about-6.csv") %>%
 - briefly discuss causality again at the beginning of next class 
 - didn't have time to ask pace and overall question 
 - add readings 
+- maybe use this shinyapp for illustration in class: https://research-methods-dojo.shinyapps.io/causality_and_regression/

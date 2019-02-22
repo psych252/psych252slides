@@ -597,6 +597,10 @@ lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
 - [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
 - [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
+### Misc 
+
+- [Explanation of different types of sums of squares](https://mcfromnz.wordpress.com/2011/03/02/anova-type-iiiiii-ss-explained/)
+
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 

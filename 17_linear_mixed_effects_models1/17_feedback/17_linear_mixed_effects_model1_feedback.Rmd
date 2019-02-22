@@ -1,0 +1,88 @@
+---
+title: "17 Linear mixed effects model 1"
+author: "Tobias Gerstenberg"
+date: "2/20/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> It's a really helpful lecture for explaining CV, AIC, BIC. __One thing I am wondering about is "likelihood". I think it would be helpful to clarify whether "likelihood" is of the model or of the data.__ When explaining the formula of AIC/BIC, Tobi said "likelihood of the model", but my understanding might be given the current model, what's the likelihood of the observed data?
+
+> __Didn't really understand Monte Carlo as it went by so quickly. And unsure about lmer...__ :( But I think the LOO and K fold were explained well last lecture!
+
+> I can tell that you are really spending time preparing this material, and I feel like I've been able to grasp the concepts in lecture quite well recently. __Despite the scathing review of the timing for the midterm, I just wanted to share that there are many other graduate classes here (in other departments) that give longer than 3 hour exams. I think the main difference here was the expectation for time spent (as those classes are usually very forward about the extended length of time the exam will take)__ 
+
+> I'm a little __confused on the differences in use cases between replicate and map__. It seems like map is just more universally useful, but I'm not sure what context you would want to use one function over the other.
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-17.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-17.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+# ggsave("pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-17.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+# ggsave("overall.pdf", width = 8, height = 6)
+```
+
+
+## What to do next time
+
+- this class went well
+- there was some confusion as to whether the lines that indicate `dnorm()` are residuals 
+- I need to make sure to use technical terms correctly (and consistently): e.g. likelihood of the data given the model (I said likelihood of the model at some point)
+- continue in next class with how to interpret the `lmer()` summary
+

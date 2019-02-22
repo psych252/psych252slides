@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
   fig.show = "hold")
 ```
 
-# Model comparison
+# Linear mixed effects models 1
 
 ```{r install-packages, include=FALSE, eval=FALSE}
 install.packages(c("lme4", "lmerTest", "pbkrtest"))
@@ -50,8 +50,6 @@ theme_set(
     theme(text = element_text(size = 20)) #set the default text size
 )
 ```
-
-# Linear mixed effects models 1 
 
 ## Things that came up in class 
 
