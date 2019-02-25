@@ -1,0 +1,885 @@
+---
+title: "Class 18"
+author: "Tobias Gerstenberg"
+date: "February 20th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=17"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Linear mixed effects models 2
+
+```{r install-packages, include=FALSE, eval=FALSE}
+install.packages(c("lme4", "lmerTest", "pbkrtest"))
+```
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("patchwork")    # for making figure panels
+library("lme4")    # for linear mixed effects models
+library("pbkrtest")    # for testing lmers, parametric bootstrap and modified F-test
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Things that came up in class 
+
+### Difference between `replicate()` and `map()`
+
+```{r}
+
+# draw from a normal distribution and take mean
+fun.normal_means = function(n, mean, sd){
+  mean(rnorm(n = n, mean = mean, sd = sd))
+}
+
+# execute the function 4 times
+replicate(n = 4, fun.normal_means(n = 20, mean = 1, sd = 0.5))
+
+# same same but different 
+map_dbl(.x = c(20, 20, 20, 20), ~ fun.normal_means(n = .x, mean = 1, sd = 0.5))
+
+# and more flexible
+map_dbl(.x = c(1, 1, 10, 10), ~ fun.normal_means(n = 20, mean = .x, sd = 0.5))
+
+
+```
+
+
+## Simpson's paradox 
+
+```{r}
+# make example reproducible 
+set.seed(2)
+
+n_participants = 20
+n_observations = 10
+# slope = -3 
+slope = -10 
+sd_error = 0.4
+sd_participant = 5
+intercept = rnorm(n_participants, sd = sd_participant) %>% sort()
+
+df.simpson = tibble(x = runif(n_participants * n_observations, min = 0, max = 1)) %>%
+  arrange(x) %>% 
+  mutate(intercept = rep(intercept, each = n_observations),
+         y = intercept + x * slope + rnorm(n(), sd = sd_error),
+         participant = factor(intercept, labels = 1:n_participants))
+```
+
+```{r}
+# overall effect 
+ggplot(data = df.simpson,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              color = "black")
+```
+
+```{r}
+lm(formula = y ~ x,
+   data = df.simpson) %>% 
+  summary()
+```
+
+```{r}
+# effect by participant 
+ggplot(data = df.simpson,
+       mapping = aes(x = x,
+                     y = y,
+                     color = participant)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              color = "black") +
+  theme(legend.position = "none")
+```
+
+```{r}
+# effect by participant 
+ggplot(data = df.simpson,
+       mapping = aes(x = x,
+                     y = y,
+                     color = participant,
+                     group = participant)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              color = "black") +
+  theme(legend.position = "none")
+```
+
+```{r}
+lmer(formula = y ~ 1 + x + (1 | participant),
+     data = df.simpson) %>% 
+  summary()
+```
+
+```{r}
+fit.lmer = lmer(formula = y ~ 1 + x + (1 | participant),
+     data = df.simpson) 
+
+fit.lmer %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         aes(x = x,
+             y = y,
+             group = participant,
+             color = participant)) +
+  geom_point() +
+  geom_line(aes(y = fitted),
+            size = 1,
+            color = "black") +
+  theme(legend.position = "none")
+
+```
+
+## Linear mixed effects model example 
+
+```{r}
+# load sleepstudy data set 
+df.sleep = sleepstudy %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  mutate(subject = as.character(subject)) %>% 
+  select(subject, days, reaction)
+```
+
+```{r}
+df.sleep %>% 
+  group_by(subject) %>% 
+  filter(row_number() <= 5) %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+
+```{r}
+# add two fake participants 
+df.sleep = df.sleep %>% 
+  bind_rows(
+    tibble(subject = "374",
+           days = 0:1,
+           reaction = c(286, 288)),
+    tibble(subject = "373",
+           days = 0,
+           reaction = 245)
+  )
+```
+
+```{r}
+# visualize the data
+
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  # stat_smooth(method = "lm", se = FALSE) +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+### complete pooling 
+
+```{r}
+fit.complete = lm(formula = reaction ~ days,
+                  data = df.sleep)
+
+fit.params = fit.complete %>% 
+  tidy()
+```
+
+```{r}
+# visualization (aggregate) 
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_abline(intercept = fit.params$estimate[1],
+              slope = fit.params$estimate[2],
+              color = "blue") +
+  geom_point() +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+```{r}
+# visualization (separate participants) 
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_abline(intercept = fit.params$estimate[1],
+              slope = fit.params$estimate[2],
+              color = "blue") +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+### no pooling 
+
+```{r}
+# fit regressions and extract parameter estimates 
+df.no_pooling = df.sleep %>% 
+  group_by(subject) %>% 
+  nest(days, reaction) %>% 
+  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+         params = map(fit, tidy)) %>% 
+  unnest(params) %>% 
+  select(subject, term, estimate) %>% 
+  complete(subject, term, fill = list(estimate = 0)) %>% 
+  spread(term, estimate) %>% 
+  clean_names()
+```
+
+```{r}
+ggplot(data = df.sleep,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_abline(data = df.no_pooling,
+              aes(intercept = intercept,
+                  slope = days),
+              color = "blue") +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+### partial pooling 
+
+#### random intercept and random slope
+
+```{r}
+fit.random_intercept_slope = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                                  data = df.sleep)
+```
+
+```{r}
+fit.random_intercept_slope %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+#### only random intercepts 
+
+```{r}
+fit.random_intercept = lmer(formula = reaction ~ 1 + days + (1 | subject),
+                            data = df.sleep)
+```
+
+```{r}
+fit.random_intercept %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+
+#### only random slopes 
+
+```{r}
+fit.random_slope = lmer(formula = reaction ~ 1 + days + (0 + days | subject),
+                   data = df.sleep)
+```
+
+```{r}
+fit.random_slope %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+
+### compare results 
+
+```{r}
+fit.complete_pooling = lm(formula = reaction ~ days,
+                          data = df.sleep)  
+
+df.complete_pooling =  fit.complete_pooling %>% 
+  augment() %>% 
+  bind_rows(
+    fit.complete_pooling %>% 
+    augment(newdata = tibble(subject = c("373", "374"),
+                           days = rep(10, 2)))
+  ) %>% 
+  clean_names() %>% 
+  select(reaction, days, complete_pooling = fitted)
+
+df.no_pooling = df.sleep %>% 
+  group_by(subject) %>% 
+  nest(days, reaction) %>% 
+  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+         augment = map(fit, augment)) %>% 
+  unnest(augment) %>% 
+  clean_names() %>% 
+  select(subject, reaction, days, no_pooling = fitted )
+
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                   data = df.sleep) 
+
+df.partial_pooling = fit.lmer %>% 
+  augment() %>% 
+  bind_rows(
+    fit.lmer %>% 
+    augment(newdata = tibble(subject = c("373", "374"),
+                           days = rep(10, 2)))
+  ) %>% 
+  clean_names() %>% 
+  select(subject, reaction, days, partial_pooling = fitted)
+
+df.pooling = df.partial_pooling %>% 
+  left_join(df.complete_pooling) %>% 
+  left_join(df.no_pooling)
+```
+
+```{r}
+ggplot(data = df.pooling,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_smooth(method = "lm",
+              se = F,
+              color = "orange",
+              fullrange = T) + 
+  geom_line(aes(y = complete_pooling),
+            color = "green") + 
+  geom_line(aes(y = partial_pooling),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+```{r}
+# subselection
+ggplot(data = df.pooling %>% 
+         filter(subject %in% c("373", "374")),
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_smooth(method = "lm",
+              se = F,
+              color = "orange",
+              fullrange = T) + 
+  geom_line(aes(y = complete_pooling),
+            color = "green") + 
+  geom_line(aes(y = partial_pooling),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reation time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+### coefficients 
+
+```{r}
+fit.complete_pooling %>% 
+  coef()
+```
+
+```{r}
+fit.random_intercept %>% 
+  coef()
+```
+
+```{r}
+fit.random_slope %>% 
+  coef()
+```
+
+```{r}
+fit.random_intercept_slope %>% 
+  coef()
+```
+
+### shrinkage 
+
+```{r}
+df.partial_pooling = fit.random_intercept_slope %>% 
+  coef() %>% 
+  .[[1]] %>% 
+  rownames_to_column("subject") %>% 
+  clean_names()
+
+df.plot = df.no_pooling %>% 
+  mutate(method = "no pooling") %>% 
+  bind_rows(df.partial_pooling %>% 
+              mutate(method = "partial pooling")) %>% 
+  gather("index", "value", -c(subject, method)) %>% 
+  mutate(index = factor(index, levels = c("intercept", "days")))
+  
+ggplot(data = df.plot,
+       mapping = aes(x = value,
+                     group = method,
+                     fill = method)) + 
+  stat_density(position = "identity",
+               geom = "area",
+               color = "black",
+               alpha = 0.3) +
+  facet_grid(cols = vars(index),
+             scales = "free")
+
+df.plot %>% 
+  group_by(method, index) %>% 
+  summarize(sd = sd(value)) %>% 
+  spread(index, sd) %>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+
+```
+
+
+## Explore stuff
+
+### random effects structures 
+
+```{r}
+fit.test = lmer(formula = reaction ~ 1 + days + (days | subject),
+                data = df.sleep)
+```
+
+
+### No correlation between fixed effects when predictor is effect coded
+
+```{r}
+df.test = df.original %>% 
+  mutate(condition = as.factor(condition))
+  
+contrasts(df.test$condition) = "contr.sum"
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                     data = df.test)
+
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+```
+
+### no correlation when effect of condition doesn't vary 
+
+- no correlation but also fails to converge 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+tmp = rnorm(n = 20)
+
+df.test = tibble(
+  condition = rep(1:2, each = 20), 
+  participant = rep(1:20, 2),
+  value = ifelse(condition == 1, tmp,
+                 tmp + 3)
+)
+
+lmer(formula = value ~ condition + (1 | participant),
+     data = df.test) %>% 
+  summary()
+```
+
+### regression to the mean example 
+
+- lmer() with random intercepts not better than lm() even though there is individual variation
+- 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+tmp = rnorm(n = 20)
+
+df.test = tibble(
+  condition = rep(1:2, each = 20), 
+  participant = rep(1:20, 2),
+  value = ifelse(condition == 1, tmp,
+                 mean(tmp) + rnorm(n = 20, sd = 0.3))
+                 # tmp + rnorm(n = 20, sd = 0.3))
+) %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.test)
+
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  bind_cols(df.test %>% select(participant)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") + 
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+```
+
+- random slopes (won't work)
+
+```{r}
+# fit model
+lmer(formula = value ~ 1 + condition + (1 + condition | participant),
+     data = df.test)
+```
+
+
+### fixed effects factor not worth it 
+
+- little variance between individual participants 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters 
+sample_size = 100
+b0 = 1
+b1 = 2
+sd_residual = 1
+sd_participant = 0.5
+
+# randomly draw intercepts for each participant
+intercepts = rnorm(sample_size, sd = sd_participant)
+
+# generate the data 
+df.test = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.test)
+
+fit.test %>% 
+  augment() %>% 
+  clean_names() %>% 
+  bind_cols(df.test %>% select(participant)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+
+# fit linear model 
+fit.lm = lm(formula = value ~ 1 + condition,
+            data = df.test)
+
+# chisq test 
+anova(fit.test, fit.lm) 
+
+fit.test %>% 
+  glance()
+
+fit.test %>% 
+  tidy()
+
+fit.lm %>% 
+  glance()
+```
+
+
+### Compare lmerTest with chisq test: 
+
+```{r}
+# using lmerTest
+fit.lmer = lmerTest::lmer(formula = value ~ condition + (1 | participant),
+                data = df.original)
+
+fit.lmer %>% 
+  summary()
+
+# using chisq test
+fit.compact = lm(formula = value ~ 1 +  condition,
+                data = df.original)
+
+fit.augmented = lmer(formula = value ~ 1 + condition +  (1 | participant),
+                data = df.original)
+
+anova(fit.augmented, fit.compact)
+
+# similar method 
+lmerTest::rand(fit.lmer)
+
+```
+
+### outlier
+
+- sensitivity to outliers 
+- strongly affects predictions (simulated data)
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 20
+b0 = 1
+b1 = 2
+sd_residual = 0.5
+sd_participant = 0.5
+
+# randomly draw intercepts for each participant
+intercepts = rnorm(sample_size, sd = sd_participant)
+
+df.mixed = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+# df.test = df.test %>%
+#   mutate(value = ifelse(participant == 20, value + 30, value))
+
+# fit model
+fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.test)
+
+fit.test %>%
+  augment() %>%
+  clean_names() %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.test %>% summary()
+
+# simulated data 
+fit.test %>% 
+  simulate() %>% 
+  bind_cols(df.test) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = sim_1,
+                       group = participant)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5)
+
+```
+
+### predict and simulate from lmer 
+
+```{r}
+fit.lmer = lmer(formula = value ~ condition + (1 | participant),
+                data = df.original)
+
+# # deterministic 
+fit.lmer %>%
+  predict(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
+                           participant = rep(10:22, 2)),
+          allow.new.levels = T)
+
+# condition on the fit random effects (or not)
+fit.lmer %>%
+  simulate(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
+                           participant = rep(10:22, 2)),
+          allow.new.levels = T,
+          re.form = NULL)
+
+fit.lmer %>% 
+  simulate(nsim = 100) %>% 
+  bind_cols(df.original) %>% 
+  # filter(participant == 1) %>% 
+  filter(participant == 14) %>% 
+  gather("simulation", "prediction", -c(participant, condition, value)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = prediction,
+                       group = simulation)) +
+  geom_line(alpha = 0.5) + 
+  geom_line(aes(y = value), 
+            color = "red",
+            size = 2)
+
+tmp = fit.lmer %>% 
+  simulate(nsim = 100)
+  
+```
+### paired t-test 
+
+```{r}
+# original data set 
+t.test(df.original$value[df.original$condition == "1"],
+       df.original$value[df.original$condition == "2"],
+       alternative = "two.sided",
+       paired = T)
+
+# equivalent: t-test on the differences 
+df.original %>% 
+  spread(condition, value) %>% 
+  mutate(diff = `1` - `2`) %>% 
+  pull(diff) %>% 
+  t.test()
+  
+# shuffled data set 
+t.test(df.shuffled$value[df.shuffled$condition == "1"],
+       df.shuffled$value[df.shuffled$condition == "2"],
+       alternative = "two.sided",
+       paired = T
+       )
+```
+
+### model coefficients 
+
+```{r}
+fit.independent %>% coef()
+
+fit.dependent %>% coef()
+fit.dependent %>% ranef()
+```
+
+
+### lm on differences 
+
+```{r}
+df.original %>% 
+  spread(condition, value) %>% 
+  mutate(diff = `1` - `2`) %>% 
+  lm(formula = diff ~ 1,
+     data = .) %>% 
+  summary()
+```
+
+- can't generate new data from this approach (since the interindividual variation is not modeled)
+
+
+
+## Additional resources 
+
+### Readings 
+
+- [Linear mixed effects models tutorial by Bodo Winter](https://arxiv.org/pdf/1308.5499.pdf)
+- [Simpson's paradox](https://paulvanderlaken.com/2017/09/27/simpsons-paradox-two-hr-examples-with-r-code/)
+- [Tutorial on pooling](https://www.tjmahr.com/plotting-partial-pooling-in-mixed-effects-models/)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+## References
