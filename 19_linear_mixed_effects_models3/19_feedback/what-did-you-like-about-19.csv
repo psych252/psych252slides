@@ -1,0 +1,10 @@
+Response,Created At
+"Delaying questions is helpful, as students' questions (while sometimes helpful) interrupted the flow and my understanding of the material. Repetition of why and how these methods being taught are useful would also be great, as I still do not have a sense of why lm vs lmer",2019-02-25 11:58:31
+"Overall, the class is clear. But when you get to the bootstrapping method, you may not have made it clear why bootstrapping is a good idea/solution for the violation of lmer assumptions. For example, will this help the heterogeneity of between-group variance in the previous example you raised? or ....? A clear explanation will be appreciated!",2019-02-25 11:52:35
+the structure of the class was helpful :),2019-02-25 11:51:51
+"I think it might be exciting and interesting to structure this class in a 'flipped' manner, i.e., have the content delivery be independently done at home and then work with the code in class with the instructors.",2019-02-25 11:51:45
+"I am uncertain why one would choose no slope or no intercept for an lmer. Can you go over the reasons for choosing (1 + var | other_var), (1 | other_var), and (0 + var | other_var)?",2019-02-25 11:51:43
+The summary of differences between each type of pooling was really useful in understanding the differences in why some are more appropriate than others.,2019-02-25 11:51:17
+Lovely lecture. Thank you so much for painting the full big picture  (bootstrapping + lmer),2019-02-25 11:51:04
+I'd like to know whether simulations can verify that partial pooling somehow does better than no pooling.,2019-02-25 11:51:04
+The example was hella helpful,2019-02-25 11:50:46

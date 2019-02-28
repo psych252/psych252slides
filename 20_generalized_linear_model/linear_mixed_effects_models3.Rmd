@@ -1,0 +1,584 @@
+---
+title: "Class 19"
+author: "Tobias Gerstenberg"
+date: "February 25th, 2019"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=18"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Linear mixed effects models 3
+
+```{r install-packages, include=FALSE, eval=FALSE}
+# install.packages(c("lme4", "lmerTest", "pbkrtest"))
+```
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")    # for tidying up linear models 
+library("patchwork")    # for making figure panels
+library("lme4")    # for linear mixed effects models
+library("modelr")    # for bootstrapping
+library("boot")    # also for bootstrapping
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Load data set 
+
+```{r}
+# load sleepstudy data set 
+df.sleep = sleepstudy %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  mutate(subject = as.character(subject)) %>% 
+  select(subject, days, reaction)
+```
+
+```{r}
+# add two fake participants 
+df.sleep = df.sleep %>% 
+  bind_rows(
+    tibble(subject = "374",
+           days = 0:1,
+           reaction = c(286, 288)),
+    tibble(subject = "373",
+           days = 0,
+           reaction = 245)
+  )
+```
+
+
+## Things that came up in class 
+
+### One-tailed vs. two-tailed tests
+
+#### t distribution
+
+```{r}
+tibble(x = c(-4, 4)) %>% 
+  ggplot(data = ., 
+         mapping = aes(x = x)) + 
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                # xlim = c(qt(0.95, df = 20), qt(0.999, df = 20))) +
+                # xlim = c(qt(0.001, df = 20), qt(0.05, df = 20))) +
+                xlim = c(qt(0.001, df = 20), qt(0.025, df = 20))) +
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                xlim = c(qt(0.975, df = 20), qt(0.999, df = 20))) +
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1) +
+  coord_cartesian(expand = F)
+```
+
+#### F distribution
+
+```{r}
+tibble(x = c(0, 5)) %>% 
+  ggplot(data = ., 
+         mapping = aes(x = x)) +
+  stat_function(fun = "df",
+                args = list(df1 = 100, df2 = 10),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                xlim = c(qf(0.95, df1 = 100, df2 = 10), qf(0.999, df1 = 100, df2 = 10))) +
+  stat_function(fun = "df",
+                args = list(df1 = 100, df2 = 10),
+                size = 1) +
+  coord_cartesian(expand = F)
+```
+
+### Mixtures of participants 
+
+#### Ignoring mixture
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 20
+b0 = 1
+b1 = 2
+sd_residual = 0.5
+sd_participant = 0.5
+mean_group1 = 1
+mean_group2 = 10
+
+df.mixed = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(participant) %>% 
+  mutate(group = sample(1:2, size = 1),
+         intercept = ifelse(group == 1,
+                            rnorm(n(), mean = mean_group1, sd = sd_participant),
+                            rnorm(n(), mean = mean_group2, sd = sd_participant))) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercept + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+# fit model
+fit.mixed = lmer(formula = value ~ 1 + condition + (1 | participant),
+                data = df.mixed)
+
+fit.mixed %>%
+  augment() %>%
+  clean_names() %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.mixed %>% summary()
+
+# simulated data 
+fit.mixed %>%
+  simulate() %>%
+  bind_cols(df.mixed) %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = sim_1,
+                       group = participant)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5)
+
+```
+
+#### Modeling mixture
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 20
+b0 = 1
+b1 = 2
+sd_residual = 0.5
+sd_participant = 0.5
+mean_group1 = 1
+mean_group2 = 10
+
+df.mixed = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(participant) %>% 
+  mutate(group = sample(1:2, size = 1),
+         intercept = ifelse(group == 1,
+                            rnorm(n(), mean = mean_group1, sd = sd_participant),
+                            rnorm(n(), mean = mean_group2, sd = sd_participant))) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercept + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+# fit model
+fit.mixed = lmer(formula = value ~ 1 + group + condition + (1 | participant),
+                data = df.mixed)
+
+fit.mixed %>%
+  augment() %>%
+  clean_names() %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.mixed %>% summary()
+
+# simulated data 
+fit.mixed %>%
+  simulate() %>%
+  bind_cols(df.mixed) %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = sim_1,
+                       group = participant)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5)
+
+```
+
+#### Heterogeneity in variance
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 20
+b0 = 1
+b1 = 2
+sd_residual = 0.5
+mean_group1 = 1
+sd_group1 = 1
+mean_group2 = 30
+sd_group2 = 10
+
+df.mixed = tibble(
+  condition = rep(0:1, each = sample_size), 
+  participant = rep(1:sample_size, 2)) %>% 
+  group_by(participant) %>% 
+  mutate(group = sample(1:2, size = 1),
+         intercept = ifelse(group == 1,
+                            rnorm(n(), mean = mean_group1, sd = sd_group1),
+                            rnorm(n(), mean = mean_group2, sd = sd_group2))) %>% 
+  group_by(condition) %>% 
+  mutate(value = b0 + b1 * condition + intercept + rnorm(n(), sd = sd_residual)) %>% 
+  ungroup %>% 
+  mutate(condition = as.factor(condition),
+         participant = as.factor(participant))
+
+# fit model
+fit.mixed = lmer(formula = value ~ 1 + group + condition + (1 | participant),
+                data = df.mixed)
+
+fit.mixed %>%
+  augment() %>%
+  clean_names() %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted),
+             color = "red") +
+  geom_line(aes(y = fitted),
+             color = "red")
+
+fit.mixed %>% summary()
+
+# simulated data 
+fit.mixed %>%
+  simulate() %>%
+  bind_cols(df.mixed) %>%
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = sim_1,
+                       group = participant)) +
+  geom_line(alpha = 0.5) +
+  geom_point(alpha = 0.5)
+
+```
+
+## Bootstrapping 
+
+### linear model 
+
+```{r}
+# fit model 
+fit.lm = lm(formula = reaction ~ 1 + days,
+            data = df.sleep)
+
+# coefficients
+fit.lm %>% coef()
+
+# bootstrapping 
+df.boot = df.sleep %>% 
+  bootstrap(n = 100,
+            id = "id") %>% 
+  mutate(fit = map(strap, ~ lm(formula = reaction ~ 1 + days, data = .)),
+         tidy = map(fit, tidy)) %>% 
+  unnest(tidy) %>% 
+  select(id, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  clean_names() 
+```
+
+
+```{r}
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_smooth(method = "lm") + 
+  geom_point(alpha = 0.3)
+```
+
+```{r}
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_abline(data = df.boot,
+              aes(intercept = intercept,
+                  slope = days,
+                  group = id),
+              alpha = 0.1) +
+  geom_point(alpha = 0.3)
+```
+
+
+```{r}
+df.plot = df.boot %>% 
+  gather("index", "value", -id)
+
+ggplot(data = df.plot,
+       mapping = aes(x = value)) + 
+  geom_density() + 
+  facet_grid(cols = vars(index),
+             scales = "free") +
+  coord_cartesian(expand = F)
+```
+
+### mixed effects model 
+
+```{r}
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep)
+```
+
+```{r}
+# bootstrapping 
+df.boot = df.sleep %>% 
+  bootstrap(n = 100,
+            id = "id") %>% 
+  mutate(fit = map(strap, ~ lmer(formula = reaction ~ 1 + days + (1 + days | subject), data = .)),
+         convergence = map(fit, ~ .@optinfo$conv$lme4),
+         converged = map(convergence, ~ length(.)),
+         tidy = map(fit, tidy)) %>% 
+  # filter(converged == 0) %>%
+  unnest(tidy) %>% 
+  select(id, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  clean_names() 
+
+```
+
+```{r}
+df.plot = df.boot %>% 
+  select(id, intercept, days) %>% 
+  gather("index", "value", -id)
+
+ggplot(data = df.plot,
+       mapping = aes(x = value)) + 
+  geom_density() + 
+  facet_grid(cols = vars(index),
+             scales = "free") +
+  coord_cartesian(expand = F)
+
+df.boot %>% 
+  pull(days) %>% 
+  quantile(probs = c(0.025, 0.975))
+
+```
+
+#### bootmer() function
+
+```{r}
+# fit the model 
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep)
+
+# bootstrap parameter estimates 
+boot.lmer = bootMer(fit.lmer,
+                    FUN = fixef,
+                    nsim = 100)
+
+# compute confidence interval 
+boot.ci(boot.lmer, index = 2, type = "perc")
+
+# plot estimates 
+boot.lmer$t %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  mutate(id = 1:n()) %>% 
+  gather("index", "value", - id) %>% 
+  ggplot(data = .,
+       mapping = aes(x = value)) + 
+  geom_density() + 
+  facet_grid(cols = vars(index),
+             scales = "free") +
+  coord_cartesian(expand = F)
+
+
+```
+
+## Getting p-values 
+
+```{r}
+lmerTest::lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep) %>% 
+  summary()
+```
+
+## Solving convergence issues 
+
+```{r}
+# fit the model 
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep)
+
+# explore different optimization algorithms 
+fit.all = allFit(fit.lmer)
+
+# summarize result
+fit.all %>% summary()
+```
+
+## Understanding the lmer() syntax 
+
+```{r}
+# fit the model 
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep)
+# model summary
+fit.lmer %>% 
+  summary()
+
+```
+
+```{r}
+# fit the model 
+fit.lmer = lmer(formula = reaction ~ 1 + days + (0 + days | subject) + (1 | subject),
+                data = df.sleep)
+# model summary
+fit.lmer %>% 
+  summary()
+
+# coefficients 
+fit.lmer %>% 
+  coef()
+```
+
+### Multi-level models 
+
+```{r}
+df.school = read.table("http://bayes.acs.unt.edu:8083/BayesContent/class/Jon/R_SC/Module9/lmm.data.txt",
+                   header = TRUE,
+                   sep = ",",
+                   na.strings = "NA",
+                   dec=".",
+                   strip.white = TRUE)
+```
+
+- visualize the data 
+
+```{r}
+df.school %>% 
+  ggplot(data = .,
+         aes(x = open,
+             y = extro)) +
+  geom_smooth(method = "lm",
+              se = F) + 
+  geom_point(alpha = 0.2) +
+  facet_grid(cols = vars(class),
+             rows = vars(school),
+             scales = "free") +
+  theme(axis.text = element_text(size = 10))
+```
+
+```{r}
+df.school %>% 
+  count(class, school)
+```
+
+
+```{r}
+# fit nested model 
+fit.nested = lmer(extro ~ open + agree + social + (1 | school/class), data = df.school)
+
+# print model summary
+fit.nested %>% summary()
+
+# model coefficients
+fit.nested %>% coef()
+
+
+```
+
+```{r}
+# fit crossed model 
+fit.crossed = lmer(extro ~ open + agree + social + (1 | school) + (1 | class), data = df.school)
+
+# print model summary
+fit.crossed %>% summary()
+
+# model coefficients
+fit.crossed %>% coef()
+```
+
+### Syntax summary
+
+```{r}
+tibble(
+  formula = c(
+    "`dv ~ x1 + (1 | g)`",
+    "`dv ~ x1 + (0 + x1 | g)`",
+    "`dv ~ x1 + (x1 | g)`",
+    "`dv ~ x1 + (x1 || g)`",
+    "`dv ~ x1 + (1 | sch) + (1 | tch)`",
+     "`dv ~ x1 + (1 | sch/tch)`"
+  ),
+  description = c(
+    "Random intercept for each level of `g`",
+    "Random slope for each level of `g`",
+    "Correlated random slope and intercept for each level of `g`",
+    "Uncorrelated random slope and intercept for each level of `g`",
+    "Random intercept for each level of `sch` and for each level of `tch` (crossed)",
+    "Random intercept for each level of `sch` and for each level of `tch` in `sch` (nested)"
+  )
+) %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+
+## Additional resources 
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+## References

@@ -36,8 +36,6 @@ library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
 library("patchwork")    # for making figure panels
 library("lme4")    # for linear mixed effects models
-# library("lmerTest")    # provides p-values for lmers
-library("pbkrtest")    # for testing lmers, parametric bootstrap and modified F-test
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -55,7 +53,11 @@ theme_set(
 
 ### Comparing t-test with F-test in `lm()`
 
-```{r}
+What's the difference between the t-test on individual predictors in the model and the F-test comparing two models (one with, and one without the predictor)? 
+
+Let's generate some data first: 
+
+```{r lmer1-1}
 # make example reproducible 
 set.seed(1)
 
@@ -77,7 +79,7 @@ df.data = tibble(
 
 # fit linear model 
 fit = lm(formula = y ~ 1 + x1 + x2,
-   data = df.data)
+         data = df.data)
 
 # print model summary 
 fit %>% summary()
@@ -85,7 +87,7 @@ fit %>% summary()
 
 Let's visualize the data: 
 
-```{r}
+```{r lmer1-2}
 df.data %>% 
   ggplot(data = .,
          mapping = aes(x = x1,
@@ -94,13 +96,13 @@ df.data %>%
   geom_smooth(method = "lm",
               color = "black") + 
   geom_point()
-  
 ```
 
+#### Global F-test 
 
-The global F-test which is shown by the F-statistic at the bottom of the `summary()` output compares the full model with a  model that only has an intercept. So, to use our model comparison approach, we would compare the following two models 
+The global F-test which is shown by the F-statistic at the bottom of the `summary()` output compares the full model with a  model that only has an intercept. So, to use our model comparison approach, we would compare the following two models: 
 
-```{r}
+```{r lmer1-3}
 # fit models 
 model_compact = lm(formula = y ~ 1,
                    data = df.data)
@@ -115,9 +117,11 @@ anova(model_compact, model_augmented)
 
 Note how the result of the F-test using the `anova()` function which compares the two models is identical to the F-statistic reported at the end of the `summary` function.
 
-To test for individual parameters in the model, we compare two models, a compact model without that parameter, and an augmented model with that parameter. Let's test the significance of `x1`. 
+#### Test for individual predictors
 
-```{r}
+To test for individual predictors in the model, we compare two models, a compact model without that predictor, and an augmented model with that predictor. Let's test the significance of `x1`. 
+
+```{r lmer1-4}
 # fit models 
 model_compact = lm(formula = y ~ 1 + x2,
                    data = df.data)
@@ -137,7 +141,7 @@ $$
 
 Let's check that that's correct: 
 
-```{r, warning=FALSE}
+```{r lmer1-5, warning=FALSE}
 # get the t-value from the fitted lm
 t_value = fit %>% 
   tidy() %>% 
@@ -163,7 +167,9 @@ Yip, they are the same.
 
 ## Dependence 
 
-```{r}
+Let's generate a data set in which two observations from the same participants are dependent, and then let's also shuffle this data set to see whether taking into account the dependence in the data matters. 
+
+```{r lmer1-6}
 # make example reproducible 
 set.seed(1)
 
@@ -172,8 +178,12 @@ df.dependence = data_frame(
   condition1 = rnorm(20),
   condition2 = condition1 + rnorm(20, mean = 0.2, sd = 0.1)
 ) %>% 
-  mutate(condition2shuffled = sample(condition2))
+  mutate(condition2shuffled = sample(condition2)) # shuffles the condition label
+```
 
+Let's visualize the original and shuffled data set: 
+
+```{r lmer1-7}
 df.plot = df.dependence %>% 
   gather("condition", "value", -participant) %>% 
   mutate(condition = str_replace(condition, "condition", ""))
@@ -189,7 +199,7 @@ p1 = ggplot(data = df.plot %>% filter(condition != "2shuffled"),
                size = 4) +
   labs(title = "original",
        tag = "a)")
-  
+
 p2 = ggplot(data = df.plot %>% filter(condition != "2"), 
             mapping = aes(x = condition, y = value)) +
   geom_line(aes(group = participant), alpha = 0.3) +
@@ -203,23 +213,26 @@ p2 = ggplot(data = df.plot %>% filter(condition != "2"),
        tag = "b)")
 
 p1 + p2 
-
 ```
 
-```{r}
+Let's save the two original and shuffled data set as two separate data sets.
+
+```{r lmer1-8}
 # separate the data sets 
 df.original = df.dependence %>% 
   gather("condition", "value", -participant) %>% 
   mutate(condition = str_replace(condition, "condition", "")) %>% 
   filter(condition != "2shuffled")
-  
+
 df.shuffled = df.dependence %>% 
   gather("condition", "value", -participant) %>% 
   mutate(condition = str_replace(condition, "condition", "")) %>% 
   filter(condition != "2")
 ```
 
-```{r}
+Let's run a linear model, and independent samples t-test on the original data set. 
+
+```{r lmer1-9}
 # linear model (assuming independent samples)
 lm(formula = value ~ condition,
    data = df.original) %>% 
@@ -229,39 +242,47 @@ t.test(df.original$value[df.original$condition == "1"],
        df.original$value[df.original$condition == "2"],
        alternative = "two.sided",
        paired = F
-       )
+)
 ```
 
-The mean difference between the conditions is very small 
+The mean difference between the conditions is extremely small, and non-significant (if we ignore the dependence in the data). 
 
-```{r}
+Let's fit a linear mixed effects model with a random intercept for each participant: 
+
+```{r lmer1-10}
 # fit a linear mixed effects model 
 lmer(formula = value ~ condition + (1 | participant),
-                 data = df.original) %>% 
+     data = df.original) %>% 
   summary()
 ```
 
+To test for whether condition is a significant predictor, we need to use our model comparison approach: 
 
-```{r}
+```{r lmer1-11}
 # fit models
 fit.compact = lmer(formula = value ~ 1 + (1 | participant),
-                 data = df.original)
+                   data = df.original)
 fit.augmented = lmer(formula = value ~ condition + (1 | participant),
-                 data = df.original)
+                     data = df.original)
 
 # compare via Chisq-test
 anova(fit.compact, fit.augmented)
+```
 
+This result is identical to running a paired samples t-test: 
+
+```{r lmer1-12}
 t.test(df.original$value[df.original$condition == "1"],
        df.original$value[df.original$condition == "2"],
        alternative = "two.sided",
-       paired = T
-       )
+       paired = T)
 ```
 
-Visualize model predictions: 
+But, unlike in the paired samples t-test, the linear mixed effects model explicitly models the variation between participants, and it's a much more flexible approach for modeling dependence in data. 
 
-```{r}
+Let's fit a linear model and a linear mixed effects model to the original (non-shuffled) data. 
+
+```{r lmer1-13}
 # model assuming independence
 fit.independent = lm(formula = value ~ 1 + condition,
                      data = df.original)
@@ -271,9 +292,9 @@ fit.dependent = lmer(formula = value ~ 1 + condition + (1 | participant),
                      data = df.original)
 ```
 
-Model predictions:
+Let's visualize the linear model's predictions: 
 
-```{r}
+```{r lmer1-14}
 # plot with predictions by fit.independent 
 fit.independent %>% 
   augment() %>% 
@@ -288,12 +309,12 @@ fit.independent %>%
   geom_point(aes(y = fitted),
              color = "red") + 
   geom_line(aes(y = fitted),
-             color = "red")
+            color = "red")
 ```
 
-Illustrate residuals: 
+And this is what the residuals look like: 
 
-```{r}
+```{r lmer1-15}
 # make example reproducible 
 set.seed(1)
 
@@ -324,8 +345,11 @@ fit.independent %>%
 
 ```
 
+It's clear from this residual plot, that fitting two separate lines (or points) is not much better than just fitting one line (or point). 
 
-```{r}
+Let's visualize the predictions of the linear mixed effects model: 
+
+```{r lmer1-16}
 # plot with predictions by fit.independent 
 fit.dependent %>% 
   augment() %>% 
@@ -339,13 +363,14 @@ fit.dependent %>%
   geom_point(aes(y = fitted),
              color = "red") + 
   geom_line(aes(y = fitted),
-             color = "red")
+            color = "red")
 ```
 
-Residual plots
+Let's compare the residuals of the linear model with that of the linear mixed effects model: 
 
-```{r}
-fit.independent %>% 
+```{r lmer1-17}
+# linear model 
+p1 = fit.independent %>% 
   augment() %>% 
   clean_names() %>% 
   ggplot(data = .,
@@ -354,10 +379,8 @@ fit.independent %>%
   geom_point() +
   coord_cartesian(ylim = c(-2.5, 2.5))
 
-```
-
-```{r}
-fit.dependent %>% 
+# linear mixed effects model 
+p2 = fit.dependent %>% 
   augment() %>% 
   clean_names() %>% 
   ggplot(data = .,
@@ -365,11 +388,13 @@ fit.dependent %>%
                        y = resid)) +
   geom_point() + 
   coord_cartesian(ylim = c(-2.5, 2.5))
+
+p1 + p2
 ```
 
-Compare whether accounting for dependence is worth it: 
+The residuals of the linear mixed effects model are much smaller. Let's test whether taking the individual variation into account is worth it (statistically speaking). 
 
-```{r}
+```{r lmer1-18}
 # fit models (without and with dependence)
 fit.compact = lm(formula = value ~ 1 + condition,
                  data = df.original)
@@ -382,362 +407,7 @@ fit.augmented = lmer(formula = value ~ 1 + condition + (1 | participant),
 anova(fit.augmented, fit.compact) 
 ```
 
-
-Explore lmer() object: 
-
-```{r}
-fit.augmented %>% 
-  summary()
-```
-
-
-```{r}
-fit.augmented %>% 
-  tidy()
-```
-
-## Explore stuff
-
-### No correlation between fixed effects when predictor is effect coded
-
-```{r}
-df.test = df.original %>% 
-  mutate(condition = as.factor(condition))
-  
-contrasts(df.test$condition) = "contr.sum"
-
-fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
-                     data = df.test)
-
-fit.test %>% 
-  augment() %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = value,
-                       group = participant)) +
-  geom_point(alpha = 0.5) +
-  geom_line(alpha = 0.5) +
-  geom_point(aes(y = fitted),
-             color = "red") + 
-  geom_line(aes(y = fitted),
-             color = "red")
-
-fit.test %>% summary()
-```
-
-### no correlation when effect of condition doesn't vary 
-
-- no correlation but also fails to converge 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-tmp = rnorm(n = 20)
-
-df.test = tibble(
-  condition = rep(1:2, each = 20), 
-  participant = rep(1:20, 2),
-  value = ifelse(condition == 1, tmp,
-                 tmp + 3)
-)
-
-lmer(formula = value ~ condition + (1 | participant),
-     data = df.test) %>% 
-  summary()
-```
-
-### regression to the mean example 
-
-- lmer() with random intercepts not better than lm() even though there is individual variation
-- 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-tmp = rnorm(n = 20)
-
-df.test = tibble(
-  condition = rep(1:2, each = 20), 
-  participant = rep(1:20, 2),
-  value = ifelse(condition == 1, tmp,
-                 mean(tmp) + rnorm(n = 20, sd = 0.3))
-                 # tmp + rnorm(n = 20, sd = 0.3))
-) %>% 
-  mutate(condition = as.factor(condition),
-         participant = as.factor(participant))
-
-fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
-                data = df.test)
-
-fit.test %>% 
-  augment() %>% 
-  clean_names() %>% 
-  bind_cols(df.test %>% select(participant)) %>% 
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = value,
-                       group = participant)) +
-  geom_point(alpha = 0.5) +
-  geom_line(alpha = 0.5) +
-  geom_point(aes(y = fitted),
-             color = "red") + 
-  geom_line(aes(y = fitted),
-             color = "red")
-
-fit.test %>% summary()
-```
-
-### fixed effects factor not worth it 
-
-- little variance between individual participants 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-# parameters 
-sample_size = 100
-b0 = 1
-b1 = 2
-sd_residual = 1
-sd_participant = 0.5
-
-# randomly draw intercepts for each participant
-intercepts = rnorm(sample_size, sd = sd_participant)
-
-# generate the data 
-df.test = tibble(
-  condition = rep(0:1, each = sample_size), 
-  participant = rep(1:sample_size, 2)) %>% 
-  group_by(condition) %>% 
-  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
-  ungroup %>% 
-  mutate(condition = as.factor(condition),
-         participant = as.factor(participant))
-
-fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
-                data = df.test)
-
-fit.test %>% 
-  augment() %>% 
-  clean_names() %>% 
-  bind_cols(df.test %>% select(participant)) %>% 
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = value,
-                       group = participant)) +
-  geom_point(alpha = 0.5) +
-  geom_line(alpha = 0.5) +
-  geom_point(aes(y = fitted),
-             color = "red") +
-  geom_line(aes(y = fitted),
-             color = "red")
-
-fit.test %>% summary()
-
-# fit linear model 
-fit.lm = lm(formula = value ~ 1 + condition,
-            data = df.test)
-
-# chisq test 
-anova(fit.test, fit.lm) 
-
-fit.test %>% 
-  glance()
-
-fit.test %>% 
-  tidy()
-
-fit.lm %>% 
-  glance()
-```
-
-
-
-### Compare lmerTest with chisq test: 
-
-```{r}
-# using lmerTest
-fit.lmer = lmerTest::lmer(formula = value ~ condition + (1 | participant),
-                data = df.original)
-
-fit.lmer %>% 
-  summary()
-
-# using chisq test
-fit.compact = lm(formula = value ~ 1 +  condition,
-                data = df.original)
-
-fit.augmented = lmer(formula = value ~ 1 + condition +  (1 | participant),
-                data = df.original)
-
-anova(fit.augmented, fit.compact)
-
-# similar method 
-lmerTest::rand(fit.lmer)
-
-```
-
-### coefficients 
-
-```{r}
-
-```
-
-
-### outlier
-
-- sensitivity to outliers 
-- strongly affects predictions (simulated data)
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-sample_size = 20
-b0 = 1
-b1 = 2
-sd_residual = 0.5
-sd_participant = 0.5
-
-# randomly draw intercepts for each participant
-intercepts = rnorm(sample_size, sd = sd_participant)
-
-df.test = tibble(
-  condition = rep(0:1, each = sample_size), 
-  participant = rep(1:sample_size, 2)) %>% 
-  group_by(condition) %>% 
-  mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
-  ungroup %>% 
-  mutate(condition = as.factor(condition),
-         participant = as.factor(participant))
-
-df.test = df.test %>%
-  mutate(value = ifelse(participant == 20, value + 30, value))
-
-# fit model
-fit.test = lmer(formula = value ~ 1 + condition + (1 | participant),
-                data = df.test)
-
-fit.test %>%
-  augment() %>%
-  clean_names() %>%
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = value,
-                       group = participant)) +
-  geom_point(alpha = 0.5) +
-  geom_line(alpha = 0.5) +
-  geom_point(aes(y = fitted),
-             color = "red") +
-  geom_line(aes(y = fitted),
-             color = "red")
-
-fit.test %>% summary()
-
-# simulated data 
-fit.test %>% 
-  simulate() %>% 
-  bind_cols(df.test) %>% 
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = sim_1,
-                       group = participant)) +
-  geom_line(alpha = 0.5) +
-  geom_point(alpha = 0.5)
-
-```
-
-
-### predict and simulate from lmer 
-
-```{r}
-fit.lmer = lmer(formula = value ~ condition + (1 | participant),
-                data = df.original)
-
-# # deterministic 
-fit.lmer %>%
-  predict(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
-                           participant = rep(10:22, 2)),
-          allow.new.levels = T)
-
-# condition on the fit random effects (or not)
-fit.lmer %>%
-  simulate(newdata = tibble(condition = as.factor(rep(c(1:2), each = 13)),
-                           participant = rep(10:22, 2)),
-          allow.new.levels = T,
-          re.form = NULL)
-
-fit.lmer %>% 
-  simulate(nsim = 100) %>% 
-  bind_cols(df.original) %>% 
-  # filter(participant == 1) %>% 
-  filter(participant == 14) %>% 
-  gather("simulation", "prediction", -c(participant, condition, value)) %>% 
-  ggplot(data = .,
-         mapping = aes(x = condition,
-                       y = prediction,
-                       group = simulation)) +
-  geom_line(alpha = 0.5) + 
-  geom_line(aes(y = value), 
-            color = "red",
-            size = 2)
-
-tmp = fit.lmer %>% 
-  simulate(nsim = 100)
-  
-```
-### paired t-test 
-
-```{r}
-# original data set 
-t.test(df.original$value[df.original$condition == "1"],
-       df.original$value[df.original$condition == "2"],
-       alternative = "two.sided",
-       paired = T)
-
-# equivalent: t-test on the differences 
-df.original %>% 
-  spread(condition, value) %>% 
-  mutate(diff = `1` - `2`) %>% 
-  pull(diff) %>% 
-  t.test()
-  
-# shuffled data set 
-t.test(df.shuffled$value[df.shuffled$condition == "1"],
-       df.shuffled$value[df.shuffled$condition == "2"],
-       alternative = "two.sided",
-       paired = T
-       )
-```
-
-### model coefficients 
-
-```{r}
-fit.independent %>% coef()
-
-fit.dependent %>% coef()
-fit.dependent %>% ranef()
-```
-
-
-### lm on differences 
-
-```{r}
-df.original %>% 
-  spread(condition, value) %>% 
-  mutate(diff = `1` - `2`) %>% 
-  lm(formula = diff ~ 1,
-     data = .) %>% 
-  summary()
-```
-
-- can't generate new data from this approach (since the interindividual variation is not modeled)
-
-
+Yes, the likelihood of the data given the linear mixed effects model is significantly higher compared to its likelihood given the linear model. 
 
 ## Additional resources 
 

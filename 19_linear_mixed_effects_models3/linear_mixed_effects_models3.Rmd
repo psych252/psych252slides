@@ -63,7 +63,7 @@ df.sleep = sleepstudy %>%
 ```
 
 ```{r}
-# add two fake participants 
+# add two fake participants (with missing data)
 df.sleep = df.sleep %>% 
   bind_rows(
     tibble(subject = "374",
@@ -75,12 +75,13 @@ df.sleep = df.sleep %>%
   )
 ```
 
-
 ## Things that came up in class 
 
 ### One-tailed vs. two-tailed tests
 
 #### t distribution
+
+Some code to draw a t-distribution: 
 
 ```{r}
 tibble(x = c(-4, 4)) %>% 
@@ -108,6 +109,8 @@ tibble(x = c(-4, 4)) %>%
 
 #### F distribution
 
+Some code to draw an F-distribution
+
 ```{r}
 tibble(x = c(0, 5)) %>% 
   ggplot(data = ., 
@@ -126,7 +129,7 @@ tibble(x = c(0, 5)) %>%
 
 ### Mixtures of participants 
 
-#### Ignoring mixture
+What if we have groups of participants who differ from each other? Let's generate data for which this is the case.
 
 ```{r}
 # make example reproducible 
@@ -153,11 +156,23 @@ df.mixed = tibble(
   ungroup %>% 
   mutate(condition = as.factor(condition),
          participant = as.factor(participant))
+```
 
+#### Ignoring mixture
+
+Let' first fit a model that ignores the fact that there are two different groups of participatns. 
+
+```{r}
 # fit model
 fit.mixed = lmer(formula = value ~ 1 + condition + (1 | participant),
                 data = df.mixed)
 
+fit.mixed %>% summary()
+```
+
+Let's look at the model's predictions: 
+
+```{r}
 fit.mixed %>%
   augment() %>%
   clean_names() %>%
@@ -171,9 +186,12 @@ fit.mixed %>%
              color = "red") +
   geom_line(aes(y = fitted),
              color = "red")
+```
 
-fit.mixed %>% summary()
 
+And let's simulate some data from the fitted model: 
+
+```{r}
 # simulated data 
 fit.mixed %>%
   simulate() %>%
@@ -184,42 +202,28 @@ fit.mixed %>%
                        group = participant)) +
   geom_line(alpha = 0.5) +
   geom_point(alpha = 0.5)
-
 ```
+
+As we can see, the simulated data doesn't look like the data that was used to fit the model.  
 
 #### Modeling mixture
 
+Now, let's fit a model that takes the differences between groups into account by adding a fixed effect for `group`.
+
 ```{r}
-# make example reproducible 
-set.seed(1)
-
-sample_size = 20
-b0 = 1
-b1 = 2
-sd_residual = 0.5
-sd_participant = 0.5
-mean_group1 = 1
-mean_group2 = 10
-
-df.mixed = tibble(
-  condition = rep(0:1, each = sample_size), 
-  participant = rep(1:sample_size, 2)) %>% 
-  group_by(participant) %>% 
-  mutate(group = sample(1:2, size = 1),
-         intercept = ifelse(group == 1,
-                            rnorm(n(), mean = mean_group1, sd = sd_participant),
-                            rnorm(n(), mean = mean_group2, sd = sd_participant))) %>% 
-  group_by(condition) %>% 
-  mutate(value = b0 + b1 * condition + intercept + rnorm(n(), sd = sd_residual)) %>% 
-  ungroup %>% 
-  mutate(condition = as.factor(condition),
-         participant = as.factor(participant))
-
 # fit model
-fit.mixed = lmer(formula = value ~ 1 + group + condition + (1 | participant),
+fit.grouped = lmer(formula = value ~ 1 + group + condition + (1 | participant),
                 data = df.mixed)
 
-fit.mixed %>%
+fit.grouped %>% summary()
+```
+
+Note how the variance of the random intercepts is much smaller now that we've taken the group structure in the data into account. 
+
+Let's visualize the model's predictions:
+
+```{r}
+fit.grouped %>%
   augment() %>%
   clean_names() %>%
   ggplot(data = .,
@@ -232,11 +236,13 @@ fit.mixed %>%
              color = "red") +
   geom_line(aes(y = fitted),
              color = "red")
+```
 
-fit.mixed %>% summary()
+And simulate some data from the model: 
 
+```{r}
 # simulated data 
-fit.mixed %>%
+fit.grouped %>%
   simulate() %>%
   bind_cols(df.mixed) %>%
   ggplot(data = .,
@@ -245,10 +251,15 @@ fit.mixed %>%
                        group = participant)) +
   geom_line(alpha = 0.5) +
   geom_point(alpha = 0.5)
-
 ```
 
+This time, the simulated data looks much more like the data that was used to fit the model. Yay! 
+
 #### Heterogeneity in variance
+
+The example above has shown that we can take overall differences between groups into account by adding a fixed effect. Can we also deal with heterogeneity in variance between groups? For example, what if the responses of one group exhibit much more variance than the responses of another group? 
+
+Let's first generate some data with heterogeneous variance: 
 
 ```{r}
 # make example reproducible 
@@ -263,7 +274,7 @@ sd_group1 = 1
 mean_group2 = 30
 sd_group2 = 10
 
-df.mixed = tibble(
+df.variance = tibble(
   condition = rep(0:1, each = sample_size), 
   participant = rep(1:sample_size, 2)) %>% 
   group_by(participant) %>% 
@@ -276,12 +287,22 @@ df.mixed = tibble(
   ungroup %>% 
   mutate(condition = as.factor(condition),
          participant = as.factor(participant))
+```
 
+Let's fit the model: 
+
+```{r}
 # fit model
-fit.mixed = lmer(formula = value ~ 1 + group + condition + (1 | participant),
-                data = df.mixed)
+fit.variance = lmer(formula = value ~ 1 + group + condition + (1 | participant),
+                data = df.variance)
 
-fit.mixed %>%
+fit.variance %>% summary()
+```
+
+Look at the data and model predictions: 
+
+```{r}
+fit.variance %>%
   augment() %>%
   clean_names() %>%
   ggplot(data = .,
@@ -294,9 +315,11 @@ fit.mixed %>%
              color = "red") +
   geom_line(aes(y = fitted),
              color = "red")
+```
 
-fit.mixed %>% summary()
+And the simulated data: 
 
+```{r}
 # simulated data 
 fit.mixed %>%
   simulate() %>%
@@ -307,12 +330,393 @@ fit.mixed %>%
                        group = participant)) +
   geom_line(alpha = 0.5) +
   geom_point(alpha = 0.5)
+```
 
+The lmer() fails here. It uses one normal distribution to model the variance between participants. It cannot account for the fact that the answers of one groups of participants vary more than the answers from another groups of participants. Again, the simulated data doesn't look the original data, even though we did take the grouping into account. 
+
+## Pooling and shrinkage 
+
+Let's illustrate the concept of pooling and shrinkage via the sleep data set that comes with the lmer package. We've already loaded the data set into our environment as `df.sleep`. 
+
+Let's start by visualizing the data 
+
+```{r}
+# visualize the data
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+The plot shows the effect of the number of days of sleep deprivation on the average reaction time (presumably in an experiment). Note that for participant 373 and 374 we only have one and two data points respectively. 
+
+### Complete pooling 
+
+Let's first fit a model the simply combines all the data points. This model ignores the dependence structure in the data (i.e. the fact that we have repeated observations from the same participants). 
+
+```{r}
+fit.complete = lm(formula = reaction ~ days,
+                  data = df.sleep)
+
+fit.params = tidy(fit.complete)
+
+fit.complete %>% 
+  summary()
+```
+
+And let's visualize the predictions of this model.
+
+```{r}
+# visualization (aggregate) 
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_abline(intercept = fit.params$estimate[1],
+              slope = fit.params$estimate[2],
+              color = "blue") +
+  geom_point() +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+And here is what the model's predictions look like separated by participant.
+
+```{r}
+# visualization (separate participants) 
+ggplot(data = df.sleep,
+       mapping = aes(x = days, y = reaction)) + 
+  geom_abline(intercept = fit.params$estimate[1],
+              slope = fit.params$estimate[2],
+              color = "blue") +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+The model predicts the same relationship between sleep deprivation and reaction time for each participant (not surprising since we didn't even tell the model that this data is based on different participants). 
+
+### No pooling 
+
+We could also fit separate regressions for each participant. Let's do that.
+
+```{r}
+# fit regressions and extract parameter estimates 
+df.no_pooling = df.sleep %>% 
+  group_by(subject) %>% 
+  nest(days, reaction) %>% 
+  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+         params = map(fit, tidy)) %>% 
+  unnest(params) %>% 
+  select(subject, term, estimate) %>% 
+  complete(subject, term, fill = list(estimate = 0)) %>% 
+  spread(term, estimate) %>% 
+  clean_names()
+```
+
+And let's visualize what the predictions of these separate regressions would look like: 
+
+```{r}
+ggplot(data = df.sleep,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_abline(data = df.no_pooling %>% 
+                filter(subject != 373),
+              aes(intercept = intercept,
+                  slope = days),
+              color = "blue") +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+When we fit separate regression, no information is shared between participants. 
+
+### Partial pooling 
+
+By usign linear mixed effects models, we are partially pooling information. That is, the estimates for one participant are influenced by the rest of the participants.
+
+We'll fit a number of mixed effects models that differ in their random effects structure. 
+
+#### Random intercept and random slope
+
+This model allows for random differences in the intercepts and slopes between subjects (and also models the correlation between intercepts and slopes). 
+
+Let's fit the model
+
+```{r}
+fit.random_intercept_slope = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                                  data = df.sleep)
+```
+
+and take a look at the model's predictions: 
+
+```{r}
+fit.random_intercept_slope %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+As we can see, the lines for each participant are different. We've allowed for the intercept as well as the relationship between sleep deprivation and reaction time to be different between participants. 
+
+#### Only random intercepts 
+
+Let's fit a model that only allows for the intercepts to vary between participants. 
+
+```{r}
+fit.random_intercept = lmer(formula = reaction ~ 1 + days + (1 | subject),
+                            data = df.sleep)
+```
+
+And let's visualize what these predictions look like: 
+
+```{r}
+fit.random_intercept %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+Now, all the lines are parallel but the intercept differs between participants. 
+
+#### Only random slopes 
+
+Finally, let's compare a model that only allows for the slopes to differ but not the intercepts. 
+
+```{r}
+fit.random_slope = lmer(formula = reaction ~ 1 + days + (0 + days | subject),
+                        data = df.sleep)
+```
+
+And let's visualize the model fit: 
+
+```{r}
+fit.random_slope %>% 
+  augment() %>% 
+  clean_names() %>% 
+ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_line(aes(y = fitted),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+Here, all the lines have the same starting point (i.e. the same intercept) but the slopes are different. 
+
+### Compare results 
+
+Let's compare the results of the different methods -- complete pooling, no pooling, and partial pooling (with random intercepts and slopes). 
+
+```{r, warning=F, message=F}
+# complete pooling
+fit.complete_pooling = lm(formula = reaction ~ days,
+                          data = df.sleep)  
+
+df.complete_pooling =  fit.complete_pooling %>% 
+  augment() %>% 
+  bind_rows(
+    fit.complete_pooling %>% 
+      augment(newdata = tibble(subject = c("373", "374"),
+                               days = rep(10, 2)))
+  ) %>% 
+  clean_names() %>% 
+  select(reaction, days, complete_pooling = fitted)
+
+# no pooling
+df.no_pooling = df.sleep %>% 
+  group_by(subject) %>% 
+  nest(days, reaction) %>% 
+  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+         augment = map(fit, augment)) %>% 
+  unnest(augment) %>% 
+  clean_names() %>% 
+  select(subject, reaction, days, no_pooling = fitted)
+
+# partial pooling
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep) 
+
+df.partial_pooling = fit.lmer %>% 
+  augment() %>% 
+  bind_rows(
+    fit.lmer %>% 
+      augment(newdata = tibble(subject = c("373", "374"),
+                               days = rep(10, 2)))
+  ) %>% 
+  clean_names() %>% 
+  select(subject, reaction, days, partial_pooling = fitted)
+
+# combine results
+df.pooling = df.partial_pooling %>% 
+  left_join(df.complete_pooling) %>% 
+  left_join(df.no_pooling)
+```
+
+Let's compare the predictions of the different models visually: 
+
+```{r}
+ggplot(data = df.pooling,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_smooth(method = "lm",
+              se = F,
+              color = "orange",
+              fullrange = T) + 
+  geom_line(aes(y = complete_pooling),
+            color = "green") + 
+  geom_line(aes(y = partial_pooling),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+To better see the differences between the approaches, let's focus on the predictions for the participants with incomplete data: 
+
+```{r}
+# subselection
+ggplot(data = df.pooling %>% 
+         filter(subject %in% c("373", "374")),
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_smooth(method = "lm",
+              se = F,
+              color = "orange",
+              fullrange = T) + 
+  geom_line(aes(y = complete_pooling),
+            color = "green") + 
+  geom_line(aes(y = partial_pooling),
+            color = "blue") + 
+  geom_point() +
+  facet_wrap(~subject) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+### Coefficients 
+
+One good way to get a sense for what the different models are doing is by taking a look at the coefficients: 
+
+```{r}
+fit.complete_pooling %>% 
+  coef()
+```
+
+```{r}
+fit.random_intercept %>% 
+  coef()
+```
+
+```{r}
+fit.random_slope %>% 
+  coef()
+```
+
+```{r}
+fit.random_intercept_slope %>% 
+  coef()
+```
+
+### Shrinkage 
+
+In mixed effects models, the variance of parameter estimates across participants shrinks compared to a no pooling model (where we fit a different regression to each participant). Expressed differently, individual parameter estimates are borrowing strength from the overall data set in mixed effects models. 
+
+```{r}
+# get estimates from partial pooling model
+df.partial_pooling = fit.random_intercept_slope %>% 
+  coef() %>% 
+  .[[1]] %>% 
+  rownames_to_column("subject") %>% 
+  clean_names()
+
+# combine estimates from no pooling with partial pooling model 
+df.plot = df.sleep %>% 
+  group_by(subject) %>% 
+  nest(days, reaction) %>% 
+  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+         tidy = map(fit, tidy)) %>% 
+  unnest(tidy) %>% 
+  select(subject, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  clean_names() %>% 
+  mutate(method = "no pooling") %>% 
+  bind_rows(df.partial_pooling %>% 
+              mutate(method = "partial pooling")) %>% 
+  gather("index", "value", -c(subject, method)) %>% 
+  mutate(index = factor(index, levels = c("intercept", "days")))
+
+  
+# visualize the results  
+ggplot(data = df.plot,
+       mapping = aes(x = value,
+                     group = method,
+                     fill = method)) + 
+  stat_density(position = "identity",
+               geom = "area",
+               color = "black",
+               alpha = 0.3) +
+  facet_grid(cols = vars(index),
+             scales = "free")
 ```
 
 ## Bootstrapping 
 
-### linear model 
+Bootstrapping is a good way to estimate our uncertainty on the parameter estimates in the model. 
+
+### Linear model 
+
+Let's briefly review how to do bootstrapping in a simple linear model. 
 
 ```{r}
 # fit model 
@@ -334,6 +738,7 @@ df.boot = df.sleep %>%
   clean_names() 
 ```
 
+Let's illustrate the linear model with a confidence interval (making parametric assumptions using the t-distribution). 
 
 ```{r}
 ggplot(data = df.sleep,
@@ -341,6 +746,8 @@ ggplot(data = df.sleep,
   geom_smooth(method = "lm") + 
   geom_point(alpha = 0.3)
 ```
+
+And let's compare this with the different regression lines that we get out of our bootstrapped samples:
 
 ```{r}
 ggplot(data = df.sleep,
@@ -353,64 +760,11 @@ ggplot(data = df.sleep,
   geom_point(alpha = 0.3)
 ```
 
-
-```{r}
-df.plot = df.boot %>% 
-  gather("index", "value", -id)
-
-ggplot(data = df.plot,
-       mapping = aes(x = value)) + 
-  geom_density() + 
-  facet_grid(cols = vars(index),
-             scales = "free") +
-  coord_cartesian(expand = F)
-```
-
-### mixed effects model 
-
-```{r}
-fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
-                data = df.sleep)
-```
-
-```{r}
-# bootstrapping 
-df.boot = df.sleep %>% 
-  bootstrap(n = 100,
-            id = "id") %>% 
-  mutate(fit = map(strap, ~ lmer(formula = reaction ~ 1 + days + (1 + days | subject), data = .)),
-         convergence = map(fit, ~ .@optinfo$conv$lme4),
-         converged = map(convergence, ~ length(.)),
-         tidy = map(fit, tidy)) %>% 
-  # filter(converged == 0) %>%
-  unnest(tidy) %>% 
-  select(id, term, estimate) %>% 
-  spread(term, estimate) %>% 
-  clean_names() 
-
-```
-
-```{r}
-df.plot = df.boot %>% 
-  select(id, intercept, days) %>% 
-  gather("index", "value", -id)
-
-ggplot(data = df.plot,
-       mapping = aes(x = value)) + 
-  geom_density() + 
-  facet_grid(cols = vars(index),
-             scales = "free") +
-  coord_cartesian(expand = F)
-
-df.boot %>% 
-  pull(days) %>% 
-  quantile(probs = c(0.025, 0.975))
-
-```
-
 #### bootmer() function
 
-```{r}
+For the linear mixed effects model, we can use the `bootmer()` function to do bootstrapping. 
+
+```{r, message=F, warning=F}
 # fit the model 
 fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
                 data = df.sleep)
@@ -435,11 +789,11 @@ boot.lmer$t %>%
   facet_grid(cols = vars(index),
              scales = "free") +
   coord_cartesian(expand = F)
-
-
 ```
 
 ## Getting p-values 
+
+We can use the "lmerTest" package to get p-values for the different fixed effects. 
 
 ```{r}
 lmerTest::lmer(formula = reaction ~ 1 + days + (1 + days | subject),
@@ -447,158 +801,31 @@ lmerTest::lmer(formula = reaction ~ 1 + days + (1 + days | subject),
   summary()
 ```
 
-## Solving convergence issues 
-
-```{r}
-# fit the model 
-fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
-                data = df.sleep)
-
-# explore different optimization algorithms 
-fit.all = allFit(fit.lmer)
-
-# summarize result
-fit.all %>% summary()
-```
-
 ## Understanding the lmer() syntax 
 
-```{r}
-# fit the model 
-fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
-                data = df.sleep)
-# model summary
-fit.lmer %>% 
-  summary()
+Here is an overview of how to specify different kinds of linear mixed effects models.
 
-```
-
-```{r}
-# fit the model 
-fit.lmer = lmer(formula = reaction ~ 1 + days + (0 + days | subject) + (1 | subject),
-                data = df.sleep)
-# model summary
-fit.lmer %>% 
-  summary()
-
-# coefficients 
-fit.lmer %>% 
-  coef()
-```
-
-### Multi-level models 
-
-```{r}
-df.school = read.table("http://bayes.acs.unt.edu:8083/BayesContent/class/Jon/R_SC/Module9/lmm.data.txt",
-                   header = TRUE,
-                   sep = ",",
-                   na.strings = "NA",
-                   dec=".",
-                   strip.white = TRUE)
-```
-
-- visualize the data 
-
-```{r}
-df.school %>% 
-  ggplot(data = .,
-         aes(x = open,
-             y = extro)) +
-  geom_smooth(method = "lm",
-              se = F) + 
-  geom_point(alpha = 0.2) +
-  facet_grid(cols = vars(class),
-             rows = vars(school),
-             scales = "free") +
-  theme(axis.text = element_text(size = 10))
-```
-
-```{r}
-df.school %>% 
-  count(class, school)
-```
-
-
-```{r}
-# fit nested model 
-fit.nested = lmer(extro ~ open + agree + social + (1 | school/class), data = df.school)
-
-# print model summary
-fit.nested %>% summary()
-
-# model coefficients
-fit.nested %>% coef()
-
-
-```
-
-```{r}
-# fit crossed model 
-fit.crossed = lmer(extro ~ open + agree + social + (1 | school) + (1 | class), data = df.school)
-
-# print model summary
-fit.crossed %>% summary()
-
-# model coefficients
-fit.crossed %>% coef()
-```
-
-### Syntax summary
-
-```{r}
+```{r, echo=F}
 tibble(
   formula = c(
     "`dv ~ x1 + (1 | g)`",
     "`dv ~ x1 + (0 + x1 | g)`",
     "`dv ~ x1 + (x1 | g)`",
     "`dv ~ x1 + (x1 || g)`",
-    "`dv ~ x1 + (1 | sch) + (1 | tch)`",
-     "`dv ~ x1 + (1 | sch/tch)`"
+    "`dv ~ x1 + (1 | school) + (1 | teacher)`",
+    "`dv ~ x1 + (1 | school/teacher)`"
   ),
   description = c(
     "Random intercept for each level of `g`",
     "Random slope for each level of `g`",
     "Correlated random slope and intercept for each level of `g`",
     "Uncorrelated random slope and intercept for each level of `g`",
-    "Random intercept for each level of `sch` and for each level of `tch` (crossed)",
-    "Random intercept for each level of `sch` and for each level of `tch` in `sch` (nested)"
+    "Random intercept for each level of `school` and for each level of `teacher` (crossed)",
+    "Random intercept for each level of `school` and for each level of `teacher` in `school` (nested)"
   )
 ) %>% 
-  head(10) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
+  kable()
 ```
-
-
-**Random intercept for each level of `g`**:  
-`lme01 = lmer(formula = dv ~ x1 + (1 | g), data = df)`
-
-**Random slope for each level of `g`**:  
-`lme02 = lmer(formula = dv ~ x1 + (0 + x1 | g), data = df)`
-
-**Correlated random slope and intercept for each level of `g`**:  
-`lme03 = lmer(formula = dv ~ x1 + (x1 | g), data = df)`
-
-**Uncorrelated random slope and intercept for each level of `g`**:   
-`lme04 = lmer(formula = dv ~ x1 + (x1 || g), data = df)`
-
-For models with nested grouping factors (aka multilevel models), use `/` to indicate nesting. Below `tch` is nested in `sch`. For example, teachers nested within schools.
-
-**Random intercept for each level of `sch` and for each level of `tch` in `sch` **:  
-`lme01 = lmer(formula = dv ~ x1 + (1 | sch/tch), data = df)`
-
-**Random slope for each level of `sch` and for each level of `tch` in `sch`**:  
-`lme02 = lmer(formula = dv ~ x1 + (0 + x1 | sch/tch), data = df)`
-
-**Correlated random slope and intercept for each level of `sch` and for each level of `tch` in `sch`**:  
-`lme03 = lmer(formula = dv ~ x1 + (x1 | sch/tch), data = df)`
-
-**Uncorrelated random slope and intercept for each level of `sch` and for each level of `tch` in `sch`**:   
-`lme03 = lmer(formula = dv ~ x1 + (x1 || sch/tch), data = df)`
-
-## Additional resources 
 
 ## Session info 
 

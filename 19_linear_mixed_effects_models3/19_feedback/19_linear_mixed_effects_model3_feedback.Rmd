@@ -1,0 +1,86 @@
+---
+title: "19 Linear mixed effects model 3"
+author: "Tobias Gerstenberg"
+date: "2/25/2019"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+> I am uncertain why one would choose no slope or no intercept for an lmer. Can you go over the reasons for choosing (1 + var | other_var), (1 | other_var), and (0 + var | other_var)?
+
+> Overall, the class is clear. But when you get to the bootstrapping method, you may not have made it clear why bootstrapping is a good idea/solution for the violation of lmer assumptions. For example, will this help the heterogeneity of between-group variance in the previous example you raised? or ....? A clear explanation will be appreciated!
+
+> Delaying questions is helpful, as students' questions (while sometimes helpful) interrupted the flow and my understanding of the material. Repetition of why and how these methods being taught are useful would also be great, as I still do not have a sense of why lm vs lmer
+
+> I'd like to know whether simulations can verify that partial pooling somehow does better than no pooling.
+
+## Student feedback 
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-19.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-19.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+# ggsave("pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-19.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+# ggsave("overall.pdf", width = 8, height = 6)
+```
+
+## What to do next time
+
+- good idea to sometimes delay questions until I've come to a good break point
+- maybe show with simulations how pooling leads to more accurate predictions (and better effect estimates) than non-pooling 
+- explain why linear mixed effects models model the correlation between random effects 
+
