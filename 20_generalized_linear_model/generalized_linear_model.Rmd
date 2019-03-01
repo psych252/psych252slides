@@ -24,17 +24,19 @@ knitr::opts_chunk$set(
 # Generalized linear model 
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages(c("lme4", "lmerTest", "pbkrtest"))
+# install.packages(c("titanic"))
 ```
 
 ## Load packages and set plotting theme  
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
+library("titanic")      # titanic dataset
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
 library("lme4")    # for linear mixed effects models
+library("boot")    # for bootstrapping (also has an inverse logit function)
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -50,11 +52,270 @@ theme_set(
 
 ## Load data set 
 
+```{r}
+df.titanic = titanic_train %>% 
+  clean_names()
+```
+
+Let's take a quick look at the data: 
+
+```{r}
+df.titanic %>% glimpse()
+```
+
+```{r}
+df.titanic %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+```
+
+
+## Logistic regression 
+
+Let's see whether we can predict whether or not a passenger survived based on the price of their ticket. 
+
+Let's run a simple regression first: 
+
+```{r}
+fit.lm = lm(formula = survived ~ 1 + fare,
+            data = df.titanic)
+
+fit.lm %>% summary()
+```
+
+Look's like `fare` is a significant predictor of whether or not a person survived. Let's visualize the model's predictions:
+
+```{r}
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived)) + 
+  geom_smooth(method = "lm") + 
+  geom_point() +
+  labs(y = "p(survived)")
+```
+
+Let's run a logistic regression instead. 
+
+```{r}
+fit.glm = glm(formula = survived ~ 1 + fare,
+              family = "binomial",
+              data = df.titanic)
+
+fit.glm %>% summary()
+```
+
+
+```{r}
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived)) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial")) + 
+  geom_point() +
+  labs(y = "p(survived)")
+```
+
+### Interpret the parameters 
+
+```{r}
+fit.glm %>% 
+  tidy() %>% 
+  rowwise() %>% 
+  summarize(estimate = inv.logit(estimate))
+```
+
+```{r}
+fit.glm2 = glm(formula = survived ~ sex,
+               family = "binomial",
+               data = df.titanic)
+
+fit.glm2 %>% summary()
+```
+
+```{r}
+df.titanic %>% 
+  count(sex, survived) %>% 
+  mutate(p = n/sum(n)) %>% 
+  group_by(sex) %>% 
+  mutate(`p(survived|sex)` = p/sum(p)) %>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+```{r}
+fit.glm2 %>% 
+  tidy() %>% 
+  rowwise() %>% 
+  summarize(estimate = inv.logit(estimate))
+```
+
+
+```{r}
+fit.glm2 %>% 
+  tidy() %>% 
+  summarize(coefficient = sum(estimate) %>% inv.logit())
+```
+
+#### Predictions for continuous case 
+
+```{r}
+fit.glm %>% 
+  augment(newdata = tibble(fare = c(0, 10, 50, 100, 500))) %>% 
+  clean_names() %>% 
+  select(fare, prediction = fitted) %>% 
+  mutate(`p(survival)` = prediction %>% inv.logit()) %>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+
+#### Visualization
+
+```{r}
+df.titanic %>% 
+  mutate(survived = factor(survived, labels = c("died", "survived"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = sex,
+                       fill = survived)) +
+  geom_bar(position = "fill",
+           color = "black") +
+  scale_fill_brewer(palette = "Set1")  +
+  labs(x = "", fill = "", y = "probability")
+  
+```
+
+
+
 ## Generate some data 
 
 ```{r}
+# make example reproducible 
+set.seed(1)
+
+# set parameters 
+sample_size = 1000 
+b0 = 0
+b1 = 1
+# b1 = 8
+
+# generate data 
+df.data = tibble(
+  x = rnorm(n = sample_size),
+  y = b0 + b1 * x,
+  p = inv.logit(y)) %>% 
+  mutate(response = rbinom(n(), size = 1, p = p))
+
+# fit model 
+fit = glm(formula = response ~ 1 + x,
+          family = "binomial",
+          data = df.data)
+
+# model summary 
+fit %>% summary()
+```
+```{r}
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = response)) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial")) + 
+  geom_point(alpha = 0.1) +
+  labs(y = "p(response)")
+```
+
+#### Calculate the model's likelihood 
+
+```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  mutate(p = inv.logit(fitted),
+         log_likelihood = response * log(p) + (1 - response) * log(1 - p)) %>% 
+  summarize(log_likelihood = sum(log_likelihood))
 
 ```
+
+
+```{r}
+fit %>% 
+  glance() %>% 
+    head(10) %>% 
+  select(logLik, AIC, BIC) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+```
+
+#### Testing hypotheses
+
+```{r}
+# fit compact model
+fit.compact = glm(formula = survived ~ 1 + fare,
+                  family = "binomial",
+                  data = df.titanic)
+
+# fit augmented model
+fit.augmented = glm(formula = survived ~ 1 + sex + fare,
+                    family = "binomial",
+                    data = df.titanic)
+
+# likelihood ratio test
+anova(fit.compact, fit.augmented, test = "LRT")
+
+```
+
+##### Several predictors 
+
+```{r}
+fit = glm(formula = survived ~ 1 + sex + fare,
+          family = "binomial",
+          data = df.titanic)
+
+fit %>% summary()
+```
+
+
+```{r}
+df.titanic %>% 
+  mutate(sex = as.factor(sex)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = fare,
+                       y = survived,
+                       color = sex,
+                       group = sex)) +
+  geom_point(alpha = 0.1) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.5) +
+  scale_color_brewer(palette = "Set1")
+```
+
+## Logistic mixed effects model 
+
+```{r}
+df.language = bdf %>% 
+  clean_names() %>% 
+  filter(repeatgr != 2) %>% 
+  mutate(repeatgr = repeatgr %>% as.character() %>% as.numeric())
+```
+
+```{r}
+fit =  glmer(repeatgr ~ 1 + ses * Minority + (1 | schoolNR),
+             data = df.language,
+             family = "binomial")
+
+fit %>% summary()
+```
+
 
 
 
