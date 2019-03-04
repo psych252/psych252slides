@@ -37,6 +37,7 @@ library("janitor")    # for cleaning column names
 library("broom")    # for tidying up linear models 
 library("lme4")    # for linear mixed effects models
 library("boot")    # for bootstrapping (also has an inverse logit function)
+library("effects")    # for showing effects in linear, generalized linear, and other models
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
@@ -54,7 +55,8 @@ theme_set(
 
 ```{r}
 df.titanic = titanic_train %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(sex = as.factor(sex))
 ```
 
 Let's take a quick look at the data: 
@@ -192,6 +194,19 @@ df.titanic %>%
   
 ```
 
+### Displaying effects
+
+```{r}
+library("effects")
+
+# fit 
+fit.glm = glm(formula = survived ~ 1 + fare + sex,
+              data = df.titanic,
+              family = "binomial")
+
+# report effects 
+allEffects(mod = fit.glm)
+```
 
 
 ## Generate some data 
@@ -234,6 +249,21 @@ ggplot(data = df.data,
 #### Calculate the model's likelihood 
 
 ```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  mutate(p = inv.logit(fitted)) %>% 
+  select(response, p) %>% 
+  mutate(p_response = ifelse(response == 1, p, 1-p),
+         log_p = log(p_response)) %>% 
+  rename(`p(Y = 1)` = p, `p(Y = response)` = p_response,
+         `log(p(Y = response))` = log_p) %>% 
+    head(10) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+  
+
 fit %>% 
   augment() %>% 
   clean_names() %>% 
@@ -283,7 +313,6 @@ fit = glm(formula = survived ~ 1 + sex + fare,
 fit %>% summary()
 ```
 
-
 ```{r}
 df.titanic %>% 
   mutate(sex = as.factor(sex)) %>% 
@@ -292,10 +321,11 @@ df.titanic %>%
                        y = survived,
                        color = sex,
                        group = sex)) +
-  geom_point(alpha = 0.1) + 
+  geom_point(alpha = 0.1, size = 2) + 
   geom_smooth(method = "glm",
               method.args = list(family = "binomial"),
-              alpha = 0.5) +
+              alpha = 0.2,
+              aes(fill = sex)) +
   scale_color_brewer(palette = "Set1")
 ```
 

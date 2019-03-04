@@ -1,0 +1,616 @@
+---
+title: "Class 21"
+author: "Tobias Gerstenberg"
+date: ""
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=20"]
+bibliography: [packages.bib]
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(
+  comment = "",
+  results = "hold",
+  fig.show = "hold")
+```
+
+# Bayesian data analysis
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("modelr")    # for permutation test
+library("greta")    # for writing Bayesian models
+library("tidybayes")    # tidying up results from Bayesian models
+library("tidyverse")  # for wrangling, plotting, etc. 
+
+# include references for used packages
+knitr::write_bib(.packages(), "packages.bib") 
+```
+
+```{r set-theme}
+theme_set(
+  theme_classic() + #set the theme 
+    theme(text = element_text(size = 20)) #set the default text size
+)
+```
+
+## Things that came up 
+
+### Bias in Cosyne 2019 conference admission? 
+
+```{r}
+# data frame 
+df.conference = tibble(sex = rep(c("female", "male"), c(264, 677)),
+                       accepted = rep(c("yes", "no", "yes", "no"), c(83, 264 - 83, 255, 677 - 255))) %>% 
+  mutate(accepted = factor(accepted, levels = c("no", "yes"), labels = 0:1),
+         sex = as.factor(sex))
+```
+
+Visualize results 
+
+```{r}
+df.conference %>% 
+  ggplot(data = .,
+         mapping = aes(x = sex,
+                       fill = accepted)) + 
+  geom_bar(color = "black") + 
+  scale_fill_brewer(palette = "Set1") +
+  coord_flip() +
+  theme(legend.direction = "horizontal",
+        legend.position = "top") + 
+  guides(fill = guide_legend(reverse = T))
+```
+
+
+Logistic regression
+
+```{r}
+# logistic regression
+fit.glm = glm(formula = accepted ~ 1 + sex,
+              family = "binomial",
+              data = df.conference)
+
+# model summary 
+fit.glm %>% 
+  summary()
+```
+
+Permutation test 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# difference in proportion 
+fun.difference = function(df){
+  df %>% 
+    as_tibble() %>% 
+    count(sex, accepted) %>% 
+    group_by(sex) %>% 
+    mutate(proportion = n / sum(n)) %>% 
+    filter(accepted == 1) %>% 
+    select(sex, proportion) %>% 
+    spread(sex, proportion) %>% 
+    mutate(difference = male - female) %>% 
+    pull(difference)  
+}
+
+# actual difference 
+difference = df.conference %>% 
+  fun.difference()
+
+# permutation test 
+df.permutation = df.conference %>% 
+  permute(n = 1000, sex) %>% 
+  mutate(difference = map_dbl(perm, ~ fun.difference(.)))
+```
+
+p-value based on permutation test 
+
+```{r}
+sum(df.permutation$difference > difference) / nrow(df.permutation)
+```
+
+Visualize results 
+
+```{r}
+df.permutation %>% 
+  ggplot(data = .,
+         mapping = aes(x = difference)) +
+  stat_density(geom = "line") + 
+  geom_vline(xintercept = difference, 
+             color = "red",
+              size = 1)
+```
+
+## Writing Bayesian models 
+
+### Sequential coin flips 
+
+```{r}
+# data 
+flips = c(1, rep(0, 4), 1, rep(0, 4), 1, rep(0, 9), 1)
+
+df.sequence = tibble(
+  theta = seq(0, 1, 0.01), 
+  prior = dbeta(theta, shape1 = 10, shape2 = 10)) %>% 
+  bind_cols(
+    map_dfc(1:length(flips), ~ dbinom(flips[1:.], size = ., prob = theta)) %>% 
+      set_names(str_c("likelihood_", 1:length(flips)))
+  ) %>% 
+  gather("index", "likelihood", -c(theta, prior)) %>% 
+  group_by(index) %>% 
+  mutate(posterior = prior * likelihood / sum(prior * likelihood)) %>% 
+  ungroup() %>% 
+  mutate(index = str_remove(index, "likelihood_")) %>% 
+  rename(nobs = index) %>% 
+  mutate(nobs = as.numeric(nobs))
+```
+
+Visualize the inference 
+
+
+
+Alternative (just add observations to shape1 and shape2 parameters)
+
+### Coin flip example 
+
+Is the coin biased? 
+
+```{r}
+# data 
+data = rep(0:1, c(8, 2))
+
+# parameters 
+theta = c(0.1, 0.5, 0.9)
+
+# prior 
+prior = c(0.25, 0.5, 0.25)
+
+# likelihood 
+likelihood = dbinom(sum(data == 1), size = length(data), prob = theta)
+
+# posterior 
+posterior = likelihood * prior / sum(likelihood * prior)
+
+# store in data frame 
+df.coins = tibble(
+  theta = theta,
+  prior = prior,
+  likelihood = likelihood,
+  posterior = posterior
+) 
+
+```
+
+Visualize the results 
+
+```{r}
+df.coins %>% 
+  gather("index", "value", -theta) %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         theta = factor(theta, labels = c("p = 0.1", "p = 0.5", "p = 0.9"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       fill = index)) + 
+  geom_bar(stat = "identity",
+           color = "black") +
+  facet_grid(rows = vars(index),
+             switch = "y",
+             scales = "free") + 
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.line = element_blank())
+  
+```
+
+
+### From scratch 
+
+```{r}
+# data
+flips = rep(0:1, c(8, 2))
+n_flips = length(flips)
+bias = 0.9
+theta = seq(0, 1, 0.01)
+
+# prior
+prior = rep(1, length(theta)) / length(theta) #uniform
+
+# likelihood 
+likelihood = dbinom(sum(flips == 1), size = n_flips, prob = theta)
+
+# posterior 
+posterior = likelihood * prior / sum(likelihood * prior)
+
+# save as data frame
+df.bayes = tibble(
+  theta,
+  prior,
+  likelihood, 
+  posterior
+)
+```
+
+Visualize the results 
+
+```{r}
+df.bayes %>% 
+  gather("index", "value", -theta) %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior"))) %>% 
+ggplot(data = .,
+       mapping = aes(x = theta,
+                     y = value,
+                     color = index)) +
+  geom_point(size = 2) + 
+  facet_grid(rows = vars(index),
+             switch = 'y',
+             scales = "free_y") +
+  labs(y = "") +
+  theme(legend.position = "none",
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+### Effect of the prior 
+
+```{r}
+# grid
+theta = seq(0, 1, 0.01)
+
+# data
+data = rep(0:1, c(8, 2))
+
+df.prior = tibble(theta = theta, 
+                  prior_uniform = dbeta(grid, shape1 = 1, shape2 = 1),
+                  prior_normal = dbeta(grid, shape1 = 5, shape2 = 5),
+                  prior_biased = dbeta(grid, shape1 = 8, shape2 = 2)) %>% 
+  gather("prior_index", "prior", -theta) %>% 
+  mutate(likelihood = dbinom(sum(data == 1),
+                             size = length(data),
+                             prob = theta)) %>% 
+  group_by(prior_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  gather("index", "value", -c(theta, prior_index))
+  
+```
+
+Visualize the results 
+
+```{r}
+df.prior %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         prior_index = factor(prior_index,
+                              levels = c("prior_uniform", "prior_normal", "prior_biased"),
+                              labels = c("uniform", "symmetric", "asymmetric"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(prior_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank())
+```
+
+### Effect of the likelihood 
+
+```{r}
+# grid
+theta = seq(0, 1, 0.01)
+
+df.likelihood = tibble(theta = theta, 
+                  prior = dbeta(grid, shape1 = 2, shape2 = 8),
+                  likelihood_left = dbeta(grid, shape1 = 1, shape2 = 9),
+                  likelihood_center = dbeta(grid, shape1 = 5, shape2 = 5),
+                  likelihood_right = dbeta(grid, shape1 = 9, shape2 = 1)
+                  ) %>% 
+  gather("likelihood_index", "likelihood", -c("theta", "prior")) %>% 
+  group_by(likelihood_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  gather("index", "value", -c(theta, likelihood_index))
+  
+```
+
+Visualize the results 
+
+```{r}
+df.likelihood %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         likelihood_index = factor(likelihood_index,
+                              levels = c("likelihood_left", "likelihood_center", "likelihood_right"),
+                              labels = c("left", "center", "right"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(likelihood_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank(),
+        strip.text.x = element_blank())
+```
+
+### Effect of the sample size  
+
+```{r}
+# grid
+theta = seq(0, 1, 0.01)
+
+df.likelihood = tibble(theta = theta, 
+                  prior = dbeta(grid, shape1 = 5, shape2 = 5),
+                  likelihood_low = dbeta(grid, shape1 = 2, shape2 = 8),
+                  likelihood_medium = dbeta(grid, shape1 = 10, shape2 = 40),
+                  likelihood_high = dbeta(grid, shape1 = 20, shape2 = 80)
+                  ) %>% 
+  gather("likelihood_index", "likelihood", -c("theta", "prior")) %>% 
+  group_by(likelihood_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  gather("index", "value", -c(theta, likelihood_index))
+  
+```
+
+Visualize the results 
+
+```{r}
+df.likelihood %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         likelihood_index = factor(likelihood_index,
+                              levels = c("likelihood_low", "likelihood_medium", "likelihood_high"),
+                              labels = c("low", "medium", "high"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(likelihood_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank(),
+        strip.text.x = element_blank())
+```
+
+## Greta
+
+### Data set 
+
+```{r}
+# load the attitude data set 
+df.attitude = attitude
+```
+
+Visualize relationship between how well complaints are handled and the overall rating of an employee
+
+```{r}
+ggplot(data = df.attitude,
+       mapping = aes(x = complaints,
+                     y = rating)) +
+  geom_point()
+```
+
+### Frequentist analysis 
+
+```{r}
+# fit model 
+fit = lm(formula = rating ~ 1 + complaints, 
+         data = df.attitude)
+
+# print summary
+fit %>% summary()
+```
+Visualize model predictions
+
+```{r}
+ggplot(data = df.attitude,
+       mapping = aes(x = complaints,
+                     y = rating)) +
+  geom_smooth(method = "lm",
+              color = "black") + 
+  geom_point()
+```
+
+
+### Bayesian simple regression
+
+#### Fit the model
+
+```{r}
+library("greta")
+library("tidybayes")
+
+# variables & priors
+b0 = normal(0, 10)
+b1 = normal(0, 10)
+sd = cauchy(0, 3, truncation = c(0, Inf))
+
+# linear predictor
+mu = b0 + b1 * attitude$complaints
+
+# observation model (likelihood)
+distribution(attitude$rating) = normal(mu, sd)
+
+# define the model
+m = model(b0, b1, sd)
+
+# plotting
+plot(m)
+
+# sampling
+draws = mcmc(m, n_samples = 1000)
+
+# tidy up the draws
+df.draws = tidy_draws(draws) %>% 
+  clean_names()
+```
+
+#### Visualize the priors
+
+```{r}
+# Gaussian
+ggplot(tibble(x = c(-30, 30)),
+       aes(x = x)) +
+  stat_function(fun = "dnorm", 
+                size = 2,
+                args = list(sd = 10))
+
+# Cauchy
+ggplot(tibble(x = c(0, 30)),
+       aes(x = x)) +
+  stat_function(fun = "dcauchy", 
+                size = 2,
+                args = list(location = 0,
+                            scale = 3))
+
+
+```
+
+#### Visualize the posteriors
+
+```{r}
+df.draws %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+
+```{r}
+df.draws %>% 
+  select(draw:sd) %>% 
+  gather("index", "value", -draw) %>% 
+  ggplot(data = .,
+         mapping = aes(x = value)) + 
+  stat_density(geom = "line") + 
+  facet_grid(rows = vars(index),
+             scales = "free_y",
+             switch = "y") + 
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank(),
+        strip.text.x = element_blank())
+```
+
+#### Visualize model predictions 
+
+```{r}
+# get maximum a posterior from each posterior 
+
+df.maps = df.draws %>% 
+  select(b0, b1, sd) %>% 
+  nest() %>% 
+  mutate(density = map(data, ~ density(. %>% unlist())))
+  
+  
+
+
+tibble(x = tmp$x,
+       y = tmp$y) %>% 
+  arrange(desc(y))
+
+
+
+```
+
+
+## Likelihood contour plots 
+
+```{r}
+observation = 0.3
+
+df.like = crossing(
+  alpha = seq(from = 1, to = 10, by = 0.1),
+  beta = seq(1, 10, 0.2)
+) %>% 
+  mutate(likelihood = map2_dbl(alpha, beta, ~ dbeta(observation, .x, .y)))
+
+ggplot(data = df.like,
+       mapping = aes(x = alpha,
+                     y = beta)) +
+  geom_raster(aes(fill = likelihood),
+              interpolate = T) + 
+  geom_contour(aes(z = likelihood, color = likelihood)) + 
+  geom_point(data = df.like %>% 
+               filter(row_number() == which.max(likelihood)),
+             color = "red",
+             size = 3) +
+  scale_fill_gradient(low = "white", high = "black") +
+  coord_cartesian(expand = F)
+
+```
+
+
+
+## Additional resources 
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```
+
+## References
+
+
