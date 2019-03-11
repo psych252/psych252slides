@@ -107,7 +107,8 @@ fit.lm %>% summary()
 
 ```{r}
 fit.brm = brm(formula = balance ~ 1 + hand,
-              data = df.poker)
+              data = df.poker,
+              file = "brm2")
 
 fit.brm %>% summary()
 ```

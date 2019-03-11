@@ -700,12 +700,19 @@ df.starwars %>%
 
 The following selects all columns that are not numeric: 
 
-```{r select10}
+```{r select10a}
 df.starwars %>% 
-  select_if(funs(!is.numeric(.))) # selects all columns that are not numeric 
+  select_if(~ !is.numeric(.)) # selects all columns that are not numeric
 ```
 
-Note that I needed to use the `funs()` helper function here. 
+Note that I used `~` here to indicate that I'm creating an anonymous function to check whether column type is numeric. A one-sided formula (expression beginning with `~`) is interpreted as `function(x)`, and wherever `x` would go in the function is represented by `.`.
+
+So, I could write the same code like so: 
+
+```{r select10b}
+df.starwars %>% 
+  select_if(function(x) !is.numeric(x)) # selects all columns that are not numeric
+```
 
 We can rename some of the columns using `select()` like so: 
 
@@ -747,14 +754,14 @@ With `mutate_at()`, we can mutate several columns at the same time.
 
 ```{r mutate-at1}
 df.starwars %>% 
-  mutate_at(vars(height, mass, birth_year), funs(scale))
+  mutate_at(.vars = vars(height, mass, birth_year), .funs = "scale")
 ```
 
-`vars()` and `funs()` are helper functions. In `vars()` I've specified what variables to mutate, and in `funs()` I've specified what to do with the variables. Here, I've z-scored `height`, `mass`, and `birth_year` using the `scale()` function. Note that I wrote the function without `()`. The `funs()` helper expects a list of functions that can be specified by: 
+In `vars()` I've specified what variables to mutate, I've passed the function name `"scale"` to the `.funs` argument. Here, I've z-scored `height`, `mass`, and `birth_year` using the `scale()` function. Note that I wrote the function without `()`. The `.funs` argument expects a list of functions that can be specified by: 
 
 - their name, "mean"
 - the function itself, `mean`
-- a call to the function with `.` as a dummy argument, `mean(.)`
+- a call to the function with `.` as a dummy argument, `~ mean(.)` (note the `~` before the function call).
 
 Within `vars()`, we can use the same helper functions for selecting columns that we've seen above for `select()`. 
 
@@ -762,7 +769,7 @@ We can also use names to create new columns:
 
 ```{r mutate-at2}
 df.starwars %>% 
-  mutate_at(vars(height, mass, birth_year), funs(z = scale)) %>% 
+  mutate_at(vars(height, mass, birth_year), .funs = list(z = "scale")) %>% 
   select(name, contains("height"), contains("mass"), contains("birth_year"))
 ```
 
@@ -773,8 +780,8 @@ And we can apply several functions at the same time.
 ```{r mutate-at3}
 df.starwars %>% 
   mutate_at(vars(height, mass, birth_year),
-            funs(z = scale,
-                 centered = scale(., scale = FALSE))) %>% 
+            list(z = "scale",
+                 centered = ~ scale(., scale = FALSE))) %>% 
   select(name, contains("height"), contains("mass"), contains("birth_year"))
 ```
 
@@ -787,7 +794,7 @@ Here, I've created z-scored and centered (i.e. only subtracted the mean but didn
 ```{r mutate-all-1}
 df.starwars %>% 
   select(height, mass) %>%
-  mutate_all(funs(as.character)) # transform all columns to characters
+  mutate_all("as.character") # transform all columns to characters
 ```
 
 Here, I've selected some columns first, and then changed the mode to character in each of them. 
@@ -797,7 +804,7 @@ Like we've seen with `mutate_at()`, you can add a name in the `mutate_all()` fun
 ```{r mutate-all-2}
 df.starwars %>% 
   select(height, mass) %>%
-  mutate_all(funs(char = as.character)) # make new character columns
+  mutate_all(.funs = list(char = "as.character")) # make new character columns
 ```
 
 #### mutate_if()
@@ -806,14 +813,14 @@ df.starwars %>%
 
 ```{r mutate-if1}
 df.starwars %>% 
-  mutate_if(is.numeric, as.character)
+  mutate_if(.predicate = is.numeric, .funs = "as.character")
 ```
 
 Or we can round all the numeric columns: 
 
 ```{r mutate-if2}
 df.starwars %>% 
-  mutate_if(is.numeric, round)
+  mutate_if(.predicate = is.numeric, .funs = "round")
 ```
 
 ### arrange() 

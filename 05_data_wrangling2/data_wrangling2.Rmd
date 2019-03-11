@@ -238,7 +238,7 @@ df.reshape2 %>%
   gather(key = "index", value = "value", -participant) %>% 
   separate(col = index, into = c("index", "order"), sep = "_") %>% 
   spread(key = index, value = value) %>% 
-  mutate_at(vars(order, observation), funs(as.numeric)) %>% 
+  mutate_at(vars(order, observation), ~ as.numeric(.)) %>% 
   select(participant, order, stimulus, rating = observation)
 ```
 
@@ -284,7 +284,7 @@ df.reshape2 %>%
   gather(key = "index", value = "value", -participant) %>% 
   separate(index, into = c("index", "order"), sep = "_") %>% 
   spread(index,value) %>% 
-  mutate_at(vars(order, observation), funs(as.numeric)) %>% 
+  mutate_at(vars(order, observation), ~ as.numeric(.)) %>% 
   select(participant, order, stimulus, rating = observation)
 ```
 
