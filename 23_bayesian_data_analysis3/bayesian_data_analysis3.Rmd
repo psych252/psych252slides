@@ -9,8 +9,6 @@ output:
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=22"]
-bibliography: [packages.bib]
-nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
@@ -23,26 +21,26 @@ knitr::opts_chunk$set(
 
 # Bayesian data analysis 3
 
+```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
+install.packages(c("brms", "bayesplot", "rstanarm"))
+```
+
 ## Load packages and set plotting theme  
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("modelr")    # for doing modeling stuff
-library("tidybayes")    # tidying up results from Bayesian models
-library("brms")    # Bayesian regression models with Stan
-library("rstanarm")    # for Bayesian models
+library("modelr")     # for doing modeling stuff
+library("tidybayes")  # tidying up results from Bayesian models
+library("brms")       # Bayesian regression models with Stan
+library("rstanarm")   # for Bayesian models
 library("cowplot")    # for making figure panels
-library("ggrepel") # for labels in ggplots
-library("gganimate") # for animations
-# library("extraDistr") # additional probability distributions
-library("GGally")  # for pairs plot
+library("ggrepel")    # for labels in ggplots
+library("gganimate")  # for animations
+library("GGally")     # for pairs plot
 library("bayesplot")  # for visualization of Bayesian model fits 
 library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -54,7 +52,9 @@ theme_set(
 
 ## Load data set 
 
-```{r}
+Load the poker data set. 
+
+```{r bda3-1}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -70,12 +70,13 @@ df.poker = read_csv("data/poker.csv") %>%
   select(participant, everything())
 ```
 
-
 ## Poker 
 
-### Data visualization
+### Visualization
 
-```{r}
+Let's visualize the data first: 
+
+```{r bda3-2}
 df.poker %>% 
   ggplot(mapping = aes(x = hand,
                        y = balance,
@@ -96,7 +97,9 @@ df.poker %>%
 
 ### Linear model 
 
-```{r}
+And let's now fit a simple (frequentist) regression model: 
+
+```{r bda3-3}
 fit.lm = lm(formula = balance ~ 1 + hand,
             data = df.poker)
 
@@ -105,24 +108,24 @@ fit.lm %>% summary()
 
 ### Bayesian model 
 
-```{r}
-fit.brm = brm(formula = balance ~ 1 + hand,
-              data = df.poker,
-              file = "brm2")
+Now, let's fit a Bayesian regression model using the `brm()` function:
 
-fit.brm %>% summary()
+```{r bda3-4}
+fit.brm1 = brm(formula = balance ~ 1 + hand,
+               data = df.poker,
+               file = "brm1")
+
+fit.brm1 %>% summary()
 ```
+
+I use the `file = ` argument to save the model's results so that when I run this code chunk again, the model doesn't need to be fit again (fitting Bayesian models takes a while ...). 
 
 #### Visualize the posteriors 
 
-```{r}
-fit.brm %>% get_variables()
-```
+Let's visualize what the posterior for the different parameters looks like. We use the `geom_halfeyeh()` function from the "tidybayes" package to do so: 
 
-
-```{r}
-# fit.brm %>%
-fit.brm %>% 
+```{r bda3-5}
+fit.brm1 %>% 
   posterior_samples() %>% 
   select(-lp__) %>% 
   gather("variable", "value") %>% 
@@ -131,8 +134,10 @@ fit.brm %>%
   geom_halfeyeh()
 ```
 
-```{r}
-fit.brm %>% 
+And let's look at how the samples from the posterior are correlated with each other: 
+
+```{r bda3-6, message=FALSE}
+fit.brm1 %>% 
   posterior_samples() %>% 
   select(b_Intercept:sigma) %>% 
   ggpairs(lower = list(continuous = wrap("points", alpha = 0.03)),
@@ -143,8 +148,10 @@ fit.brm %>%
 
 #### Compute highest density intervals 
 
-```{r}
-fit.brm %>% 
+To compute the MAP (maximum a posteriori probability) estimate and highest density interval, we use the `mode_hdi()` function that comes with the "tidybayes" package.
+
+```{r bda3-7}
+fit.brm1 %>% 
   posterior_samples() %>% 
   clean_names() %>% 
   select(starts_with("b_"), sigma) %>% 
@@ -154,86 +161,26 @@ fit.brm %>%
   mutate(index = ifelse(str_detect(index, fixed(".")), index, str_c(index, ".mode"))) %>% 
   separate(index, into = c("parameter", "type"), sep = "\\.") %>% 
   spread(type, value) %>% 
-    head(10) %>% 
-    kable(digits = 2) %>% 
-    kable_styling(bootstrap_options = "striped",
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
                 full_width = F)
-  
 ```
-
-
-#### Test hypothesis
-
-```{r}
-# fit.brm %>%
-fit.brm %>% 
-  posterior_samples() %>% 
-  select(b_handneutral) %>% 
-  gather("variable", "value") %>% 
-  ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh() + 
-  geom_vline(xintercept = 4,
-             color = "red")
-```
-
-```{r}
-hypothesis(fit.brm,
-           hypothesis = "handneutral < 0")
-
-hypothesis(fit.brm,
-           hypothesis = "handneutral > 4")
-
-hypothesis(fit.brm,
-           hypothesis = "Intercept +  > 2 * Intercept")
-
-hypothesis(fit.brm,
-           hypothesis = "Intercept + handneutral < (Intercept + Intercept + handgood) / 2")
-```
-
-Let's double check one example
-
-```{r}
-df.hypothesis = fit.brm %>% 
-  posterior_samples() %>% 
-  clean_names() %>% 
-  select(starts_with("b_")) %>% 
-  mutate(neutral = b_intercept + b_handneutral,
-         bad_good_average = (b_intercept + b_intercept + b_handgood)/2,
-         hypothesis = neutral < bad_good_average)
-
-df.hypothesis %>% 
-  summarize(p = sum(hypothesis)/n())
-         
-```
-
-#### Bayes factor 
-
-```{r}
-fit.brm1 = brm(formula = balance ~ 1 + hand,
-               data = df.poker,
-               save_all_pars = T,
-               file = "brm_factor1")
-
-fit.brm2 = brm(formula = balance ~ 1 + hand + skill,
-               data = df.poker,
-               save_all_pars = T,
-               file = "brm_factor2")
-```
-
-```{r}
-bayes_factor(fit.brm2, fit.brm1)
-```
-
 
 #### Posterior predictive check 
 
-```{r}
-pp_check(fit.brm, nsamples = 100)
+To check whether the model did a good job capturing the data, we can simulate what future data the Baysian model predicts, now that it has learned from the data we feed into it.  
+
+```{r bda3-8}
+pp_check(fit.brm1, nsamples = 100)
 ```
 
-```{r}
-df.predictive_samples = fit.brm %>% 
+This looks good! The predicted shaped of the data based on samples from the posterior distribution looks very similar to the shape of the actual data.  
+
+Let's make a hypothetical outcome plot that shows what concrete data sets the model would predict: 
+
+```{r bda3-9, message=FALSE}
+# generate predictive samples 
+df.predictive_samples = fit.brm1 %>% 
   posterior_samples() %>% 
   clean_names() %>% 
   select(contains("b_"), sigma) %>% 
@@ -245,12 +192,8 @@ df.predictive_samples = fit.brm %>%
          neutral = map(data, ~ .$b_intercept + .$b_handneutral + rnorm(100, sd = .$sigma)),
          good = map(data, ~ .$b_intercept + .$b_handgood + rnorm(100, sd = .$sigma))) %>% 
   unnest(bad, neutral, good)
-```
 
-Visualization: 
-
-```{r}
-
+# plot the results as an animation
 p = df.predictive_samples %>% 
   gather("hand", "balance", -sample) %>% 
   mutate(hand = factor(hand, levels = c("bad", "neutral", "good"))) %>% 
@@ -276,10 +219,114 @@ animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 # anim_save("poker_posterior_predictive.gif")
 ```
 
-#### Full specification
+#### Test hypothesis
+
+One key advantage of Bayesian over frequentist analysis is that we can test hypothesis in a very flexible manner by directly probing our posterior samples in different ways. 
+
+We may ask, for example, what the probability is that the parameter for the difference between a bad hand and a neutral hand (`b_handneutral`) is greater than 0. Let's plot the posterior distribution together with the criterion: 
+
+```{r bda3-10}
+fit.brm1 %>% 
+  posterior_samples() %>% 
+  select(b_handneutral) %>% 
+  gather("variable", "value") %>% 
+  ggplot(data = .,
+         mapping = aes(y = variable, x = value)) +
+  geom_halfeyeh() + 
+  geom_vline(xintercept = 0,
+             color = "red")
+```
+
+We see that the posterior is definitely greater than 0. 
+
+We can ask many different kinds of questions about the data by doing basic arithmetic on our posterior samples. The `hypothesis()` function makes this even easier. Here are some examples: 
+
+```{r bda3-11}
+# the probability that the posterior for handneutral is less than 0
+hypothesis(fit.brm1,
+           hypothesis = "handneutral < 0")
+```
 
 ```{r}
-fit.brm2 = brm(
+# the probability that the posterior for handneutral is greater than 4
+hypothesis(fit.brm1,
+           hypothesis = "handneutral > 4")
+```
+
+```{r}
+# the probability that good hands make twice as much as bad hands
+hypothesis(fit.brm1,
+           hypothesis = "Intercept + handgood > 2 * Intercept")
+```
+
+```{r}
+# the probability that neutral hands make less than the average of bad and good hands
+hypothesis(fit.brm1,
+           hypothesis = "Intercept + handneutral < (Intercept + Intercept + handgood) / 2")
+```
+
+Let's double check one example, and calculate the result directly based on the posterior samples: 
+
+```{r bda3-12}
+df.hypothesis = fit.brm1 %>% 
+  posterior_samples() %>% 
+  clean_names() %>% 
+  select(starts_with("b_")) %>% 
+  mutate(neutral = b_intercept + b_handneutral,
+         bad_good_average = (b_intercept + b_intercept + b_handgood)/2,
+         hypothesis = neutral < bad_good_average)
+
+df.hypothesis %>% 
+  summarize(p = sum(hypothesis)/n())
+```
+
+#### Bayes factor 
+
+Another way of testing hypothesis is via the Bayes factor. Let's fit the two models we are interested in comparing with each other: 
+
+```{r bda3-13, message=FALSE}
+fit.brm2 = brm(formula = balance ~ 1 + hand,
+               data = df.poker,
+               save_all_pars = T,
+               file = "brm2")
+
+fit.brm3 = brm(formula = balance ~ 1 + hand + skill,
+               data = df.poker,
+               save_all_pars = T,
+               file = "brm3")
+```
+
+And then compare the models useing the `bayes_factor()` function: 
+
+```{r bda3-14}
+bayes_factor(fit.brm3, fit.brm2)
+```
+
+#### Full specification
+
+So far, we have used the defaults that `brm()` comes with and not bothered about specifiying the priors, etc. 
+
+##### Getting the priors
+
+Notice that we didn't specify any priors in the model. By default, "brms" assigns weakly informative priors to the parameters in the model. We can see what these are by running the following command: 
+
+```{r bda3-15}
+fit.brm1 %>% 
+  prior_summary()
+```
+
+We can also get information about which priors need to be specified before fitting a model:
+
+```{r bda3-16}
+get_prior(formula = balance ~ 1 + hand,
+          family = "gaussian",
+          data = df.poker)
+```
+
+Here is an example for what a more complete model specification could look like: 
+
+```{r bda3-17, message=FALSE}
+fit.brm4 = brm(
   formula = balance ~ 1 + hand,
   family = "gaussian",
   data = df.poker,
@@ -298,23 +345,34 @@ fit.brm2 = brm(
   iter = 4000,
   warmup = 1000,
   chains = 4,
-  file = "brm2",
+  file = "brm4",
   seed = 1
 )
 
-fit.brm2 %>% summary()
+fit.brm4 %>% summary()
 ```
+
+We can also take a look at the Stan code that the `brm()` function creates: 
+
+```{r bda3-18}
+fit.brm4 %>% stancode()
+```
+
+One thing worth noticing: by default, "brms" centers the predictors which makes it easier to assign a default prior over the intercept. 
+
 
 #### Inference diagnostics
 
-```{r}
-plot(fit.brm)
+So far, we've assumed that the inference has worked out. We can check this by running plot() on our brm object:  
+
+```{r bda3-19}
+plot(fit.brm1)
 ```
 
-Let's make our own trace plot 
+Let's make our own version of a trace plot for one parameter in the model:
 
-```{r}
-fit.brm %>% 
+```{r bda3-20}
+fit.brm1 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
   mutate(chain = as.factor(chain)) %>% 
@@ -322,12 +380,27 @@ fit.brm %>%
   geom_line()
 ```
 
+We can also take a look at the auto-correlation plot. Ideally, we want to generate independent samples from the posterior. So we don't want subsequent samples to be strongly correlated with each other. Let's take a look: 
+
+```{r bda3-21}
+variables = fit.brm1 %>% get_variables() %>% .[1:4]
+
+fit.brm1 %>% 
+  posterior_samples() %>% 
+  mcmc_acf(pars = variables,
+           lags = 4)
+```
+
+Looking good! The autocorrelation should become very small as the lag increases (indicating that we are getting independent samples from the posterior). 
+
 ##### When things go wrong 
 
-```{r}
+Let's try to fit a model to very little data (just two observations) with extremely uninformative priors: 
+
+```{r bda3-22}
 df.data = tibble(y = c(-1, 1))
 
-fit.brm1 = brm(
+fit.brm5 = brm(
   data = df.data,
   family = gaussian,
   formula = y ~ 1,
@@ -342,38 +415,40 @@ fit.brm1 = brm(
   iter = 4000,
   warmup = 1000,
   chains = 2,
-  file = "fit_brm1"
+  file = "brm5"
 )
 ```
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r}
-summary(fit.brm1)
+```{r bda3-23}
+summary(fit.brm5)
 ```
 
 Not looking good -- The estimates and credible intervals are off the charts. And the effective samples sizes in the chains are very small. 
 
 Let's visualize the trace plots:
 
-```{r}
-fit.brm1 %>% 
-  plot()
+```{r bda3-24}
+plot(fit.brm5)
 ```
 
-```{r}
-fit.brm1 %>% 
+```{r bda3-25}
+fit.brm5 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
   mutate(chain = as.factor(chain)) %>% 
-  ggplot(aes(x = iteration, y = b_intercept, group = chain, color = chain)) + 
+  ggplot(aes(x = iteration,
+             y = b_intercept,
+             group = chain,
+             color = chain)) + 
   geom_line()
 ```
 
 Given that we have so little data in this case, we need to help the model a little bit by providing some slighlty more specific priors. 
 
-```{r}
-fit.brm2 = brm(
+```{r bda3-26}
+fit.brm6 = brm(
   data = df.data,
   family = gaussian,
   formula = y ~ 1,
@@ -385,28 +460,26 @@ fit.brm2 = brm(
   warmup = 1000,
   chains = 2,
   seed = 1,
-  file = "fit_brm2"
+  file = "brm6"
 )
 ```
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r}
-fit.brm2 %>% 
-  summary()
+```{r bda3-27}
+summary(fit.brm6)
 ```
 
-This looks much better. There is still some uncertainty over the estimate, but it has reduced dramatically. 
+This looks much better. There is still quite a bit of uncertainty in our paremeter estimates, but it has reduced dramatically. 
 
 Let's visualize the trace plots:
 
-```{r}
-fit.brm2 %>% 
-  plot()
+```{r bda3-28}
+plot(fit.brm6)
 ```
 
-```{r}
-fit.brm2 %>% 
+```{r bda3-29}
+fit.brm6 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
   mutate(chain = as.factor(chain)) %>% 
@@ -416,10 +489,11 @@ fit.brm2 %>%
 
 Looking mostly good -- except for one hiccup on sigma ... 
 
+## Dealing with heteroscedasticity 
 
-### Dealing with heteroscedasticity 
+Let's generate some fake developmental data where the variance in the data is greatest for young children, smaller for older children, and even smaller for adults:  
 
-```{r}
+```{r bda3-30}
 # make example reproducible 
 set.seed(0)
 
@@ -435,72 +509,72 @@ df.variance %>%
               alpha = 0.7)
 ```
 
-```{r, cache=TRUE}
-fit.variance = brm(
+While frequentist models (such as a linear regression) assume equality of variance, Baysian models afford us with the flexibility of inferring both the parameter estimates of the groups (i.e. the means and differences between the means), as well as the variances. 
+
+We simply define a multivariate model which tries to fit both the `response` as well as the variance `sigma`: 
+
+```{r bda3-31}
+fit.brm7 = brm(
   formula = bf(response ~ group,
                sigma ~ group),
   data = df.variance,
-  file = "variance"
+  file = "brm7"
 )
 ```
 
-```{r}
-fit.variance %>% 
-  summary()
+Let's take a look at the model output: 
+
+```{r bda3-32}
+summary(fit.brm7)
 ```
 
+And let's visualize the results:
 
-Visualize the results 
-
-```{r}
-grid = df.variance %>%
-  data_grid(group)
-
-fits = grid %>%
-  add_fitted_draws(fit.variance)
-
-preds = grid %>%
-  add_predicted_draws(fit.variance)
-
+```{r bda3-33}
 df.variance %>%
-  ggplot(aes(x = response, y = group)) +
-  geom_halfeyeh(aes(x = .value), relative_scale = 0.7, position = position_nudge(y = 0.1), data = fits) +
-  stat_intervalh(aes(x = .prediction), data = preds) +
-  geom_point(data = df.variance) +
-  scale_color_brewer()
-```
-
-```{r}
-grid %>%
-  add_fitted_draws(fit.variance, dpar = TRUE) %>%
-  ggplot(aes(x = sigma, y = group)) +
+  expand(group) %>% 
+  add_fitted_draws(fit.brm7, dpar = TRUE) %>%
+  select(group, .row, .draw, posterior = .value, mu, sigma) %>% 
+  gather("index", "value", c(mu, sigma)) %>% 
+  ggplot(aes(x = value, y = group)) +
   geom_halfeyeh() +
-  geom_vline(xintercept = 0, linetype = "dashed")
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_grid(cols = vars(index))
 ```
 
-### Ordinal regression 
+This plot shows what the posterior looks like for both mu (the inferred means), and for sigma (the inferred variances) for the different groups. 
 
-```{r}
+## Ordinal regression 
+
+For more information, see this [tutorial](https://mjskay.github.io/tidybayes/articles/tidy-
+brms.html#ordinal-models).
+
+While running an ordinal regression is far from trivial in frequentist world, it's easy to do using "brms". 
+
+Let's load the cars data and turn the number of cylinders into an ordered factor: 
+
+```{r bda3-34}
 df.cars = mtcars %>% 
   mutate(cyl = ordered(cyl)) # creates an ordered factor
 ```
 
+Let's check that the cylinders are indeed ordered now: 
 
-```{r}
+```{r bda3-35}
 df.cars %>% str()
 ```
 
-```{r}
-fit.cars = brm(formula = cyl ~ mpg,
+```{r bda3-36}
+fit.brm8 = brm(formula = cyl ~ mpg,
                data = df.cars,
                family = "cumulative",
-               file = "cars",
+               file = "brm8",
                seed = 1)
 ```
 
-Visualize the results
+Visualize the results:
 
-```{r}
+```{r bda3-37}
 data_plot = df.cars %>%
   ggplot(aes(x = mpg, y = cyl, color = cyl)) +
   geom_point() +
@@ -508,7 +582,7 @@ data_plot = df.cars %>%
 
 fit_plot = df.cars %>%
   data_grid(mpg = seq_range(mpg, n = 101)) %>%
-  add_fitted_draws(fit.cars, value = "P(cyl | mpg)", category = "cyl") %>%
+  add_fitted_draws(fit.brm8, value = "P(cyl | mpg)", category = "cyl") %>%
   ggplot(aes(x = mpg, y = `P(cyl | mpg)`, color = cyl)) +
   stat_lineribbon(aes(fill = cyl),
                   alpha = 1/5,
@@ -517,23 +591,23 @@ fit_plot = df.cars %>%
   scale_fill_brewer(palette = "Dark2")
 
 plot_grid(ncol = 1, align = "v",
-  data_plot,
-  fit_plot
+          data_plot,
+          fit_plot
 )
 ```
 
 Posterior predictive check: 
 
-```{r}
+```{r bda3-38}
 df.cars %>%
   select(mpg) %>%
-  add_predicted_draws(fit.cars, prediction = "cyl", seed = 1234) %>%
+  add_predicted_draws(fit.brm8, prediction = "cyl", seed = 1234) %>%
   ggplot(aes(x = mpg, y = cyl)) +
   geom_count(color = "gray75") +
   geom_point(aes(fill = cyl),
-    data = df.cars,
-    shape = 21,
-    size = 2) +
+             data = df.cars,
+             shape = 21,
+             size = 2) +
   scale_fill_brewer(palette = "Dark2") +
   geom_label_repel(
     data = . %>% ungroup() %>% filter(cyl == "8") %>% filter(mpg == max(mpg)) %>% dplyr::slice(1),
@@ -555,496 +629,18 @@ df.cars %>%
 ```
 
 
-
-
-## Playing around with BRMS 
-
-### Simulate data 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-b0 = 1
-b1 = 2
-b2 = 3
-sample_size = 100 
-sd_residual = 2
-
-df.data = tibble(
-  x1 = runif(sample_size, min = 0, max = 1),
-  x2 = runif(sample_size, min = 0, max = 1),
-  y = b0 + b1 * x1 + b2 * x2 + rnorm(sample_size, sd = sd_residual)
-)
-
-```
-
-### Fit linear model 
-
-```{r}
-fit.lm = lm(formula = y ~ 1 + x1 + x2,
-             data = df.data)
-
-fit.lm %>% summary()
-```
-
-### Fit Bayesian regression 
-
-```{r, cache=TRUE}
-
-fit.brm = brm(formula = y ~ 1 + x1 + x2,
-              data = df.data,
-              file = "fit_brm")
-
-fit.brm %>% summary()
-```
-
-#### Inspecting the stan code 
-
-```{r}
-fit.brm %>% stancode()
-```
-
-One thing worth noticing: by default, "brms" centers the predictors which makes it easier to assign a default prior to the intercept. 
-
-#### Getting the priors
-
-Notice that we didn't specify any priors in the model. By default, "brms" assigns weakly informative priors to the parameters in the model. We can see what these are by running the following command: 
-
-```{r}
-fit.brm %>% 
-  prior_summary()
-```
-
-We can also get information about which priors need to be specified before fitting a model:
-
-```{r}
-get_prior(formula = y ~ 1 + x1 + x2,
-          family = "gaussian",
-          data = df.data)
-```
-
-#### Setting the priors
-
-```{r}
-fit.brm2 = brm(
-  formula = y ~ 1 + x1 + x2,
-  family = "gaussian",
-  data = df.data,
-  prior = c(
-    prior(normal(0, 10), class = "b", coef = "x1"),
-    prior(normal(0, 20), class = "b", coef = "x2"),
-    prior(student_t(3, 3, 10), class = "Intercept"),
-    prior(student_t(3, 0, 10), class = "sigma")
-  ),
-  inits = list(
-    list(Intercept = 0, sigma = 1, x1 = 0, x2 = 0),
-    list(Intercept = 0, sigma = 1, x1 = 0, x2 = 0),
-    list(Intercept = 0, sigma = 1, x1 = 0, x2 = 0),
-    list(Intercept = 1, sigma = 2, x1 = 2, x2 = -2)
-  ),
-  iter = 4000,
-  warmup = 1000,
-  chains = 4,
-  file = "brm2",
-  seed = 1
-)
-
-fit.brm2 %>% summary()
-```
-
-#### Hypothesis test 
-
-```{r}
-hypothesis(fit.brm,
-           hypothesis = "x1 > 0")
-```
-
-Test by hand
-
-```{r}
-fit.brm %>% 
-  gather_draws(b_x1) %>% 
-  clean_names() %>% 
-  summarize(p_value = 1 - (sum(value > 0) / n()))
-```
-
-Easy to specify contrasts and answer research questions in a very flexible way. 
-
-
-#### Exploring the posterior
-
-##### Pairs plot 
-
-```{r}
-fit.brm %>% 
-  posterior_samples() %>% 
-  select(b_Intercept:sigma) %>% 
-  ggpairs(lower = list(continuous = wrap("points", alpha = 0.03)),
-          upper = list(continuous = wrap("cor", size = 8))) + 
-  theme(panel.grid.major = element_blank())
-```
-
-##### Densities and trace plot 
-
-```{r}
-fit.brm %>% plot()
-```
-
-Using the "bayesplot" package
-
-```{r}
-df.samples = posterior_samples(fit.brm, add_chain = T)
-
-df.samples %>% 
-  select(b_Intercept:sigma, chain) %>% 
-  mcmc_trace(facet_args = list(ncol = 4))
-```
-
-##### Autocorrelation plot
-
-```{r}
-df.samples %>% 
-mcmc_acf(pars = fit.brm %>% get_variables() %>% .[1:4],
-         lags = 4)
-```
-
-Looking good! The autocorrelation should become very small as the lag increases (indicating that we are getting independent samples from the posterior). 
-
-
-
-##### Posterior predictive fit 
-
-Draw samples from the posterior and see whether it looks like the actual data. 
-
-```{r}
-pp_check(fit.brm, nsamples = 100)
-```
-
-Do this by hand: 
-
-```{r}
-# get the variable names in the model 
-get_variables(fit.brm)
-```
-
-```{r}
-# let's get the posterior samples 
-df.samples = fit.brm %>% 
-  spread_draws(b_Intercept, b_x1, b_x2, sigma) %>%
-  # gather_draws(b_Intercept, b_x1, b_x2, sigma) %>% 
-  clean_names()
-
-# generate predictions 
-df.predictions = df.samples %>%
-  sample_n(size = 100) %>%
-  rowwise() %>%
-  mutate(prediction = list(b_intercept + b_x1 * df.data$x1 + b_x2 * df.data$x2 + rnorm(n = nrow(df.data), sd = sigma))) %>%
-  unnest(prediction, .id = "sample")
-
-# plot posterior predictive 
-df.data %>% 
-  ggplot(data = .,
-         mapping = aes(x = y)) +
-  stat_density(geom = "line",
-               size = 1.5) +
-  stat_density(data = df.predictions,
-               mapping = aes(x = prediction,
-                             group = draw),
-               geom = "line",
-               position = "identity",
-               color = "lightblue",
-               alpha = 0.2)
-
-```
-
-##### Plotting point summaries and intervals 
-
-Intervals 
-
-```{r}
-fit.brm %>% 
-  gather_draws(b_Intercept, b_x1, b_x2, sigma) %>% 
-  median_qi() %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(x = variable, 
-                       y = value,
-                       ymin = lower,
-                       ymax = upper)) + 
-  geom_pointrange() +
-  coord_flip()
-```
-
-Intervals with densities
-
-```{r}
-fit.brm %>%
-  gather_draws(b_Intercept, b_x1, b_x2, sigma) %>%
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh()
-```
-
-
-##### Fit / prediction curves
-
-Fitted intervals 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>% 
-  add_fitted_draws(fit.brm) %>% 
-  clean_names() %>% 
-  ggplot(aes(x = x1, y = y)) +
-  stat_lineribbon(aes(y = value)) + 
-  geom_point(data = df.data) +
-  scale_fill_brewer(palette = "Greys")
-```
-
-Prediction intervals 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>% 
-  add_predicted_draws(fit.brm) %>% 
-  clean_names() %>% 
-  ggplot(aes(x = x1, y = y)) +
-  stat_lineribbon(aes(y = prediction)) + 
-  geom_point(data = df.data) +
-  scale_fill_brewer(palette = "Greys")
-```
-
-Show fits as individuals lines 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>%
-  add_fitted_draws(fit.brm, n = 10) %>%
-  clean_names() %>%
-  # arrange(.draw)
-  ggplot(aes(x = x1, y = y)) +
-  geom_line(aes(y = value, group = paste(x2, draw)), alpha = .1) +
-  geom_point(data = df.data) +
-  scale_color_brewer(palette = "Dark2")
-```
-
-
-
-## Comparing hypotheses 
-
-### Bayes factor 
-
-Specify one model with, and one model without the predictor and then use the `bayes_factor()` function from "brms". 
-
-```{r}
-# model with the treatment effect
-fit1 <- brm(
-  formula = count ~ log_Age_c + log_Base4_c + Trt_c,
-  data = epilepsy, family = negbinomial(), 
-  prior = prior(normal(0, 1), class = b),
-  file = "fit1",
-  save_all_pars = TRUE
-)
-summary(fit1)
-
-# model without the treatment effect
-fit2 <- brm(
-  count ~ log_Age_c + log_Base4_c,
-  data = epilepsy, family = negbinomial(), 
-  prior = prior(normal(0, 1), class = b),
-  file = "fit2",
-  save_all_pars = TRUE
-)
-summary(fit2)
-
-# compute the bayes factor
-bayes_factor(fit1, fit2)
-```
-
-### Posterior over a parameter
-
-
-
-```{r}
-fit1 %>%
-  gather_draws(b_Intercept, b_log_Age_c, b_log_Base4_c, b_Trt_c, shape) %>% 
-  mode_hdi() %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(x = variable, 
-                       y = value,
-                       ymin = lower,
-                       ymax = upper)) + 
-  geom_hline(yintercept = 0,
-             color = "red") +
-  geom_pointrange() + 
-  coord_flip()
-```
-
-
-## Dealing with heteroscedasticity 
-
-```{r}
-set.seed(1234)
-
-df.variance = tibble(
-  group = rep(c("a", "b"), each = 20),
-  response = rnorm(40, mean = rep(c(1, 3), each = 20), sd = rep(c(1, 3), each = 20))
-)
-
-df.variance %>%
-  ggplot(aes(x = group, y = response)) +
-  geom_point()
-```
-
-```{r, cache=TRUE}
-fit.variance = brm(
-  formula = bf(response ~ group,
-               sigma ~ group),
-  family = "gaussian", 
-  data = df.variance,
-  file = "variance"
-)
-```
-
-Visualize the results 
-
-```{r}
-grid = df.variance %>%
-  data_grid(group)
-
-fits = grid %>%
-  add_fitted_draws(fit.variance)
-
-preds = grid %>%
-  add_predicted_draws(fit.variance)
-
-df.variance %>%
-  ggplot(aes(x = response, y = group)) +
-  geom_halfeyeh(aes(x = .value), relative_scale = 0.7, position = position_nudge(y = 0.1), data = fits) +
-  stat_intervalh(aes(x = .prediction), data = preds) +
-  geom_point(data = df.variance) +
-  scale_color_brewer()
-```
-
-```{r}
-grid %>%
-  add_fitted_draws(fit.variance, dpar = TRUE) %>%
-  ggplot(aes(x = sigma, y = group)) +
-  geom_halfeyeh() +
-  geom_vline(xintercept = 0, linetype = "dashed")
-```
-
-How different are the groups? 
-
-```{r}
-fit.variance %>% 
-  gather_draws(b_Intercept, b_sigma_Intercept, b_groupb, b_sigma_groupb) %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh()
-```
-
-Linear model 
-
-```{r}
-fit = lm(formula = response ~ 1 + group,
-         data = df.variance)
-
-fit %>% summary()
-```
-
-## Summarizing the posterior 
-
-Quantile interval vs. highest density interval 
-
-```{r}
-# make example reproducible
-set.seed(1)
-
-# generate data 
-df.multimodal = tibble(
-  x = c(rnorm(5000, 0, 1), rnorm(2500, 4, 1))
-)
-
-```
-
-Visualize: 
-
-```{r}
-df.multimodal %>%
-  ggplot(aes(x = x)) +
-  stat_density(fill = "gray75",
-               color = "black") +
-  stat_pointintervalh(aes(y = -0.025), point_interval = mode_hdi, .width = c(.95, .80)) +
-  annotate("text", label = "mode, 80% and 95% highest-density intervals", x = 6, y = -0.025, hjust = 0, vjust = 0.3) +
-  stat_pointintervalh(aes(y = -0.05), point_interval = median_qi, .width = c(.95, .80)) +
-  annotate("text", label = "median, 80% and 95% quantile intervals", x = 6, y = -0.05, hjust = 0, vjust = 0.3) +
-  stat_pointintervalh(aes(y = -0.075), point_interval = mode_hdci, .width = c(.95, .80)) +
-  annotate("text", label = "mode, 80% and 95% continuous highest-density intervals", x = 6, y = -0.075, hjust = 0, vjust = 0.3) +
-  xlim(-3.5, 16)
-```
-
-## Simulate linear and Bayesian regression 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-# simulate data
-n = 10
-df.conditions = tibble(condition = rep(c("A","B","C","D","E"), n),
-                       response = rnorm(n * 5, c(0,1,2,1,-1), 0.5))
-
-```
-
-Fit linear model: 
-
-```{r}
-fit.lm1 = lm(formula = response ~ 1 + condition,
-             data = df.conditions)
-
-fit.lm1 %>% summary()
-```
-
-Fit Bayesian model: 
-
-```{r, cache=TRUE}
-fit.brm1 = brm(formula = response ~ 1 + condition,
-               data = df.conditions)
-```
-
-
-
-
-## Scratch pad 
-
-```{r}
-data(rugged, package = "rethinking")
-```
-
-
-
 ## Additional resources 
 
 - [Tutorial on visualizing brms posteriors with tidybayes](https://mjskay.github.io/tidybayes/articles/tidy-brms.html)
 - [Hypothetical outcome plots](https://mucollective.northwestern.edu/files/2018-HOPsTrends-InfoVis.pdf)
 - [Visual MCMC diagnostics](https://cran.r-project.org/web/packages/bayesplot/vignettes/visual-mcmc-diagnostics.html#general-mcmc-diagnostics)
+- [How to model slider data the Baysian way](https://vuorre.netlify.com/post/2019/02/18/analyze-analog-scale-
+ratings-with-zero-one-inflated-beta-models/#zoib-regression)
 
 ## Session info 
 
-Information about this R session including which version of R was used, and what packages were loaded. 
+Information about this R session including which version of R was used, and what packages were loaded.
 
 ```{r session}
 sessionInfo()
 ```
-
-## References
-
-

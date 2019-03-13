@@ -367,10 +367,11 @@ fit.moderation %>%
 ```{r}
 # generate data grid with three levels of the moderator 
 df.newdata = df.moderation %>% 
-  expand(x = c(min(x), max(x)), 
-            z = c(mean(z) - sd(z),
-                  mean(z),
-                  mean(z) + sd(z))) %>% 
+  expand(x = c(min(x), 
+               max(x)), 
+         z = c(mean(z) - sd(z),
+               mean(z),
+               mean(z) + sd(z))) %>% 
   mutate(moderator = rep(c("low", "average", "high"), nrow(.)/3))
 
 # predictions for the three levels of the moderator 

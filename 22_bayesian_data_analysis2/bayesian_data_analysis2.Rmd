@@ -9,8 +9,6 @@ output:
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=21"]
-bibliography: [packages.bib]
-nocite: '@*'
 ---
 
 ```{r setup, include=FALSE}
@@ -23,24 +21,25 @@ knitr::opts_chunk$set(
 
 # Bayesian data analysis 2
 
+```{r install-packages, eval=FALSE, echo=FALSE, include=FALSE}
+install.packages(c("tidybayes", "extraDistr"))
+devtools::install_github("greta-dev/greta")
+```
+
+
 ## Load packages and set plotting theme  
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("modelr")    # for permutation test
-library("greta")    # for writing Bayesian models
-library("tidybayes")    # tidying up results from Bayesian models
-library("brms")    # Bayesian regression models with Stan
+library("greta")      # for writing Bayesian models
+library("tidybayes")  # tidying up results from Bayesian models
 library("cowplot")    # for making figure panels
-library("ggrepel") # for labels in ggplots 
-library("gganimate") # for animations
+library("ggrepel")    # for labels in ggplots 
+library("gganimate")  # for animations
 library("extraDistr") # additional probability distributions
 library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -50,94 +49,48 @@ theme_set(
 )
 ```
 
-## Distributions 
+## Doing Bayesian inference "by hand"
 
-### Normal vs Student-t distribution
+### Sequential updating based on the Beta distribution 
 
-```{r}
-tibble(x = c(-5, 5)) %>% 
-  ggplot(aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                size = 1,
-                color = "blue") +
-  stat_function(fun = "dt",
-                size = 1,
-                color = "red",
-                args = list(df = 1))
-```
+```{r bda2-1}
+# data 
+data = c(0, 1, 1, 0, 1, 1, 1, 1)
 
-### Beta distributions
+# whether observation is a success or failure 
+success = c(0, cumsum(data)) 
+failure = c(0, cumsum(1 - data))
+# I've added 0 at the beginning to show the prior
 
-```{r}
-
-fun.draw_beta = function(shape1, shape2){
+# plotting function
+fun.plot_beta = function(success, failure){
   ggplot(data = tibble(x = c(0, 1)),
-         aes(x = x)) + 
-  stat_function(fun = "dbeta",
-                size = 1,
-                color = "black",
-                args = list(shape1 = shape1, shape2 = shape2)) +
-    annotate(geom = "text", 
-             label = str_c("Beta(", shape1,",",shape2,")"),
-             x = 0.5,
-             y = Inf,
-             hjust = 0.5,
-             vjust = 1.1,
-             size = 4) +
-    scale_x_continuous(breaks = seq(0, 1, 0.2)) +
-    theme(axis.title.x = element_blank())
+         mapping = aes(x = x)) +
+    stat_function(fun = "dbeta",
+                  args = list(shape1 = success + 1, shape2 = failure + 1),
+                  geom = "area",
+                  color = "black",
+                  fill = "lightblue") +
+    coord_cartesian(expand = F) +
+    scale_x_continuous(breaks = seq(0.25, 0.75, 0.25)) + 
+    theme(axis.title = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          plot.margin = margin(r = 1, t = 0.5, unit = "cm"))
 }
 
+# generate the plots 
+plots = map2(success, failure, ~ fun.plot_beta(.x, .y))
 
-shape1 = c(1, 0.5, 5, 1, 8, 20)
-shape2 = c(1, 0.5, 5, 9, 2, 20)
-
-p.list = map2(.x = shape1, .y = shape2, ~ fun.draw_beta(.x, .y))
-
-plot_grid(
-  plotlist = p.list
-)
-
+# make a grid of plots
+plot_grid(plotlist = plots)
 ```
-
-### Normal distributions 
-
-```{r}
-tibble(x = c(-10, 10)) %>% 
-  ggplot(aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                size = 1,
-                color = "blue",
-                args = list(sd = 1)) +
-  stat_function(fun = "dnorm",
-                size = 1,
-                color = "red",
-                args = list(sd = 5))
-```
-
-### Distributions for non-negative parameters 
-
-```{r}
-tibble(x = c(0, 10)) %>% 
-  ggplot(aes(x = x)) + 
-  stat_function(fun = "dcauchy",
-                size = 1,
-                color = "blue",
-                args = list(location = 0, scale = 1),
-                xlim = c(0, 10)) +
-  stat_function(fun = "dgamma",
-                size = 1,
-                color = "red",
-                args = list(shape = 4, rate = 2))
-```
-
-## Writing Bayesian models 
 
 ### Coin flip example 
 
 Is the coin biased? 
 
-```{r}
+```{r bda2-2}
 # data 
 data = rep(0:1, c(8, 2))
 
@@ -145,9 +98,9 @@ data = rep(0:1, c(8, 2))
 theta = c(0.1, 0.5, 0.9)
 
 # prior 
-# prior = c(0.25, 0.5, 0.25)
-# prior = c(0.1, 0.1, 0.8)
-# prior = c(0.000001, 0.000001, 0.999998)
+prior = c(0.25, 0.5, 0.25)
+# prior = c(0.1, 0.1, 0.8) # alternative setting of the prior
+# prior = c(0.000001, 0.000001, 0.999998) # another prior setting 
 
 # likelihood 
 likelihood = dbinom(sum(data == 1), size = length(data), prob = theta)
@@ -165,9 +118,9 @@ df.coins = tibble(
 
 ```
 
-Visualize the results 
+Visualize the results: 
 
-```{r}
+```{r bda2-3}
 df.coins %>% 
   gather("index", "value", -theta) %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
@@ -192,57 +145,11 @@ df.coins %>%
         axis.line = element_blank())
 ```
 
-
-### From scratch 
-
-```{r}
-# data
-flips = rep(0:1, c(8, 2))
-n_flips = length(flips)
-bias = 0.9
-theta = seq(0, 1, 0.01)
-
-# prior
-prior = rep(1, length(theta)) / length(theta) #uniform
-
-# likelihood 
-likelihood = dbinom(sum(flips == 1), size = n_flips, prob = theta)
-
-# posterior 
-posterior = likelihood * prior / sum(likelihood * prior)
-
-# save as data frame
-df.bayes = tibble(
-  theta,
-  prior,
-  likelihood, 
-  posterior
-)
-```
-
-Visualize the results 
-
-```{r}
-df.bayes %>% 
-  gather("index", "value", -theta) %>% 
-  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior"))) %>% 
-ggplot(data = .,
-       mapping = aes(x = theta,
-                     y = value,
-                     color = index)) +
-  geom_point(size = 2) + 
-  facet_grid(rows = vars(index),
-             switch = 'y',
-             scales = "free_y") +
-  labs(y = "") +
-  theme(legend.position = "none",
-        axis.text.y = element_blank(),
-        axis.ticks.y = element_blank())
-```
+### Bayesian inference by discretization
 
 ### Effect of the prior 
 
-```{r}
+```{r bda2-4, fig.cap="Illustration of how the prior affects the posterior."}
 # grid
 theta = seq(0, 1, 0.01)
 
@@ -250,10 +157,10 @@ theta = seq(0, 1, 0.01)
 data = rep(0:1, c(8, 2))
 
 # calculate posterior
-df.prior = tibble(theta = theta, 
-                  prior_uniform = dbeta(grid, shape1 = 1, shape2 = 1),
-                  prior_normal = dbeta(grid, shape1 = 5, shape2 = 5),
-                  prior_biased = dbeta(grid, shape1 = 8, shape2 = 2)) %>% 
+df.prior_effect = tibble(theta = theta, 
+                  prior_uniform = dbeta(theta, shape1 = 1, shape2 = 1),
+                  prior_normal = dbeta(theta, shape1 = 5, shape2 = 5),
+                  prior_biased = dbeta(theta, shape1 = 8, shape2 = 2)) %>% 
   gather("prior_index", "prior", -theta) %>% 
   mutate(likelihood = dbinom(sum(data == 1),
                              size = length(data),
@@ -262,12 +169,9 @@ df.prior = tibble(theta = theta,
   mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
   ungroup() %>% 
   gather("index", "value", -c(theta, prior_index))
-```
 
-Visualize the results 
-
-```{r}
-df.prior %>% 
+# make the plot
+df.prior_effect %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
          prior_index = factor(prior_index,
                               levels = c("prior_uniform", "prior_normal", "prior_biased"),
@@ -295,32 +199,26 @@ df.prior %>%
 
 ### Effect of the likelihood 
 
-```{r}
+```{r bda2-5, fig.cap="Illustration of how the likelihood of the data affects the posterior."}
 # grid
 theta = seq(0, 1, 0.01)
 
-df.likelihood = tibble(theta = theta, 
-                  prior = dbeta(grid, shape1 = 2, shape2 = 8),
-                  likelihood_left = dbeta(grid, shape1 = 1, shape2 = 9),
-                  likelihood_center = dbeta(grid, shape1 = 5, shape2 = 5),
-                  likelihood_right = dbeta(grid, shape1 = 9, shape2 = 1)
-                  ) %>% 
+df.likelihood_effect = tibble(theta = theta, 
+                              prior = dbeta(theta, shape1 = 2, shape2 = 8),
+                              likelihood_left = dbeta(theta, shape1 = 1, shape2 = 9),
+                              likelihood_center = dbeta(theta, shape1 = 5, shape2 = 5),
+                              likelihood_right = dbeta(theta, shape1 = 9, shape2 = 1)) %>% 
   gather("likelihood_index", "likelihood", -c("theta", "prior")) %>% 
   group_by(likelihood_index) %>% 
   mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
   ungroup() %>% 
   gather("index", "value", -c(theta, likelihood_index))
-  
-```
 
-Visualize the results 
-
-```{r}
-df.likelihood %>% 
+df.likelihood_effect %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
          likelihood_index = factor(likelihood_index,
-                              levels = c("likelihood_left", "likelihood_center", "likelihood_right"),
-                              labels = c("left", "center", "right"))) %>% 
+                                   levels = c("likelihood_left", "likelihood_center", "likelihood_right"),
+                                   labels = c("left", "center", "right"))) %>% 
   ggplot(data = .,
          mapping = aes(x = theta,
                        y = value,
@@ -341,36 +239,31 @@ df.likelihood %>%
         axis.text.x = element_text(size = 10),
         axis.line = element_blank(),
         strip.text.x = element_blank())
+  
 ```
 
 ### Effect of the sample size  
 
-```{r}
+```{r bda2-6}
 # grid
 theta = seq(0, 1, 0.01)
 
-df.likelihood = tibble(theta = theta, 
-                  prior = dbeta(grid, shape1 = 5, shape2 = 5),
-                  likelihood_low = dbeta(grid, shape1 = 2, shape2 = 8),
-                  likelihood_medium = dbeta(grid, shape1 = 10, shape2 = 40),
-                  likelihood_high = dbeta(grid, shape1 = 20, shape2 = 80)
-                  ) %>% 
+df.sample_size_effect = tibble(theta = theta, 
+                               prior = dbeta(theta, shape1 = 5, shape2 = 5),
+                               likelihood_low = dbeta(theta, shape1 = 2, shape2 = 8),
+                               likelihood_medium = dbeta(theta, shape1 = 10, shape2 = 40),
+                               likelihood_high = dbeta(theta, shape1 = 20, shape2 = 80)) %>% 
   gather("likelihood_index", "likelihood", -c("theta", "prior")) %>% 
   group_by(likelihood_index) %>% 
   mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
   ungroup() %>% 
   gather("index", "value", -c(theta, likelihood_index))
-  
-```
 
-Visualize the results 
-
-```{r}
-df.likelihood %>% 
+df.sample_size_effect %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
          likelihood_index = factor(likelihood_index,
-                              levels = c("likelihood_low", "likelihood_medium", "likelihood_high"),
-                              labels = c("low", "medium", "high"))) %>% 
+                                   levels = c("likelihood_low", "likelihood_medium", "likelihood_high"),
+                                   labels = c("n = low", "n = medium", "n = high"))) %>% 
   ggplot(data = .,
          mapping = aes(x = theta,
                        y = value,
@@ -389,13 +282,93 @@ df.likelihood %>%
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.text.x = element_text(size = 10),
-        axis.line = element_blank(),
-        strip.text.x = element_blank())
+        axis.line = element_blank())
 ```
+
+## Distributions 
+
+### Normal vs Student-t distribution
+
+```{r bda2-7, fig.cap="Comparison between the normal distribution and the student-t distribution."}
+tibble(x = c(-5, 5)) %>% 
+  ggplot(aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                color = "blue") +
+  stat_function(fun = "dt",
+                size = 1,
+                color = "red",
+                args = list(df = 1))
+```
+
+### Beta distributions
+
+```{r bda2-8, fig.cap="Beta distributions with different parameter settings."}
+
+fun.draw_beta = function(shape1, shape2){
+  ggplot(data = tibble(x = c(0, 1)),
+         aes(x = x)) + 
+  stat_function(fun = "dbeta",
+                size = 1,
+                color = "black",
+                args = list(shape1 = shape1, shape2 = shape2)) +
+    annotate(geom = "text", 
+             label = str_c("Beta(", shape1,",",shape2,")"),
+             x = 0.5,
+             y = Inf,
+             hjust = 0.5,
+             vjust = 1.1,
+             size = 4) +
+    scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+    theme(axis.title.x = element_blank())
+}
+
+
+shape1 = c(1, 0.5, 5, 1, 8, 20)
+shape2 = c(1, 0.5, 5, 9, 2, 20)
+
+p.list = map2(.x = shape1, .y = shape2, ~ fun.draw_beta(.x, .y))
+
+plot_grid(plotlist = p.list)
+```
+
+### Normal distributions 
+
+```{r bda2-9, fig.cap="Normal distributions with different standard deviation."}
+tibble(x = c(-10, 10)) %>% 
+  ggplot(aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                color = "blue",
+                args = list(sd = 1)) +
+  stat_function(fun = "dnorm",
+                size = 1,
+                color = "red",
+                args = list(sd = 5))
+```
+
+### Distributions for non-negative parameters 
+
+```{r bda2-10, fig.cap="Cauchy and Gamma distribution."}
+tibble(x = c(0, 10)) %>% 
+  ggplot(aes(x = x)) + 
+  stat_function(fun = "dcauchy",
+                size = 1,
+                color = "blue",
+                args = list(location = 0, scale = 1),
+                xlim = c(0, 10)) +
+  stat_function(fun = "dgamma",
+                size = 1,
+                color = "red",
+                args = list(shape = 4, rate = 2))
+```
+
 
 ## Inference via sampling 
 
-```{r}
+Example for how we can compute probabilities based on random samples generated from a distribution. 
+
+```{r bda2-11}
 # generate samples 
 df.samples = tibble(x = rnorm(n = 10000, mean = 1, sd = 2)) 
 
@@ -420,110 +393,18 @@ pnorm(4, mean = 1, sd = 2) - pnorm(0, mean = 1, sd = 2)
 
 ## Greta 
 
-### Gaussian example
-
-```{r}
-# prior 
-mu = normal(mean = 0, sd = 10)
-sigma = cauchy(location = 0, scale = 3, truncation = c(0, Inf))
-  
-# data
-data = rnorm(n = 20, mean = 10, sd = 5)
-
-# likelihood 
-distribution(data) = normal(mu, sigma)
-
-# fit model 
-m1 = model(mu, sigma)
-
-# sample from the model 
-draws = mcmc(m1, n_samples = 1000)
-
-# visualize posterior 
-df.samples1 = draws %>% 
-  tidy_draws() %>% 
-  clean_names()
-
-df.samples1 %>% 
-  gather("index", "value", c(mu, sigma)) %>% 
-  ggplot(aes(x = value)) + 
-  stat_density(geom = "line") +
-  facet_grid(cols = vars(index),
-             scales = "free")
-```
-
-```{r}
-# prior 
-mu = normal(mean = 0, sd = 10)
-sigma = cauchy(location = 0, scale = 3, truncation = c(0, Inf))
-  
-# data
-data = rnorm(n = 20, mean = 6, sd = 8)
-
-# likelihood 
-distribution(data) = normal(mu, sigma)
-
-# fit model 
-m2 = model(mu, sigma)
-
-# sample from the model 
-draws = mcmc(m2, n_samples = 1000)
-
-# visualize posterior 
-df.samples2 = draws %>% 
-  tidy_draws() %>% 
-  clean_names()
-
-df.samples2 %>% 
-  gather("index", "value", c(mu, sigma)) %>% 
-  ggplot(aes(x = value)) + 
-  stat_density(geom = "line") +
-  facet_grid(cols = vars(index),
-             scales = "free")
-```
-
-```{r}
-df.comparison = df.samples1 %>% 
-  rename(mu_1 = mu,
-         sigma_1 = sigma) %>% 
-  left_join(df.samples2 %>% 
-              rename(mu_2 = mu,
-                     sigma_2 = sigma),
-            by = c("chain", "iteration", "draw")) %>% 
-  mutate(mu_diff = mu_1 - mu_2,
-         sigma_diff = sigma_1 - sigma_2)
-
-df.comparison %>% 
-  gather("index", "value", c(mu_diff, sigma_diff)) %>% 
-  ggplot(aes(x = value)) + 
-  stat_density(geom = "line") +
-  facet_grid(cols = vars(index),
-             scales = "free")
-
-# df.comparison %>% 
-#   select(-c(chain, iteration)) %>% 
-#     head(10) %>% 
-#     kable(digits = 2) %>% 
-#     kable_styling(bootstrap_options = "striped",
-#                 full_width = F)
-```
-
-```{r}
-df.comparison %>% 
-  summarize(mu_p_value = sum(mu_diff < 0)/n(),
-            sigma_p_value = sum(sigma_diff > 0)/n())
-```
+You can find out more about how get started with "greta" here: [https://greta-stats.org/articles/get_started.html](https://greta-stats.org/articles/get_started.html). Make sure to install the development version of "greta" (as shown in the "install-packages" code chunk above: `devtools::install_github("greta-dev/greta")`).
 
 ### Attitude data set 
 
-```{r}
+```{r bda2-12}
 # load the attitude data set 
 df.attitude = attitude
 ```
 
 Visualize relationship between how well complaints are handled and the overall rating of an employee
 
-```{r}
+```{r bda2-13}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
@@ -532,7 +413,7 @@ ggplot(data = df.attitude,
 
 ### Frequentist analysis 
 
-```{r}
+```{r bda2-14}
 # fit model 
 fit = lm(formula = rating ~ 1 + complaints, 
          data = df.attitude)
@@ -540,9 +421,10 @@ fit = lm(formula = rating ~ 1 + complaints,
 # print summary
 fit %>% summary()
 ```
-Visualize model predictions
 
-```{r}
+Visualize the model's predictions
+
+```{r bda2-15}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
@@ -551,17 +433,11 @@ ggplot(data = df.attitude,
   geom_point()
 ```
 
-
-### Bayesian simple regression
+### Bayesian regression
 
 #### Fit the model
 
-```{r}
-# library("greta")
-# library("tidybayes")
-
-df.attitude = attitude
-
+```{r bda2-16}
 # variables & priors
 b0 = normal(0, 10)
 b1 = normal(0, 10)
@@ -575,10 +451,18 @@ distribution(df.attitude$rating) = normal(mu, sd)
 
 # define the model
 m = model(b0, b1, sd)
+```
 
+Visualize the model as graph: 
+
+```{r bda2-17}
 # plotting
 plot(m)
+```
 
+Draw samples from the posterior distribution: 
+
+```{r bda2-18, cache=TRUE, message=FALSE}
 # sampling
 draws = mcmc(m, n_samples = 1000)
 
@@ -589,7 +473,9 @@ df.draws = tidy_draws(draws) %>%
 
 #### Visualize the priors
 
-```{r}
+These are the priors I used for the intercept, regression weights, and the standard deviation of the Gaussian likelihood function:  
+
+```{r bda2-19}
 # Gaussian
 ggplot(tibble(x = c(-30, 30)),
        aes(x = x)) +
@@ -604,23 +490,13 @@ ggplot(tibble(x = c(0, 30)),
                 size = 2,
                 args = list(location = 0,
                             scale = 3))
-
-
 ```
 
 #### Visualize the posteriors
 
-```{r}
-df.draws %>% 
-  head(10) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-              full_width = F)
+This is what the posterior looks like for the three parameters in the model: 
 
-```
-
-
-```{r}
+```{r bda2-20}
 df.draws %>% 
   select(draw:sd) %>% 
   gather("index", "value", -draw) %>% 
@@ -644,7 +520,9 @@ df.draws %>%
 
 #### Visualize model predictions 
 
-```{r}
+Let's take some samples from the posterior to visualize the model predictions: 
+
+```{r bda2-21}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints, 
                      y = rating)) + 
@@ -659,7 +537,9 @@ ggplot(data = df.attitude,
 
 #### Posterior predictive check 
 
-```{r}
+Let's make an animation that illustrates what predicted data sets (based on samples from the posterior) would look like: 
+
+```{r bda2-22, message=FALSE}
 p = df.draws %>% 
   sample_n(size = 10) %>%  
   mutate(complaints = list(seq(min(df.attitude$complaints),
@@ -679,13 +559,14 @@ p = df.draws %>%
 
 animate(p, nframes = 60, width = 800, height = 600, res = 96, type = "cairo")
 
-anim_save("posterior_predictive.gif")
-
+# anim_save("posterior_predictive.gif")
 ```
 
 #### Prior predictive check 
 
-```{r}
+And let's illustrate what data we would have expected to see just based on the information that we encoded in our priors. 
+
+```{r bda2-23, message=FALSE}
 sample_size = 10
 
 p = tibble(
@@ -705,426 +586,12 @@ p = tibble(
   geom_point(data = df.attitude,
              aes(y = rating,
                  x = complaints)) +
-  # coord_cartesian(xlim = c(20, 100),
-  #                 ylim = c(20, 100)) +
   transition_manual(draw)
 
 animate(p, nframes = 60, width = 800, height = 600, res = 96, type = "cairo")
 
-anim_save("prior_predictive.gif")
-
+# anim_save("prior_predictive.gif")
 ```
-
-
-## Bayesian sequential inference 
-
-```{r}
-data = c(0, 1, 1, 0, 1, 1, 1, 1)
-success = c(0, cumsum(data)) 
-failure = c(0, cumsum(1 - data))
-# I've added 0 at the beginning to show the prior
-
-fun.plot_beta = function(success, failure){
-  ggplot(data = tibble(x = c(0, 1)),
-         mapping = aes(x = x)) +
-    stat_function(fun = "dbeta",
-                  args = list(shape1 = success + 1, shape2 = failure + 1),
-                  geom = "area",
-                  color = "black",
-                  fill = "lightblue") +
-    coord_cartesian(expand = F) +
-    scale_x_continuous(breaks = seq(0.25, 0.75, 0.25)) + 
-    theme(axis.title = element_blank(),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank(),
-          plot.margin = margin(r = 1, t = 0.5, unit = "cm"))
-}
-
-plots = map2(success, failure, ~ fun.plot_beta(.x, .y))
-plot_grid(plotlist = plots)
-
-```
-
-
-## Playing around with BRMS 
-
-### Simulate data 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-b0 = 1
-b1 = 2
-b2 = 3
-sample_size = 100 
-sd_error = 2
-
-df.data = tibble(
-  x1 = runif(sample_size, min = 0, max = 1),
-  x2 = runif(sample_size, min = 0, max = 1),
-  y = b0 + b1 * x1 + b2 * x2 + rnorm(sample_size, sd = sd_error)
-)
-```
-
-### Fit linear model 
-
-```{r}
-fit.lm = lm(formula = y ~ 1 + x1 + x2,
-             data = df.data)
-
-fit.lm %>% summary()
-```
-
-### Fit Bayesian regression 
-
-```{r, cache=TRUE}
-fit.brm = brm(formula = y ~ 1 + x1 + x2,
-              data = df.data)
-
-fit.brm %>% summary()
-```
-
-#### Exploring the posterior
-
-```{r}
-fit.brm %>% plot()
-```
-
-#### Posterior predictive fit 
-
-Draw samples from the posterior and see whether it looks like the actual data. 
-
-```{r}
-pp_check(fit.brm, nsamples = 100)
-```
-
-Do this by hand: 
-
-```{r}
-# get the variable names in the model 
-get_variables(fit.brm)
-```
-
-```{r}
-# let's get the posterior samples 
-df.samples = fit.brm %>% 
-  spread_draws(b_Intercept, b_x1, b_x2, sigma) %>%
-  # gather_draws(b_Intercept, b_x1, b_x2, sigma) %>% 
-  clean_names()
-
-# generate predictions 
-df.predictions = df.samples %>%
-  sample_n(size = 100) %>%
-  rowwise() %>%
-  mutate(prediction = list(b_intercept + b_x1 * df.data$x1 + b_x2 * df.data$x2 + rnorm(n = nrow(df.data), sd = sigma))) %>%
-  unnest(prediction, .id = "sample")
-
-# plot posterior predictive 
-df.data %>% 
-  ggplot(data = .,
-         mapping = aes(x = y)) +
-  stat_density(geom = "line",
-               size = 1.5) +
-  stat_density(data = df.predictions,
-               mapping = aes(x = prediction,
-                             group = draw),
-               geom = "line",
-               position = "identity",
-               color = "lightblue",
-               alpha = 0.2)
-
-```
-
-#### Plotting point summaries and intervals 
-
-Intervals 
-
-```{r}
-fit.brm %>% 
-  gather_draws(b_Intercept, b_x1, b_x2, sigma) %>% 
-  median_qi() %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(x = variable, 
-                       y = value,
-                       ymin = lower,
-                       ymax = upper)) + 
-  geom_pointrange() +
-  coord_flip()
-```
-
-Intervals with densities
-
-```{r}
-fit.brm %>%
-  gather_draws(b_Intercept, b_x1, b_x2, sigma) %>%
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh()
-```
-
-
-#### Fit / prediction curves
-
-Fitted intervals 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>% 
-  add_fitted_draws(fit.brm) %>% 
-  clean_names() %>% 
-  ggplot(aes(x = x1, y = y)) +
-  stat_lineribbon(aes(y = value)) + 
-  geom_point(data = df.data) +
-  scale_fill_brewer(palette = "Greys")
-```
-
-Prediction intervals 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>% 
-  add_predicted_draws(fit.brm) %>% 
-  clean_names() %>% 
-  ggplot(aes(x = x1, y = y)) +
-  stat_lineribbon(aes(y = prediction)) + 
-  geom_point(data = df.data) +
-  scale_fill_brewer(palette = "Greys")
-```
-
-Show fits as individuals lines 
-
-```{r}
-df.data %>% 
-  data_grid(x1 = seq_range(x1, n = 10),
-            x2 = seq_range(x2, n = 10)) %>%
-  add_fitted_draws(fit.brm, n = 10) %>%
-  clean_names() %>%
-  # arrange(.draw)
-  ggplot(aes(x = x1, y = y)) +
-  geom_line(aes(y = value, group = paste(x2, draw)), alpha = .1) +
-  geom_point(data = df.data) +
-  scale_color_brewer(palette = "Dark2")
-```
-
-## Dealing with heteroscedasticity 
-
-```{r}
-set.seed(1234)
-
-df.variance = tibble(
-  group = rep(c("a", "b"), each = 20),
-  response = rnorm(40, mean = rep(c(1, 3), each = 20), sd = rep(c(1, 3), each = 20))
-)
-
-df.variance %>%
-  ggplot(aes(x = group, y = response)) +
-  geom_point()
-```
-
-```{r, cache=TRUE}
-fit.variance = brm(
-  formula = bf(response ~ group, sigma ~ group),
-  data = df.variance
-)
-```
-
-Visualize the results 
-
-```{r}
-grid = df.variance %>%
-  data_grid(group)
-
-fits = grid %>%
-  add_fitted_draws(fit.variance)
-
-preds = grid %>%
-  add_predicted_draws(fit.variance)
-
-df.variance %>%
-  ggplot(aes(x = response, y = group)) +
-  geom_halfeyeh(aes(x = .value), relative_scale = 0.7, position = position_nudge(y = 0.1), data = fits) +
-  stat_intervalh(aes(x = .prediction), data = preds) +
-  geom_point(data = df.variance) +
-  scale_color_brewer()
-```
-
-```{r}
-grid %>%
-  add_fitted_draws(fit.variance, dpar = TRUE) %>%
-  ggplot(aes(x = sigma, y = group)) +
-  geom_halfeyeh() +
-  geom_vline(xintercept = 0, linetype = "dashed")
-```
-
-How different are the groups? 
-
-```{r}
-fit.variance %>% 
-  gather_draws(b_Intercept, b_sigma_Intercept, b_groupb, b_sigma_groupb) %>% 
-  clean_names() %>% 
-  ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh()
-```
-
-Linear model 
-
-```{r}
-fit = lm(formula = response ~ 1 + group,
-         data = df.variance)
-
-fit %>% summary()
-```
-
-## Summarizing the posterior 
-
-Quantile interval vs. highest density interval 
-
-```{r}
-# make example reproducible
-set.seed(1)
-
-# generate data 
-df.multimodal = tibble(
-  x = c(rnorm(5000, 0, 1), rnorm(2500, 4, 1))
-)
-
-```
-
-Visualize: 
-
-```{r}
-df.multimodal %>%
-  ggplot(aes(x = x)) +
-  stat_density(fill = "gray75",
-               color = "black") +
-  stat_pointintervalh(aes(y = -0.025), point_interval = mode_hdi, .width = c(.95, .80)) +
-  annotate("text", label = "mode, 80% and 95% highest-density intervals", x = 6, y = -0.025, hjust = 0, vjust = 0.3) +
-  stat_pointintervalh(aes(y = -0.05), point_interval = median_qi, .width = c(.95, .80)) +
-  annotate("text", label = "median, 80% and 95% quantile intervals", x = 6, y = -0.05, hjust = 0, vjust = 0.3) +
-  stat_pointintervalh(aes(y = -0.075), point_interval = mode_hdci, .width = c(.95, .80)) +
-  annotate("text", label = "mode, 80% and 95% continuous highest-density intervals", x = 6, y = -0.075, hjust = 0, vjust = 0.3) +
-  xlim(-3.5, 16)
-```
-
-## Simulate linear and Bayesian regression 
-
-```{r}
-# make example reproducible 
-set.seed(1)
-
-# simulate data
-n = 10
-df.conditions = tibble(condition = rep(c("A","B","C","D","E"), n),
-                       response = rnorm(n * 5, c(0,1,2,1,-1), 0.5))
-
-```
-
-Fit linear model: 
-
-```{r}
-fit.lm1 = lm(formula = response ~ 1 + condition,
-             data = df.conditions)
-
-fit.lm1 %>% summary()
-```
-
-Fit Bayesian model: 
-
-```{r, cache=TRUE}
-fit.brm1 = brm(formula = response ~ 1 + condition,
-               data = df.conditions)
-```
-
-## Ordinal regression 
-
-```{r}
-df.cars = mtcars %>% 
-  mutate(cyl = ordered(cyl)) # creates an ordered factor
-```
-
-
-```{r}
-df.cars %>% str()
-```
-
-```{r}
-m.cars = brm(formula = cyl ~ mpg,
-             data = df.cars,
-             family = cumulative,
-             seed = 1) # to make this reproducible
-```
-
-Visualize the results
-
-```{r}
-data_plot = df.cars %>%
-  ggplot(aes(x = mpg, y = cyl, color = cyl)) +
-  geom_point() +
-  scale_color_brewer(palette = "Dark2", name = "cyl")
-
-fit_plot = df.cars %>%
-  data_grid(mpg = seq_range(mpg, n = 101)) %>%
-  add_fitted_draws(m.cars, value = "P(cyl | mpg)", category = "cyl") %>%
-  ggplot(aes(x = mpg, y = `P(cyl | mpg)`, color = cyl)) +
-  stat_lineribbon(aes(fill = cyl),
-                  alpha = 1/5,
-                  .width = c(0.95)) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_fill_brewer(palette = "Dark2")
-
-plot_grid(ncol = 1, align = "v",
-  data_plot,
-  fit_plot
-)
-```
-
-
-Posterior predictive check: 
-
-```{r}
-df.cars %>%
-  select(mpg) %>%
-  add_predicted_draws(m.cars, prediction = "cyl", seed = 1234) %>%
-  ggplot(aes(x = mpg, y = cyl)) +
-  geom_count(color = "gray75") +
-  geom_point(aes(fill = cyl),
-             data = df.cars,
-             shape = 21,
-             size = 2) +
-  scale_fill_brewer(palette = "Dark2") +
-  geom_label_repel(
-    data = . %>% ungroup() %>% filter(cyl == "8") %>% filter(mpg == max(mpg)) %>% dplyr::slice(1),
-    label = "posterior predictions",
-    xlim = c(26, NA),
-    ylim = c(NA, 2.8),
-    point.padding = 0.3,
-    label.size = NA,
-    color = "gray50",
-    segment.color = "gray75"
-  ) +
-  geom_label_repel(
-    data = df.cars %>% filter(cyl == "6") %>% filter(mpg == max(mpg)) %>% dplyr::slice(1),
-    label = "observed data",
-    xlim = c(26, NA),
-    ylim = c(2.2, NA),
-    point.padding = 0.2,
-    label.size = NA,
-    segment.color = "gray35"
-  )
-```
-
-
-
-## Additional resources 
-
-- [Tutorial on visualizing brms posteriors with tidybayes](https://mjskay.github.io/tidybayes/articles/tidy-brms.html)
-- [Hypothetical outcome plots](https://mucollective.northwestern.edu/files/2018-HOPsTrends-InfoVis.pdf)
 
 ## Session info 
 
@@ -1133,7 +600,4 @@ Information about this R session including which version of R was used, and what
 ```{r session}
 sessionInfo()
 ```
-
-## References
-
 
