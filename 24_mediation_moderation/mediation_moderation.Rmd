@@ -9,8 +9,7 @@ output:
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=23"]
-bibliography: [packages.bib, references.bib]
-nocite: '@*'
+bibliography: [references.bib]
 ---
 
 ```{r setup, include=FALSE}
@@ -21,14 +20,16 @@ knitr::opts_chunk$set(
   fig.show = "hold")
 ```
 
+```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
+install.packages(c("mediation", "multilevel"))
+```
+
+
 # Mediation & Moderation
 
-This report is based on the following two tutorials: 
+These notes are adapted from this tutorial: [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
 
-- [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
-- [Moderation mediation](https://ademos.people.uic.edu/Chapter15.html)
-
-_Mediation analysis_ tests a hypothetical causal chain where one variable X affects a second variable M and, in turn, that variable affects a third variable Y. Mediators describe the how or why of a (typically well-established) relationship between two other variables and are sometimes called intermediary variables since they often describe the process through which an effect occurs. This is also sometimes called an indirect effect. For instance, people with higher incomes tend to live longer but this effect is explained by the mediating influence of having access to better health care. (source [here](https://ademos.people.uic.edu/Chapter14.html#1_what_are_mediation_and_moderation))
+> _Mediation analysis_ tests a hypothetical causal chain where one variable __X__ affects a second variable __M__ and, in turn, that variable affects a third variable __Y__. Mediators describe the how or why of a (typically well-established) relationship between two other variables and are sometimes called intermediary variables since they often describe the process through which an effect occurs. This is also sometimes called an indirect effect. For instance, people with higher incomes tend to live longer but this effect is explained by the mediating influence of having access to better health care. 
 
 ## Recommended reading 
 
@@ -47,9 +48,6 @@ library("broom")      # tidying up regression results
 library("brms")       # Bayesian regression models 
 library("tidybayes")  # visualize the posterior
 library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
 ```{r set-theme}
@@ -72,11 +70,11 @@ df.pmi = read_csv("data/pmi.csv")
 include_graphics("figures/mediation.png")
 ```
 
-Mediation tests whether the effects of X (the independent variable) on Y (the dependent variable) operate through a third variable, M (the mediator). In this way, mediators explain the causal relationship between two variables or "how" the relationship works, making it a very popular method in psychological research.
+Mediation tests whether the effects of __X__ (the independent variable) on __Y__ (the dependent variable) operate through a third variable, __M__ (the mediator). In this way, mediators explain the causal relationship between two variables or "how" the relationship works, making it a very popular method in psychological research.
 
-Figure \@ref(fig:mediation) shows the standard mediation model. Perfect mediation occurs when the effect of X on Y decreases to 0 with M in the model. Partial mediation occurs when the effect of X on Y decreases by a nontrivial amount (the actual amount is up for debate) with M in the model.
+Figure \@ref(fig:mediation) shows the standard mediation model. Perfect mediation occurs when the effect of __X__ on __Y__ decreases to 0 with __M__ in the model. Partial mediation occurs when the effect of __X__ on __Y__ decreases by a nontrivial amount (the actual amount is up for debate) with __M__ in the model.
 
-Both mediation and moderation assume that the DV __did not CAUSE the mediator/moderator__.
+__Important__: Both mediation and moderation assume that the DV __did not CAUSE the mediator/moderator__.
 
 ### Generate data 
 
@@ -100,7 +98,7 @@ df.mediation = tibble(
 
 The @baron1986moderator method is among the original methods for testing for mediation but tends to have low statistical power. It is covered in this chapter because it provides a very clear approach to establishing relationships between variables and is still occassionally requested by reviewers.
 
-__The four steps__:
+__The three steps__:
 
 1. Estimate the relationship between $X$ and $Y$ (hours since dawn on degree of wakefulness). Path “c” must be significantly different from 0; must have a total effect between the IV & DV. 
 
@@ -131,7 +129,7 @@ fit.m_x = lm(formula = m ~ 1 + x,
 fit.m_x %>% summary()
 ```
 
-#### Path b 
+#### Path b and c'
 
 Effect of M on Y controlling for X. 
 
@@ -145,20 +143,20 @@ fit.y_mx %>% summary()
 #### Interpretation
 
 ```{r}
-fit.total %>% 
+fit.y_x %>% 
   tidy() %>% 
-  mutate(path = "total") %>% 
+  mutate(path = "c") %>% 
   bind_rows(
-    fit.xm %>% 
+    fit.m_x %>% 
     tidy() %>% 
     mutate(path = "a"),
-    fit.my %>% 
+    fit.y_mx %>% 
     tidy() %>% 
-    mutate(path = "b")
+    mutate(path = c("(Intercept)", "b", "c'"))
   ) %>% 
   filter(term != "(Intercept)") %>% 
   mutate(significance = p.value < .05,
-         dv = ifelse(path %in% c("total", "b"), "y", "m")) %>% 
+         dv = ifelse(path %in% c("c'", "b"), "y", "m")) %>% 
   select(path, iv = term, dv, estimate, p.value, significance)
 ```
 
@@ -166,7 +164,9 @@ Here we find that our total effect model shows a significant positive relationsh
 
 Since the relationship between hours since dawn and wakefulness is no longer significant when controlling for coffee consumption, this suggests that coffee consumption does in fact mediate this relationship. However, this method alone does not allow for a formal test of the indirect effect so we don’t know if the change in this relationship is truly meaningful.
 
-##### Sobel Test 
+### Method 2: Sobel Test 
+
+The Sobel Test tests whether the indirect effect from X via M to Y is significant. 
 
 ```{r}
 library("multilevel")
@@ -184,9 +184,9 @@ The relationship between "hours since dawn" and "wakefulness" is significantly m
 
 The Sobel Test is largely considered an outdated method since it assumes that the indirect effect (ab) is normally distributed and tends to only have adequate power with large sample sizes. Thus, again, it is highly recommended to use the mediation bootstrapping method instead.
 
-### Method 2: Mediation package
+### Method 3: Bootstrapping
 
-This package uses the more recent bootstrapping method of @preacher2004spss to address the power limitations of the Sobel Test.
+The "mediation" packages uses the more recent bootstrapping method of @preacher2004spss to address the power limitations of the Sobel Test.
 
 This method does not require that the data are normally distributed, and is particularly suitable for small sample sizes. 
 
@@ -205,8 +205,8 @@ fit.mediation %>% summary()
 ```
 
 - ACME = Average causal mediation effect 
-- ADE = 
-
+- ADE = Average direct effect
+- Total effect = ACME + ADE 
 
 Plot the results: 
 
@@ -216,11 +216,11 @@ fit.mediation %>% plot()
 
 #### Interpretation 
 
-The mediate function gives us our Average Causal Mediation Effects (ACME), our Average Direct Effects (ADE), our combined indirect and direct effects (Total Effect), and the ratio of these estimates (Prop. Mediated). The ACME here is the indirect effect of M (total effect - direct effect) and thus this value tells us if our mediation effect is significant.
+The `mediate()` function gives us our Average Causal Mediation Effects (ACME), our Average Direct Effects (ADE), our combined indirect and direct effects (Total Effect), and the ratio of these estimates (Prop. Mediated). The ACME here is the indirect effect of M (total effect - direct effect) and thus this value tells us if our mediation effect is significant.
 
-### Method 3: Bayesian approach 
+### Method 4: Bayesian approach 
 
-```{r}
+```{r, message=FALSE}
 # model specification 
 y_mx = bf(y ~ 1 + m + x)
 m_x = bf(m ~ 1 + x)
@@ -237,15 +237,14 @@ fit.brm_mediation = brm(
 fit.brm_mediation %>% summary()
 ```
 
-`set_rescor(FALSE)` to make it such that the residual correlation between the response variables is not modeled. 
+`set_rescor(FALSE)` makes it such that the residual correlation between the response variables is not modeled. 
 
 ```{r}
 # check inference 
-
 fit.brm_mediation %>% plot()
 ```
 
-looks solid! 
+Looks pretty solid! 
 
 Let's get the posterior samples 
 
@@ -254,12 +253,10 @@ df.samples = fit.brm_mediation %>%
   posterior_samples() %>% 
   mutate(ab = b_m_x * b_y_m,
          total = ab + b_y_x)
-  # mutate(ab = b_m_x * b_y_x,
-  #        total = ab + b_y_m)
 ```
 
 
-Visualize the posterior: 
+And visualize the posterior: 
 
 ```{r}
 df.samples %>% 
@@ -270,7 +267,7 @@ df.samples %>%
   coord_cartesian(ylim = c(1.5, 2.3))
 ```
 
-Summarize the posterior
+Let's also get some summaries of the posterior (MAP with highest density intervals).
 
 ```{r}
 df.samples %>% 
@@ -280,46 +277,6 @@ df.samples %>%
   mode_hdi(value) %>% 
   clean_names()
 ```
-
-# PMI example 
-
-```{r}
-y_model = bf(reaction ~ 1 + pmi + cond)
-m_model = bf(pmi ~ 1 + cond)
-```
-
-```{r}
-fit.brm = brm(
-  formula = y_model + m_model + set_rescor(FALSE),
-  family = "gaussian",
-  data = df.pmi,
-  chains = 4,
-  cores = 4,
-  file = "brm_pmi"
-)
-```
-
-```{r}
-# get posterior samples and compute indirect effect 
-df.samples = fit.brm %>% 
-  posterior_samples() %>% 
-  mutate(ab = b_pmi_cond * b_reaction_pmi,
-         total = b_reaction_cond + ab)
-
-# summarize indirect effect
-df.samples %>%
-  median_qi(ab)
-```
-
-```{r}
-df.samples %>% 
-  select(ab, total) %>%
-  gather("effect", "value") %>% 
-  ggplot(aes(y = effect, x = value)) +
-  geom_halfeyeh() + 
-  coord_cartesian(ylim = c(1.5, 2))
-```
-
 
 ## Moderation 
 
