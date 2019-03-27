@@ -800,6 +800,10 @@ Not quite as normally distributed as we would hope. We learn what to do if some 
 - [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
 - [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
+### Misc 
+
+- [Spurious correlations](http://www.tylervigen.com/spurious-correlations)
+
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
