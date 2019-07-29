@@ -637,6 +637,10 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
   - [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
 - [tidyexplain](https://github.com/gadenbuie/tidyexplain): Animations that illustrate how `gather()`, `spread()`, `left_join()`, etc. work
 
+### Miscellaneous 
+
+- [Regular expressions in R](https://blog.rsquaredacademy.com/regular-expression-in-r/)
+
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
