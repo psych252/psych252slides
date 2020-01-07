@@ -1,7 +1,7 @@
 ---
 title: "01_Introduction"
 author: "Tobias Gerstenberg"
-date: "1/7/2019"
+date: "1/6/2020"
 output: 
   html_document:
     toc: true
@@ -26,21 +26,21 @@ theme_set(
 
 ## Student feedback 
 
-> I appreciate knowing expectations about the course. Humor was also helpful. Having a date for the midterm and more details about the final project will be helpful as I plan my quarter. __Might be good to dive into some material, too__, although I imagine that'll happen on Wednesday.
+> One improvement could be to allow for the TAs to handle some of the questions.
 
-> I really appreciated that you gave an overview at the start of lecture of what we'll be covering and the important points. It's helpful to know what's important to focus on. On the same note (and maybe it's not so applicable to this lecture) it would be similarly helpful to __wrap up at the end with the biggest takeaways__.
+> I thought that the general overview of the course schedule and expectations was clear and helpful. Next time, I think it could be helpful to briefly address examples of what kinds of things we'll be going over in the course (particularly examples of final project topics). Thanks!
 
-> Great overview of what we will be learning. You come across as super approachable and knowledgeable. __I would have liked to know the length of the homework and the average amount of time you estimate us spending on: (a) homework, (b) readings + datacamp__. Also, I loved citing sources and the thank you slide!
+> The professor and teaching staff are clearly enthusiastic (and enthusiasm is contagious - I'm excited too!). However, attending 2 sections per week seems like a lot. How much are the Thursday sections (application sections) recommended? Could those be discussed a little more during the next class?
 
-> It was informative. __Next time it would be great if all deadlines for the midterm etc. would already be known by the first lecture__. In terms of setup of the class I think 2 longer lectures rather than 3 short ones per week would be better (less switching costs etc)
+> I appreciated when you gave us time to discuss things in small groups and then talk about them as a full lecture. Specifically, when we were going through the plots and looking at what was wrong with each one.
 
-> I would have liked to hear more from you on __what you define to be 'good science.'__ For example, you alluded to replication, but beyond replication, what are some of your thoughts or philosophical orientation when it comes to conducting social science.
+> Really helpful to understand the arc of the course. I'm eager to learn more about the specific statistical concepts we'll be learning, but I know those are available in the book and will be covered in classes to come. I'm also looking forward to seeing guidelines for and examples of final projects so that I can start brainstorming about possible ideas.
 
-> I will be happy to get started with R and its exercises! It was the first lecture, __so it was slower than expected__. But I like how you made the class expectation clear to students! __But perhaps we can keep the first lecture shorter in length.__
+> Good pace of questions throughout the tutorial. It would be good to review concerns about preparedness in taking the course.
 
-> __It was nice to meet our neighbors.__ I hope we keep having time and ways to meet others in class. It makes it easier to ask each other questions when the time comes. I like how many resources you list on the class website.
+> I liked the syllabus. I'm really looking forward to learning all these interesting tools to use them in my research. I get distracted when people eat in class and I'd appreciate it if the rule "no food or drinks" could be respected.
 
-> Disliked: __no concepts today...__
+> Would have appreciated more detail on the project. When are we expected to form groups?
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-1.csv") %>% 
@@ -88,20 +88,7 @@ ggplot(data = df.overall,
 
 ## What to do next time
 
-- keep the interactive "introduce yourself to your neighbor" bit at the beginning 
-- keep the interactive feedback (polleverywhere) 
-- smoothen out the part about building models (with the Field figure, and the "Statistics as arguments" reference)
-- introduce some conceptual material from the very beginning 
-	+ a few fun statistics examples would be nice 
-	+ maybe a worked example from my own research: 
-	  - research question
-	  - statistical model 
-	  - experiment
-	  - results 
-- have a slide the motivates the different tools: 
-  + a person in the middle, "Question about homework" --> Piazza; "Not feeling well" --> Office hour / email, ... 
-- move some of the visualization content to the first lecture: 
-  + motivation for why visualization is so important 
-  + discuss some bad plots 
-- make clear that sections are a mandatory part of class 
-- make clear that they can call me "Tobi"
+- maybe add some more concrete examples for the kinds of things that will be learned in class (e.g. maybe spotlight a few final projects examples)
+- keep the interactive parts (introduction at the beginning, and talking about the plots in pairs before sharing with the class)
+- review concerns about level of preparedness for the course
+- provide some more information on final projects more generally 
