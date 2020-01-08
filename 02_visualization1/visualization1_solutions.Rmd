@@ -1,7 +1,7 @@
 ---
 title: "Class 2"
 author: "Tobias Gerstenberg"
-date: "January 9th, 2019"
+date: "January 8th, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -12,8 +12,7 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "")
+knitr::opts_chunk$set(comment = "#>")
 ```
 
 # Visualization 1: Exercise solutions 
@@ -30,10 +29,8 @@ library("tidyverse") # for data wrangling
 Let's set the plotting theme. 
 
 ```{r plotting_theme}
-theme_set(
-  theme_classic()+ #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
+theme_set(theme_classic() + #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
 ```
 
 ## Practice plot 1
@@ -41,7 +38,8 @@ theme_set(
 Make a scatter plot that shows the relationship between the variables `depth` (on the x-axis), and `table` (on the y-axis). Take a look at the description for the `diamonds` dataset so you know what these different variables mean. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1).
 
 ```{r}
-ggplot(diamonds, aes(x = depth, y = table)) +
+ggplot(data = diamonds,
+       mapping = aes(x = depth, y = table)) +
   geom_point()
 ```
 
@@ -54,7 +52,8 @@ include_graphics("figures/practice_plot1.png")
 Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:practice-plot2).
 
 ```{r}
-ggplot(diamonds, aes(x = clarity, y = price)) +
+ggplot(data = diamonds,
+       mapping = aes(x = clarity, y = price)) +
   stat_summary(fun.y = "mean", geom = "bar") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange")
 ```
@@ -69,9 +68,17 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
 ```{r}
 # make practice plot 3 here
-ggplot(diamonds, aes(x = color, y = price, group = clarity, color = clarity)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1) +
-  stat_summary(fun.y = "mean", geom = "line", size = 2)
+ggplot(data = diamonds, 
+       mapping = aes(x = color,
+                     y = price,
+                     group = clarity,
+                     color = clarity)) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) +
+  stat_summary(fun.y = "mean",
+               geom = "line",
+               size = 2)
 ```
 
 
@@ -85,7 +92,10 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
 ```{r}
 # make practice plot 4 here
-ggplot(diamonds, aes(x = color, y = price, fill = cut)) +
+ggplot(data = diamonds,
+       mapping = aes(x = color,
+                     y = price,
+                     fill = cut)) +
   stat_summary(fun.y = "mean",
                geom = "bar",
                position = position_dodge(width = 0.9),
