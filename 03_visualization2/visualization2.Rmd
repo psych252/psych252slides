@@ -530,33 +530,49 @@ Let's combine a few plots that we've made above into one.
 
 ```{r}
 # first plot
-p1 = ggplot(data = df.diamonds, mapping = aes(x = y, fill = color)) +
-  geom_density(bw = 0.2, show.legend = F) +
+p1 = ggplot(data = df.diamonds,
+            mapping = aes(x = y, fill = color)) +
+  geom_density(bw = 0.2,
+               show.legend = F) +
   facet_grid(cols = vars(color)) +
-  coord_cartesian(xlim = c(3, 10), expand = F) + #setting expand to FALSE removes any padding on x and y axes
+  coord_cartesian(xlim = c(3, 10),
+                  expand = F) + #setting expand to FALSE removes any padding on x and y axes
   labs(title = "Width of differently colored diamonds",
-    tag = "A")
+       tag = "A")
 
 # second plot
-p2 = ggplot(data = df.diamonds, mapping = aes(x = color, y = clarity, z = carat)) +
-  stat_summary_2d(fun = "mean", geom = "tile") +
+p2 = ggplot(data = df.diamonds,
+            mapping = aes(x = color,
+                          y = clarity,
+                          z = carat)) +
+  stat_summary_2d(fun = "mean",
+                  geom = "tile") +
   labs(title = "Carat values",
        subtitle = "For different color and clarity",
-       x = 'width in mm',
+       x = "Color",
        tag = "B")
 
 # third plot
-p3 = ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) + 
-  scale_x_discrete(labels = c('fair', 'good', 'very\ngood', 'premium', 'ideal')) +
+p3 = ggplot(data = df.diamonds,
+            mapping = aes(x = cut, y = price)) +
+  stat_summary(fun.y = "mean",
+               geom = "bar",
+               color = "black",
+               fill = "lightblue",
+               width = 0.85) +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1.5) + 
+  scale_x_discrete(labels = c("fair", "good", "very\ngood", "premium", "ideal")) +
   labs(
     title = "Price as a function of cut", 
     subtitle = "Note: The price is in US dollars",
     tag = "C",
     x = "Quality of the cut", 
     y = "Price") + 
-  coord_cartesian(xlim = c(0.25, 5.75), ylim = c(0, 5000), expand = F)
+  coord_cartesian(xlim = c(0.25, 5.75),
+                  ylim = c(0, 5000),
+                  expand = F)
 
 # combine the plots
 p1 + (p2 + p3) + 
@@ -564,7 +580,7 @@ p1 + (p2 + p3) +
   theme_classic() & 
   theme(plot.tag = element_text(face = "bold", size = 20))
 
-# ggsave("figures/combined_plot.pdf", width = 10, height = 6)
+# ggsave("figures/combined_plot.png", width = 10, height = 6)
 
 ```
 
