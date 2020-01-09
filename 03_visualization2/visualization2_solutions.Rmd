@@ -1,7 +1,7 @@
 ---
 title: "Class 3"
 author: "Tobias Gerstenberg"
-date: "January 11th, 2019"
+date: "January 10th, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -12,8 +12,8 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "")
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = "#>")
 ```
 
 # Visualization 2: Exercise solutions 
@@ -30,10 +30,8 @@ library("tidyverse") # for data wrangling
 Let's set the plotting theme. 
 
 ```{r plotting_theme}
-theme_set(
-  theme_classic()+ #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
+theme_set(theme_classic()+ #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
 ```
 
 ## Practice plot 1 
@@ -41,23 +39,18 @@ theme_set(
 Try to make the plot shown in Figure \@ref(fig:practice-plot1). Here are some tips: 
 
 - For the data argument in `ggplot()` use: `df.diamonds[1:1000, ]` (this selects the first 1000 rows).
-- Note that the violin plots have different areas that reflect the number of observations. Take a look at `geom_violin()`'s help file to figure out how to set this. 
 
 ```{r}
 ggplot(data = diamonds[1:10000, ], 
        mapping = aes(x = cut, y = price)) +
-  geom_violin(scale = "count") +
-  geom_point(
-    alpha = 0.1,
-    position = position_jitter(width = 0.1)
-  ) +
-  stat_summary(
-    fun.y = "mean",
-    shape = 21,
-    geom = "point",
-    fill = "blue",
-    size = 5
-  )
+  geom_violin() +
+  geom_point(alpha = 0.1,
+             position = position_jitter(width = 0.1)) +
+  stat_summary(fun.y = "mean",
+               shape = 21,
+               geom = "point",
+               fill = "blue",
+               size = 5)
 ```
 
 ```{r practice-plot1, echo=FALSE, fig.cap='Practice plot 1.'}

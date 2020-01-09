@@ -1,0 +1,94 @@
+---
+title: "01_Introduction"
+author: "Tobias Gerstenberg"
+date: "1/6/2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> One improvement could be to allow for the TAs to handle some of the questions.
+
+> I thought that the general overview of the course schedule and expectations was clear and helpful. Next time, I think it could be helpful to briefly address examples of what kinds of things we'll be going over in the course (particularly examples of final project topics). Thanks!
+
+> The professor and teaching staff are clearly enthusiastic (and enthusiasm is contagious - I'm excited too!). However, attending 2 sections per week seems like a lot. How much are the Thursday sections (application sections) recommended? Could those be discussed a little more during the next class?
+
+> I appreciated when you gave us time to discuss things in small groups and then talk about them as a full lecture. Specifically, when we were going through the plots and looking at what was wrong with each one.
+
+> Really helpful to understand the arc of the course. I'm eager to learn more about the specific statistical concepts we'll be learning, but I know those are available in the book and will be covered in classes to come. I'm also looking forward to seeing guidelines for and examples of final projects so that I can start brainstorming about possible ideas.
+
+> Good pace of questions throughout the tutorial. It would be good to review concerns about preparedness in taking the course.
+
+> I liked the syllabus. I'm really looking forward to learning all these interesting tools to use them in my research. I get distracted when people eat in class and I'd appreciate it if the rule "no food or drinks" could be respected.
+
+> Would have appreciated more detail on the project. When are we expected to form groups?
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-1.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read_csv("how-was-the-pace-of-1.csv", skip = 10) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+# ggsave("01_introduction_pace.pdf", width = 8, height = 6)
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-1.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+# ggsave("01_introduction_overall.pdf", width = 8, height = 6)
+```
+
+## What to do next time
+
+- maybe add some more concrete examples for the kinds of things that will be learned in class (e.g. maybe spotlight a few final projects examples)
+- keep the interactive parts (introduction at the beginning, and talking about the plots in pairs before sharing with the class)
+- review concerns about level of preparedness for the course
+- provide some more information on final projects more generally 

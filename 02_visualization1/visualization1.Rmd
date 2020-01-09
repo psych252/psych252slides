@@ -60,7 +60,7 @@ The `tidyverse` is a collection of packages that includes `ggplot2`.
 include_graphics("figures/anscombe.png")
 ```
 
-Anscombe's quartet in Figure \@ref(fig:visualization1-01) (left side) illustrates the importance of visualizing data. Even though the datasets I-IV have the same summary statistics (mean, standard deviation, correlation), they are importantly different from each other. On the right side, we have four data sets with the same summary statistics that are very similar to each other.
+Anscombe's quartet in Figure \@ref(fig:visualization1-02) (left side) illustrates the importance of visualizing data. Even though the datasets I-IV have the same summary statistics (mean, standard deviation, correlation), they are importantly different from each other. On the right side, we have four data sets with the same summary statistics that are very similar to each other.
 
 ```{r visualization1-03, echo=FALSE, fig.cap= "The Pearson's $r$ correlation coefficient is the same for all of these datasets. Source: [Data Visualization -- A practical introduction by Kieran Healy](http://socviz.co/lookatdata.html#lookatdata)", out.width="95%"}
 include_graphics("figures/correlations.png")
@@ -87,27 +87,27 @@ include_graphics("figures/data_dino.gif")
 Below are some examples of visualizations that could be improved. How would you make them better?
 
 ```{r visualization1-06, echo=FALSE, out.width='90%', fig.align='center', fig.cap="Example of a bad plot. Source: [Data Visualization -- A practical introduction by Kieran Healy](http://socviz.co/lookatdata.html#lookatdata)", out.width="95%"}
-  include_graphics("figures/bad_plot1.png")
+include_graphics("figures/bad_plot1.png")
 ```
 
 ```{r visualization1-07, echo=FALSE, out.width='90%', fig.align='center', fig.cap="Another bad plot. Source: Google image search for 'bad graphs'", out.width="95%"}
-  include_graphics("figures/bad_plot2.png")
+include_graphics("figures/bad_plot2.png")
 ```
 
 ```{r visualization1-08, echo=FALSE, out.width='90%', fig.align='center', fig.cap="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)", out.width="95%"}
-  include_graphics("figures/bad_plot3.png")
+include_graphics("figures/bad_plot3.png")
 ```
 
 ```{r visualization1-09, echo=FALSE, out.width='90%', fig.align='center', fig.cap="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)", out.width="95%"}
-  include_graphics("figures/bad_plot4.png")
+include_graphics("figures/bad_plot4.png")
 ```
 
 ```{r visualization1-10, echo=FALSE, out.width='90%', fig.align='center', fig.cap="And another one. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)", out.width="95%"}
-  include_graphics("figures/bad_plot5.png")
+include_graphics("figures/bad_plot5.png")
 ```
 
 ```{r visualization1-11, echo=FALSE, out.width='90%', fig.align='center', fig.cap="The last one for now. Source: [Bad graph wall of shame](http://bcuchta.com/wall_of_shame/)", out.width="95%"}
-  include_graphics("figures/bad_plot6.png")
+include_graphics("figures/bad_plot6.png")
 ```
 
 ### How to make it better
@@ -119,7 +119,7 @@ Instead of learning rigid rules for what makes for a good figure, you will learn
 ## Setting up RStudio
 
 ```{r visualization1-12, out.width='100%', echo=FALSE, fig.cap="General preferences.", out.width="95%"}
-  include_graphics("figures/r_preferences_general.png")
+include_graphics("figures/r_preferences_general.png")
 ```
 
 __Make sure that__:
@@ -128,7 +128,7 @@ __Make sure that__:
 - Save workspace to .RData on exit is set to _Never_
 
 ```{r visualization1-13, out.width='100%', echo=FALSE, fig.cap="Code window preferences.", out.width="95%"}
-  include_graphics("figures/r_preferences_code.png")
+include_graphics("figures/r_preferences_code.png")
 ```
 
 __Make sure that__:
@@ -251,6 +251,7 @@ Let's take a look at the full dataset by clicking on it in the explorer.
 >__Tip__: You can view a data frame by highlighting the text in the editor (or simply moving the mouse above the text), and then press `F2`.
 
 The `df.diamonds` data frame contains information about almost 60,000 diamonds, including their `price`, `carat` value, size, etc. Let's use visualization to get a better sense for this dataset.
+
 We start by setting up the plot. To do so, we pass a data frame to the function `ggplot()` in the following way.
 
 ```{r visualization1-21}
@@ -325,7 +326,7 @@ In general, it's good practice to include the argument specifiers -- particularl
 
 ### Setting the default plot theme
 
-Before moving one, let's set a different default theme for our plots. Personally, I'm not a big fan of the gray background and the white grid lines. Also, the default size of the text should be bigger. We can change the default theme using the `theme_set()` function like so:
+Before moving on, let's set a different default theme for our plots. Personally, I'm not a big fan of the gray background and the white grid lines. Also, the default size of the text should be bigger. We can change the default theme using the `theme_set()` function like so:
 
 ```{r visualization1-29}
 theme_set(theme_classic() + # set the theme
@@ -345,7 +346,7 @@ ggplot(data = df.diamonds, mapping = aes(x = carat, y = price)) +
 
 Cool! That looks sensible. Diamonds with a higher `carat` value tend to have a higher `price`. Our dataset has `r nrow(diamonds)` rows. So the plot actually shows `r nrow(diamonds)` circles even though we can't see all of them since they overlap.
 
-Let's make some progress on trying to figure out why the diamonds with the better color weren't the most expensive ones on average. We'll add some color to the scatter plot in Figure \@ref(fig:visualization-31). We color each of the points based on the diamond's color. To do so, we pass another argument to the aesthetics of the plot via `aes()`.
+Let's make some progress on trying to figure out why the diamonds with the better color weren't the most expensive ones on average. We'll add some color to the scatter plot in Figure \@ref(fig:visualization-30). We color each of the points based on the diamond's color. To do so, we pass another argument to the aesthetics of the plot via `aes()`.
 
 ```{r visualization1-31, fig.cap="Scatterplot with color."}
 ggplot(data = df.diamonds,
@@ -355,7 +356,7 @@ ggplot(data = df.diamonds,
   geom_point()
 ```
 
-Aha! Now we've got some color. Notice how in Figure \@ref(fig:visualization-30) `ggplot2` added a legend for us, thanks! We'll see later how to play around with legends. Form just eye-balling the plot, it looks like the diamonds with the best `color` (D) tended to have a lower `carat` value, and the ones with the worst `color` (J), tended to have the highest carat values.
+Aha! Now we've got some color. Notice how in Figure \@ref(fig:visualization-31) `ggplot2` added a legend for us, thanks! We'll see later how to play around with legends. Form just eye-balling the plot, it looks like the diamonds with the best `color` (D) tended to have a lower `carat` value, and the ones with the worst `color` (J), tended to have the highest carat values.
 
 So this is why diamonds with better colors are less expensive -- these diamonds have a lower carat value overall.
 
@@ -458,7 +459,7 @@ ggplot(df.diamonds,
 
 Figure \@ref(fig:visualization1-40) looks good.
 
-```{r visualization1-41, fig.cap='This figure looks bad Error bars and means are drawn in the incorrect order.'}
+```{r visualization1-41, fig.cap='This figure looks bad. Error bars and means are drawn in the incorrect order.'}
 # I've changed the order in which the means and error bars are drawn.
 ggplot(df.diamonds,
        aes(x = clarity,
@@ -480,7 +481,7 @@ Let's take a look at two more principles for plotting data that are extremely he
 
 #### Practice plot 2
 
-Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:visualization1-41).
+Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:visualization1-43).
 
 ```{r visualization1-42}
 # make practice plot 2 here
@@ -683,7 +684,7 @@ ggplot(data = df.diamonds,
              cols = vars(clarity))
 ```
 
-Figure \@ref(fig:visualization-57) is stretching it in terms of how much information it presents. But it gives you a sense for how to combine the differnet bits and pieces we've learned so far.
+Figure \@ref(fig:visualization-59) is stretching it in terms of how much information it presents. But it gives you a sense for how to combine the different bits and pieces we've learned so far.
 
 #### Practice plot 4
 
@@ -743,11 +744,11 @@ Here, I've set `color = "black"` within the `geom_smooth()` function, and now on
 
 ### Cheatsheets
 
-- [RStudio IDE](figures/cheatsheets/rstudio-ide.pdf) --> information about RStudio
-- [RMarkdown](figures/cheatsheets/rmarkdown.pdf) --> information about writing in RMarkdown
-- [RMarkdown reference](figures/cheatsheets/rmarkdown-reference.pdf) --> RMarkdown reference sheet
-- [Data visualization](figures/cheatsheets/visualization-principles.pdf) --> general principles of effective graphic design
-- [ggplot2](figures/cheatsheets/data-visualization.pdf) --> specific information about ggplot
+- [RStudio IDE](figures/rstudio-ide.pdf) --> information about RStudio
+- [RMarkdown](figures/rmarkdown.pdf) --> information about writing in RMarkdown
+- [RMarkdown reference](figures/rmarkdown-reference.pdf) --> RMarkdown reference sheet
+- [Data visualization](figures/visualization-principles.pdf) --> general principles of effective graphic design
+- [ggplot2](figures/data-visualization.pdf) --> specific information about ggplot
 
 ### Datacamp courses
 
