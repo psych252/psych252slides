@@ -353,12 +353,11 @@ df.text = df.plot %>%
   summarize(year = mean(year) + 0.2, 
             median = mean(median))
 
-ggplot(
-  data = df.plot,
-  mapping = aes(x = year, 
-                y = median,
-                color = city,
-                fill = city)) +
+ggplot(data = df.plot,
+       mapping = aes(x = year, 
+                     y = median,
+                     color = city,
+                     fill = city)) +
   # draw dashed horizontal lines in the background
   geom_hline(yintercept = seq(from = 100000,
                               to = 250000,
@@ -437,12 +436,6 @@ ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1.5) + 
-  # add a title, subtitle, and changed axis labels 
-  labs(title = "Price as a function of quality of cut", 
-    subtitle = "Note: The price is in US dollars",
-    tag = "A",
-    x = "Quality of the cut", 
-    y = "Price") + 
   # adjust what to show on the y-axis
   scale_y_continuous(breaks = seq(from = 0, to = 4000, by = 2000),
                      labels = seq(from = 0, to = 4000, by = 2000)) + 
@@ -450,6 +443,12 @@ ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   coord_cartesian(xlim = c(0.25, 5.75),
                   ylim = c(0, 5000),
                   expand = F) + 
+  # add a title, subtitle, and changed axis labels 
+  labs(title = "Price as a function of quality of cut", 
+    subtitle = "Note: The price is in US dollars",
+    tag = "A",
+    x = "Quality of the cut", 
+    y = "Price") + 
   theme(
     # adjust the text size 
     text = element_text(size = 20), 
@@ -468,6 +467,40 @@ ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
 ```
 
 I've tweaked quite a few things here (and I've added comments to explain what's happening). Take a quick look at the `theme()` function to see all the things you can change. 
+
+### Anatomy of a `ggplot`
+
+I suggest to use this general skeleton for creating a `ggplot`: 
+
+```{r visualization2-26b, eval = F}
+# ggplot call with global aesthetics 
+ggplot(data = data,
+       mapping = aes(x = cause,
+                     y = effect)) +
+  # add geometric objects (geoms)
+  geom_point() + 
+  stat_summary(fun.y = "mean", geom = "point") + 
+  ... + 
+  # add text objects 
+  geom_text() + 
+  annotate() + 
+  # adjust axes and coordinates 
+  scale_x_continuous() + 
+  scale_y_continuous() + 
+  coord_cartesian() + 
+  # define plot title, and axis titles 
+  labs(title = "Title",
+       x = "Cause",
+       y = "Effect") + 
+  # change global aspects of the plot 
+  theme(text = element_text(size = 20),
+        plot.margin = margin(t = 1, b = 1, l = 0.5, r = 0.5, unit = "cm")) +
+  # save the plot 
+  ggsave(filename = "super_nice_plot.pdf",
+         width = 8,
+         height = 6)
+```
+
 
 ### Changing the order of things
 
