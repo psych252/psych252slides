@@ -140,9 +140,16 @@ df.plot = tibble(x = rep(1:5, 5),
                  shape = 1:25) %>% 
   mutate(shape = as.factor(shape))
 
-ggplot(data = df.plot, mapping = aes(x = x, y = y, shape = shape)) +
-  geom_point(fill = "red", size = 5, show.legend = F) +
-  geom_text(mapping = aes(label = shape), vjust = -1.3, size = 5) +
+ggplot(data = df.plot,
+       mapping = aes(x = x,
+                     y = y,
+                     shape = shape)) +
+  geom_point(fill = "red",
+             size = 5,
+             show.legend = F) +
+  geom_text(mapping = aes(label = shape),
+            vjust = -1.3,
+            size = 5) +
   scale_shape_manual(values = 1:25) +
   coord_cartesian(clip = "off") + 
   theme_void()+

@@ -753,8 +753,6 @@ Here, I've set `color = "black"` within the `geom_smooth()` function, and now on
 ### Datacamp courses
 
 - [Introduction to R](https://www.datacamp.com/courses/free-introduction-to-r)
-- [RStudio IDE 1](https://www.datacamp.com/courses/working-with-the-rstudio-ide-part-1)
-- [RStudio IDE 2](https://www.datacamp.com/courses/working-with-the-rstudio-ide-part-2)
 - [ggplot2 course 1](https://www.datacamp.com/courses/data-visualization-with-ggplot2-1)
 - [ggplot2 course 2](https://www.datacamp.com/courses/data-visualization-with-ggplot2-2)
 - [Reporting](https://www.datacamp.com/courses/communicating-with-data-in-the-tidyverse)
