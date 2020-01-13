@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Tobias Gerstenberg" />
@@ -286,7 +286,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -329,9 +329,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -345,7 +343,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -362,8 +359,6 @@ summary {
 </style>
 
 
-
-<div class="container-fluid main-container">
 
 <!-- tabsets -->
 
@@ -409,6 +404,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -421,20 +417,17 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -444,8 +437,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Class 4</h1>
-<h4 class="author"><em>Tobias Gerstenberg</em></h4>
-<h4 class="date"><em>January 14th, 2019</em></h4>
+<h4 class="author">Tobias Gerstenberg</h4>
+<h4 class="date">January 14th, 2019</h4>
 
 </div>
 
@@ -455,6 +448,7 @@ $(document).ready(function () {
 <li><a href="#load-packages-and-data-set"><span class="toc-section-number">1.1</span> Load packages and data set</a></li>
 <li><a href="#practice-1"><span class="toc-section-number">1.2</span> Practice 1</a></li>
 <li><a href="#practice-2"><span class="toc-section-number">1.3</span> Practice 2</a></li>
+<li><a href="#practice-3"><span class="toc-section-number">1.4</span> Practice 3</a></li>
 </ul></li>
 </ul>
 </div>
@@ -464,34 +458,65 @@ $(document).ready(function () {
 <div id="load-packages-and-data-set" class="section level2">
 <h2><span class="header-section-number">1.1</span> Load packages and data set</h2>
 <p>Let’s first load the packages that we need for this chapter.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span>
-<span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for data wrangling </span></code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for data wrangling </span></a></code></pre></div>
 <p>And let’s load the data set into the environment</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.starwars =<span class="st"> </span>starwars</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">df.starwars =<span class="st"> </span>starwars</a></code></pre></div>
 </div>
 <div id="practice-1" class="section level2">
 <h2><span class="header-section-number">1.2</span> Practice 1</h2>
 <p>Let’s practice the pipe operator.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># some numbers</span>
-x =<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">1</span>, <span class="dt">to =</span> <span class="dv">5</span>, <span class="dt">by =</span> <span class="dv">1</span>)</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># standard way</span>
-<span class="kw">log</span>(x)</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1"><span class="co"># here are some numbers</span></a>
+<a class="sourceLine" id="cb3-2" title="2">x =<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">1</span>, <span class="dt">to =</span> <span class="dv">5</span>, <span class="dt">by =</span> <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb3-3" title="3"></a>
+<a class="sourceLine" id="cb3-4" title="4"><span class="co"># taking the log the standard way</span></a>
+<a class="sourceLine" id="cb3-5" title="5"><span class="kw">log</span>(x)</a></code></pre></div>
 <pre><code>[1] 0.0000000 0.6931472 1.0986123 1.3862944 1.6094379</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># the pipe way (write your code underneath)</span>
-x <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">log</span>()</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="co"># now take the log the pipe way (write your code underneath)</span></a>
+<a class="sourceLine" id="cb5-2" title="2">x <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">log</span>()</a></code></pre></div>
 <pre><code>[1] 0.0000000 0.6931472 1.0986123 1.3862944 1.6094379</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># standard way</span>
-<span class="kw">mean</span>(<span class="kw">round</span>(<span class="kw">sqrt</span>(x), <span class="dt">digits =</span> <span class="dv">2</span>))</code></pre>
-<pre><code>[1] 1.676</code></pre>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># the pipe way (write your code underneath)</span>
-x <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">sqrt</span>() <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">round</span>(<span class="dt">digits =</span> <span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">mean</span>()</code></pre>
-<pre><code>[1] 1.676</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1"><span class="co"># some more numbers</span></a>
+<a class="sourceLine" id="cb7-2" title="2">x =<span class="st"> </span><span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">10</span>, <span class="dt">to =</span> <span class="dv">5</span>, <span class="dt">by =</span> <span class="dv">-1</span>)</a>
+<a class="sourceLine" id="cb7-3" title="3"></a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="co"># the standard way</span></a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="kw">mean</span>(<span class="kw">round</span>(<span class="kw">sqrt</span>(x), <span class="dt">digits =</span> <span class="dv">2</span>))</a></code></pre></div>
+<pre><code>[1] 2.721667</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1"><span class="co"># the pipe way (write your code underneath)</span></a>
+<a class="sourceLine" id="cb9-2" title="2">x <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-3" title="3"><span class="st">  </span><span class="kw">sqrt</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-4" title="4"><span class="st">  </span><span class="kw">round</span>(<span class="dt">digits =</span> <span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-5" title="5"><span class="st">  </span><span class="kw">mean</span>()</a></code></pre></div>
+<pre><code>[1] 2.721667</code></pre>
 </div>
 <div id="practice-2" class="section level2">
 <h2><span class="header-section-number">1.3</span> Practice 2</h2>
+<p>Create a data frame that:
+- only has the species <code>Human</code> and <code>Droid</code>
+- with the following data columns (in this order): name, species, birth_year, homeworld
+- is arranged according to birth year (with the oldest entry at the top of the data frame)
+- and has the <code>name</code> column renamed to <code>person</code></p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">df.starwars <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="st">  </span><span class="kw">filter</span>(species <span class="op">%in%</span><span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Human&quot;</span>, <span class="st">&quot;Droid&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-3" title="3"><span class="st">  </span><span class="kw">select</span>(name, species, birth_year, homeworld) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(birth_year)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-5" title="5"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">person =</span> name)</a></code></pre></div>
+<pre><code># A tibble: 40 x 4
+   person              species birth_year homeworld   
+   &lt;chr&gt;               &lt;chr&gt;        &lt;dbl&gt; &lt;chr&gt;       
+ 1 C-3PO               Droid          112 Tatooine    
+ 2 Dooku               Human          102 Serenno     
+ 3 Qui-Gon Jinn        Human           92 &lt;NA&gt;        
+ 4 Finis Valorum       Human           91 Coruscant   
+ 5 Palpatine           Human           82 Naboo       
+ 6 Cliegg Lars         Human           82 Tatooine    
+ 7 Shmi Skywalker      Human           72 Tatooine    
+ 8 Mace Windu          Human           72 Haruun Kal  
+ 9 Bail Prestor Organa Human           67 Alderaan    
+10 Jango Fett          Human           66 Concord Dawn
+# … with 30 more rows</code></pre>
+</div>
+<div id="practice-3" class="section level2">
+<h2><span class="header-section-number">1.4</span> Practice 3</h2>
 <p>Compute the body mass index for <code>male</code> characters who are <code>human</code>.</p>
 <ul>
 <li>select only the columns you need</li>
@@ -499,11 +524,11 @@ x <span class="op">%&gt;%</span><span class="st"> </span>
 <li>make the new variable with the body mass index</li>
 <li>arrange the data frame starting with the highest body mass index</li>
 </ul>
-<pre class="sourceCode r"><code class="sourceCode r">df.starwars <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(species, gender, height, mass) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">filter</span>(gender <span class="op">==</span><span class="st"> &quot;male&quot;</span>, species <span class="op">==</span><span class="st"> &quot;Human&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">bmi =</span> mass <span class="op">/</span><span class="st"> </span>(height<span class="op">/</span><span class="dv">100</span>)<span class="op">^</span><span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(bmi))</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" title="1">df.starwars <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-2" title="2"><span class="st">  </span><span class="kw">select</span>(species, gender, height, mass) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-3" title="3"><span class="st">  </span><span class="kw">filter</span>(gender <span class="op">==</span><span class="st"> &quot;male&quot;</span>, species <span class="op">==</span><span class="st"> &quot;Human&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-4" title="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">bmi =</span> mass <span class="op">/</span><span class="st"> </span>(height<span class="op">/</span><span class="dv">100</span>)<span class="op">^</span><span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-5" title="5"><span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(bmi))</a></code></pre></div>
 <pre><code># A tibble: 26 x 5
    species gender height  mass   bmi
    &lt;chr&gt;   &lt;chr&gt;   &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
@@ -538,6 +563,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

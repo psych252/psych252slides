@@ -1,36 +1,32 @@
-Response,Created At
-"I like the music. And the hammer. I felt we went too quickly over the last bit of the visualization 2 file, which is probably the content that is most unfamiliar to most people. For example, I'm still not sure what snippets are.",2019-01-11 11:51:59
-"It would be helpful if you could pause at your code a little more once we have made our practice plots (for future lectures). Also we covered a lot of types of plots which was good, but it would've helped to focus on the most commonly used ones and ways to edit and customize that - we can explore the other types at home. Thank you!",2019-01-11 11:51:52
-"I think the lecture about class 3 is way too fast for beginners to follow. I really appreciate the lecture notes that you have prepared and it is very informative. However, if we can save time at the beginning of the lecture (not to talk about the poll results , and you can simply email us the results), then perhaps we will have much more time to talk about the lecture. Another thing that I will appreciate is that if you can talk about more how to interpret a violin/joy plots, this will be awesome, as traditional stats class did not talk about these!",2019-01-11 11:51:52
-"Good to push my knowledge of R - a ""reproduce this plot"" works well to make me think deeper about plots - instead of changing what I want to visualize because of my knowledge I expand my knowledge to make what I want to plot.",2019-01-11 11:51:47
-"Great overall. Possibly too much material planned for 1 class. The exercises are super helpful. Note that our lines in the code don't match yours once we fill in an exercise, so direct references to lines as poiters to where we are don't always work.",2019-01-11 11:51:30
-The music.,2019-01-11 11:51:23
-"Pace was a tiny bit fast, but I guess that's fine since we can always go back to the RMarkdown files and go through the exercises on our own at home. I love how much attention you give to the feedback and very impressed by how flexible you are.",2019-01-11 11:51:22
-"Great class! Maybe a note to the lines in the R Markdown files: When exercises are included or you show other things in between, the lines get messed up which is why I often need longer time to actually find where we are. This is just something you might want to keep in mind.",2019-01-11 11:51:22
-Explained earlier,2019-01-11 11:51:17
-"Learned a lot of new tricks about ggplot, which is helpful. This class (so far) is perfect after Mike's 251, and I'm glad we're not going any slower. For section, maybe we could do some more of the hands on things. I like seeing it on the screen and agree that we don't have time to do too many practice plots. But I want to make sure it's reinforced, so I'm hoping section could solve that problem.",2019-01-11 11:51:16
-Like the diversity of graphs we generated,2019-01-11 11:51:15
-I am really enjoying the class so far! I love the music and I thought the animations showing how some way of graphing data can actually be misleading (e.g. boxplots) was very useful. I didn't think I was going to like a stats class this much :),2019-01-11 11:51:13
-The music is great!,2019-01-11 11:51:08
-Lovedddd today class. Very clear and good pace. I loved that you were walking us through each line of code. I think it would be great to set a timer for the in class practices so we don't run out of time.,2019-01-11 11:51:07
-"I thought it was a good class! I think mastering ggplot takes a lot of time and it's kind of endless skillset, so it just takes a ton of practice and iteration",2019-01-11 11:51:06
-Thank you for another great lecture! I think it would be useful if we incorporated data from psychological experiments in our practice problems in class. Love the music!,2019-01-11 11:51:03
-"After an in-class exercise, the line # in my code are no longer exactly the same with the instructor's copy, that led to some confusion for me during class.",2019-01-11 11:51:02
-"I like the contents today, and hopefully in homework/next classes, we could make some cool things with shiny apps",2019-01-11 11:51:00
-"As we fill out our practice exercises in the RMD file, our line numbers begin to differ from yours. Can you refer to them by tag, or find some consistent way of pointing out how to follow along with you?",2019-01-11 11:50:58
-It's nice to have the in-class Rmd files as far in advance as possible. I like to work through them before class so I can keep up.,2019-01-11 11:50:58
-I liked how detailed and comprehensive your ggplot examples are. I just wish we had more time to digest and practice. Will do so at home.,2019-01-11 11:50:48
-Today's class was super useful! The markdown files provided will be an excellent resource moving forward. I appreciate that you're teaching us skills without expecting us to memorize everything because there's a lot of content. Thanks!,2019-01-11 11:50:48
-I liked the RMarkdown format where we can go at our own pace. I think having a multitude of graphs as reference for ourselves later when we need to make graphs on our own will be extremely useful.,2019-01-11 11:50:44
-The explanation for note choice was heartwarming - thank you,2019-01-11 11:50:39
-"i liked that we finished up yesterday's lecture instead of just moving on. Today's pace was okay, but would have liked 1 more practice problem from today's material to really solidify it. Thanks!",2019-01-11 11:50:39
-I liked that you broke down the different elements of a graph and introduced them slowly so that we know what each line or segment of code does,2019-01-11 11:50:34
-"This class was far too fast for me. As someone with no programming experience, I plan to use the Datacamp sources, and I hope it'll get better in the future. Thank you for the helpful R Markdown files!",2019-01-11 11:50:32
-keep doing what youre doing : ),2019-01-11 11:50:32
-No major thoughts.,2019-01-11 11:50:29
-"The R markdowns are great, and I also liked the exercises.",2019-01-11 11:50:24
-good speed covering good content!,2019-01-11 11:50:20
-many examples,2019-01-11 11:50:20
-A pulse check about whether everyone is following you would be great.,2019-01-11 11:50:11
-Nice job!,2019-01-11 11:50:06
-you should play joy division during the breaks as a callback to the joy plots,2019-01-11 11:50:06
+﻿Response,Created At
+The lecture code and PDFs seem like they'll be valuable resources. Thanks for sharing them!,2020-01-10 14:52:13
+"Like I said last week, I know this R stuff so I don't mind the speed. I'm hoping we'll move slower on the stats and go in depth on the modeling.",2020-01-10 14:51:30
+"I wish we could spend a little more time on the content and less time on reviewing feedback. I think it's *great* that you are so interested in soliciting our feedback, but I also want to be sure we can cover the most complicated material in class. Maybe a digest email at the end of the week? Or allow people with specific questions to include their name so they can be contacted directly?",2020-01-10 14:50:59
+I thought the class followed a clear path and the goal was obvious. I also appreciated seeing the combined plots. It's good to know what is possible!,2020-01-10 14:50:50
+"This class was a bit faster than last time, but still manageable. I would appreciate decomposing the code a bit in class and thinking about how to debug this way to really understand what the code is doing. But that's sort of built into the existing file now, so it's manageable for us to go through it ourselves.",2020-01-10 14:50:46
+"Not sure how much to be following along on the board vs. on laptop. I guess it's personal preference, but today's class was mostly lecture minus one hands-on example and I think that laptops might be distracting in this case...",2020-01-10 14:50:44
+"The pace of this class was better. This was due to a better understanding of how the project files were organized, which allowed us to better see what was going on.  It may be best to remind us about this organization especially in the first few classes.",2020-01-10 14:50:41
+I'd love to revisit / go into greater depth on stat_summary – I don't have a great sense of the range of ways it can be used. I also would have enjoyed one more practice plot in class!,2020-01-10 14:50:35
+LITTLE BE FAST. SHOULD BE LITTLE BIT SLOW,2020-01-10 14:50:29
+"The directions for each step were very clear. Maybe more independent work would be nice, but overall I enjoyed today's class.",2020-01-10 14:50:28
+Visualizations are fun. Would love more practice (as a group) thinking through a set of data and designing the best ways to visualize it.,2020-01-10 14:50:27
+I enjoyed seeing many examples of different ways we can visualize data!,2020-01-10 14:50:23
+Really like all of the ggplot examples and the gganimate example at the end. Would have been interested to see more of a full introduction to shiny.,2020-01-10 14:50:19
+"The pace was really good, I really liked the example code (like the skeleton code) because I felt like I could easily use it in the future! :)",2020-01-10 14:50:19
+"I like hearing Tobi's tips, tricks, and shortcuts. Those seem really useful.",2020-01-10 14:50:14
+"I liked that we were exposed to a lot of different types of graphs and other useful things (such as the keyboard shortcuts). I would have liked more time to practice those things together. However, I think we'll get a change to do that in our homeworks and in sections.",2020-01-10 14:50:11
+"I learned a ton of useful skills in today's class! No specific suggestions for improvement -- the pace, class material, etc., was all great!",2020-01-10 14:50:09
+"I loved how we got to see the breadth of plots that are possible (bar charts, pie charts, scatterplots, violin plots, etc.). It was just a lot to process, especially for those of us that haven't done stats in a while. If possible, I would have loved to discuss the pros and cons of each type of visualization in a little more detail.",2020-01-10 14:50:09
+I liked the pace of class today. No suggestions.,2020-01-10 14:50:02
+👍,2020-01-10 14:50:01
+A lot of useful practical ways to modify details of the graphs for making them very customizable and ready for publications. Thanks!,2020-01-10 14:50:00
+I liked the hands-on visualization practice. I think there can be more practice problems and a little less lecture.,2020-01-10 14:49:58
+More practice examples would have been nice.,2020-01-10 14:49:50
+"great class! super cool to see the animated visuals, especially the bar plot illustration -- that was very helpful!",2020-01-10 14:49:47
+Liked seeing different plots and uses for them; would have liked more in-class practice plots,2020-01-10 14:49:46
+"Less fast than less time, I was better able to follow through, apart from the last 5minutes (but those seems advanced extras anyway?).",2020-01-10 14:49:45
+It was nice! No specific suggestions.,2020-01-10 14:49:39
+I liked the several examples and great code.,2020-01-10 14:49:36
+"I liked that you went over the practice problems in class this time, that helped to make sure we were all on the same page.",2020-01-10 14:49:27
+"I liked the scaffolding of information, the level of thinking, and the practicality.",2020-01-10 14:49:25
+the pace at the very end was a bit fast,2020-01-10 14:49:16

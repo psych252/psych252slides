@@ -37,21 +37,22 @@ df.starwars = starwars
 
 Let's practice the pipe operator. 
 
-```{r pipe-practice1}
-# some numbers
+```{r practice1-1}
+# here are some numbers
 x = seq(from = 1, to = 5, by = 1)
-```
 
-```{r pipe-practice2}
-# standard way
+# taking the log the standard way
 log(x)
 
-# the pipe way (write your code underneath)
+# now take the log the pipe way (write your code underneath)
 x %>% log()
 ```
 
-```{r pipe-practice3}
-# standard way
+```{r practice1-2}
+# some more numbers
+x = seq(from = 10, to = 5, by = -1)
+
+# the standard way
 mean(round(sqrt(x), digits = 2))
 
 # the pipe way (write your code underneath)
@@ -61,7 +62,23 @@ x %>%
   mean()
 ```
 
-## Practice 2 
+## Practice 2
+
+Create a data frame that: 
+- only has the species `Human` and `Droid` 
+- with the following data columns (in this order): name, species, birth_year, homeworld
+- is arranged according to birth year (with the oldest entry at the top of the data frame)
+- and has the `name` column renamed to `person`
+
+```{r practice2}
+df.starwars %>% 
+  filter(species %in% c("Human", "Droid")) %>% 
+  select(name, species, birth_year, homeworld) %>% 
+  arrange(desc(birth_year)) %>% 
+  rename(person = name)
+```
+
+## Practice 3 
 
 Compute the body mass index for `male` characters who are `human`.
 
@@ -70,7 +87,7 @@ Compute the body mass index for `male` characters who are `human`.
 - make the new variable with the body mass index 
 - arrange the data frame starting with the highest body mass index 
 
-```{r practice2}
+```{r practice3}
 df.starwars %>% 
   select(species, gender, height, mass) %>% 
   filter(gender == "male", species == "Human") %>% 
