@@ -13,7 +13,8 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = "#>")
 ```
 
 # Data wrangling 1 
@@ -53,7 +54,7 @@ To test your knowledge of the R basics, I recommend taking the free interactive 
 
 ### Modes 
 
-Variables in R can have different modes. Table \@ref(tab:modes) shows the most common ones. 
+Variables in R can have different modes. Table \@ref(tab:data-wrangling1-02) shows the most common ones. 
 
 ```{r data-wrangling1-02, echo=FALSE}
 name = c("numeric", "character", "logical", "not available")
@@ -91,7 +92,7 @@ The `str()` function displays the structure of an R object. Here, it shows us wh
 
 ### Data types
 
-R has a number of different data types. Table \@ref(tab:types) shows the ones you're most likely to come across (taken from [this source](https://www.statmethods.net/input/datatypes.html)): 
+R has a number of different data types. Table \@ref(tab:data-wrangling1-04) shows the ones you're most likely to come across (taken from [this source](https://www.statmethods.net/input/datatypes.html)): 
 
 ```{r data-wrangling1-04, echo=FALSE}
 name = c("vector", "factor", "matrix", "array", "data frame", "list") 
@@ -183,7 +184,7 @@ Lists are a very flexible data format. You can put almost anything in a list.
 
 ### Operators
 
-Table \@ref(tab:operators) shows the comparison operators that result in logical outputs. 
+Table \@ref(tab:data-wrangling1-09) shows the comparison operators that result in logical outputs. 
 
 ```{r data-wrangling1-09, echo=FALSE}
 operators = c("`==`", "`!=`", "`>`, `<`", "`>=`, `<=`", "`&`, `|`, `!`", "`%in%`")
@@ -622,7 +623,7 @@ We use the functions in the package `dplyr` to manipulate our data.
 
 ### `filter()`
 
-`filter()` lets us apply logical (and other) operators (see Table \@ref(tab:operators)) to subset the data. Here, I've filtered out the male characters. 
+`filter()` lets us apply logical (and other) operators (see Table \@ref(tab:data-wrangling1-09)) to subset the data. Here, I've filtered out the male characters. 
 
 ```{r data-wrangling1-42}
 df.starwars %>% 
@@ -917,9 +918,14 @@ Compute the body mass index for `male` characters who are `human`.
 
 ### Data camp courses
 
-- [cleaning data](https://www.datacamp.com/courses/importing-cleaning-data-in-r-case-studies)
 - [dplyr](https://www.datacamp.com/courses/dplyr-data-manipulation-r-tutorial)
 - [tidyverse](https://www.datacamp.com/courses/introduction-to-the-tidyverse)
+- [working with data in the tidyverse](https://www.datacamp.com/courses/working-with-data-in-the-tidyverse)
+- [cleaning data](https://www.datacamp.com/courses/importing-cleaning-data-in-r-case-studies)
+- [cleaning data: case studies](https://www.datacamp.com/courses/importing-cleaning-data-in-r-case-studies)
+- [string manipulation in R](https://www.datacamp.com/courses/string-manipulation-in-r-with-stringr)
+- [Intermediate R](https://www.datacamp.com/courses/intermediate-r)
+- [Writing functions in R](https://www.datacamp.com/courses/introduction-to-function-writing-in-r)
 
 ### Books and chapters
 
