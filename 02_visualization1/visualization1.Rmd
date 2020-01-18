@@ -18,11 +18,8 @@ install.packages(c("bookdown","knitr","tidyverse", "devtools", "tinytex", "Hmisc
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Visualization 1

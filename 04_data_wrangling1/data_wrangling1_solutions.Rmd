@@ -12,8 +12,7 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "")
+knitr::opts_chunk$set(comment = "")
 ```
 
 # Data wrangling 1: Exercise solutions 

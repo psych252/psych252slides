@@ -1,7 +1,7 @@
 ---
 title: "04_Data_wrangling1"
 author: "Tobias Gerstenberg"
-date: "1/14/2019"
+date: "1/13/2020"
 output: 
   html_document:
     toc: true
@@ -15,22 +15,18 @@ library("knitr")
 library("DT")
 library("tidyverse")
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+theme_set(theme_classic() +
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
 
 ## Student feedback 
 
-> Thanks for the class! I know that you had a lot to get through, but I would appreciate more exercises (like the ones we had last week) so the class is a bit more interactive.
+> The lecture part was a bit long and there was not enough practice time for the problems.
 
-> Everything is good and pace is just right. The only thing that I am concern is getting the practice answers from the lectures and sessions. Will it be possible for the lecturers and tutors to __post the practice answers online__, so that people who may have accidentially missed the answers can check it after classes? Thanks!
+> I think 5 minutes was too much time for the first two practice exercises.
 
-> I think a lot of today's class could have been abbreviated by having folks read through the file before class. This would have left more time for questions/exercises.
+> I thought the class went well. The explanations I valued most were the reasons why things did not work.
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-4.csv") %>% 
@@ -39,45 +35,44 @@ read_csv("what-did-you-like-about-4.csv") %>%
   datatable()
 ```
 
-### PollEverywhere results 
+<!-- ### PollEverywhere results  -->
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read.csv("how-was-the-pace-of-4.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
-                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+<!-- ```{r echo=FALSE, message=FALSE, results='hide'} -->
+<!-- df.pace = read.csv("how-was-the-pace-of-4.csv", header = F) %>% -->
+<!--   filter(row_number() > which(.$V2 == "Created At")) %>%  -->
+<!--   set_names(c("response", "date")) %>%  -->
+<!--   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"), -->
+<!--                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>%  -->
+<!--   count(response) %>%  -->
+<!--   complete(response, fill = list(n = 0)) -->
 
-ggplot(data = df.pace,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-ggsave("pace.pdf", width = 8, height = 6)
-```
+<!-- ggplot(data = df.pace, -->
+<!--        mapping = aes(x = response, y = n)) +  -->
+<!--   geom_bar(stat = "identity", fill = "lightblue", color = "black") + -->
+<!--   labs(y = "number of students", x = "", title = "How was the pace of today's class?") -->
+<!-- ggsave("pace.pdf", width = 8, height = 6) -->
+<!-- ``` -->
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-4.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
-  mutate(response = as.numeric(response),
-         response = factor(response, levels = 1:5,
-                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+<!-- ```{r echo=FALSE, message=FALSE, results='hide'} -->
+<!-- df.overall = read_csv("how-happy-were-you-with-4.csv") %>%  -->
+<!--   set_names(c("response", "date")) %>%  -->
+<!--   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions  -->
+<!--   mutate(response = as.numeric(response), -->
+<!--          response = factor(response, levels = 1:5, -->
+<!--                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>%  -->
+<!--   count(response) %>%  -->
+<!--   complete(response, fill = list(n = 0)) -->
 
-ggplot(data = df.overall,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
-  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
-  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
-  theme(title = element_text(size = 18))
-ggsave("overall.pdf", width = 8, height = 6)
-```
+<!-- ggplot(data = df.overall, -->
+<!--        mapping = aes(x = response, y = n)) +  -->
+<!--   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) + -->
+<!--   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) + -->
+<!--   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") + -->
+<!--   theme(title = element_text(size = 18)) -->
+<!-- ggsave("overall.pdf", width = 8, height = 6) -->
+<!-- ``` -->
 
 ## What to do next time
 
-- include some more practice problems (fun stuff to play around with for more advanced users so they don't get bored)
-- post answers to questions online 
-- encourage students to take a look at the materials before class 
+- expand problem 1 (or give less time for it)
+- maybe: go through more examples where stuff fails, and then explain why 

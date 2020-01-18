@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Tobias Gerstenberg" />
@@ -286,7 +286,7 @@ code span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warni
       if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -329,9 +329,7 @@ h6 {
 </style>
 
 
-</head>
 
-<body>
 
 <style type="text/css">
 .main-container {
@@ -345,7 +343,6 @@ code {
 }
 img {
   max-width:100%;
-  height: auto;
 }
 .tabbed-pane {
   padding-top: 12px;
@@ -362,8 +359,6 @@ summary {
 </style>
 
 
-
-<div class="container-fluid main-container">
 
 <!-- tabsets -->
 
@@ -409,6 +404,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -421,20 +417,17 @@ summary {
 }
 </style>
 
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
 <!-- code folding -->
 
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
 
 
 
@@ -444,8 +437,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Class 5</h1>
-<h4 class="author"><em>Tobias Gerstenberg</em></h4>
-<h4 class="date"><em>January 16th, 2019</em></h4>
+<h4 class="author">Tobias Gerstenberg</h4>
+<h4 class="date">January 15th, 2020</h4>
 
 </div>
 
@@ -465,22 +458,22 @@ $(document).ready(function () {
 <div id="load-packages-and-data-set" class="section level2">
 <h2><span class="header-section-number">5.1</span> Load packages and data set</h2>
 <p>Let’s first load the packages that we need for this chapter.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span>
-<span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for data wrangling </span></code></pre>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(<span class="st">&quot;knitr&quot;</span>) <span class="co"># for rendering the RMarkdown file</span></a>
+<a class="sourceLine" id="cb1-2" title="2"><span class="kw">library</span>(<span class="st">&quot;tidyverse&quot;</span>) <span class="co"># for data wrangling </span></a></code></pre></div>
 <p>And let’s load the data set into the environment</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.starwars =<span class="st"> </span>starwars</code></pre>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">df.starwars =<span class="st"> </span>starwars</a></code></pre></div>
 </div>
 <div id="practice-1" class="section level2">
 <h2><span class="header-section-number">5.2</span> Practice 1</h2>
 <p>Find out what the average <code>height</code> and <code>mass</code> (as well as the standard deviation) is from different <code>species</code> in different <code>homeworld</code>s. Why is the standard deviation <code>NA</code> for many groups?</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.starwars <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">group_by</span>(species, homeworld) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">mean_height =</span> <span class="kw">mean</span>(height, <span class="dt">na.rm =</span> T),
-            <span class="dt">mean_mass =</span> <span class="kw">mean</span>(mass, <span class="dt">na.rm =</span> T),
-            <span class="dt">sd_height =</span> <span class="kw">sd</span>(height, <span class="dt">na.rm =</span> T),
-            <span class="dt">sd_mass =</span> <span class="kw">sd</span>(mass, <span class="dt">na.rm =</span> T),
-            <span class="dt">n =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">ungroup</span>()</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">df.starwars <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-2" title="2"><span class="st">  </span><span class="kw">group_by</span>(species, homeworld) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-3" title="3"><span class="st">  </span><span class="kw">summarize</span>(<span class="dt">mean_height =</span> <span class="kw">mean</span>(height, <span class="dt">na.rm =</span> T),</a>
+<a class="sourceLine" id="cb3-4" title="4">            <span class="dt">mean_mass =</span> <span class="kw">mean</span>(mass, <span class="dt">na.rm =</span> T),</a>
+<a class="sourceLine" id="cb3-5" title="5">            <span class="dt">sd_height =</span> <span class="kw">sd</span>(height, <span class="dt">na.rm =</span> T),</a>
+<a class="sourceLine" id="cb3-6" title="6">            <span class="dt">sd_mass =</span> <span class="kw">sd</span>(mass, <span class="dt">na.rm =</span> T),</a>
+<a class="sourceLine" id="cb3-7" title="7">            <span class="dt">n =</span> <span class="kw">n</span>()) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb3-8" title="8"><span class="st">  </span><span class="kw">ungroup</span>()</a></code></pre></div>
 <pre><code># A tibble: 58 x 7
    species  homeworld   mean_height mean_mass sd_height sd_mass     n
    &lt;chr&gt;    &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt;
@@ -497,13 +490,13 @@ $(document).ready(function () {
 # … with 48 more rows</code></pre>
 <p>The standard deviation is <code>NA</code> for many groups since the group size is 1.</p>
 <p>Who is the tallest member of each species? What eye color do they have? The <code>top_n()</code> function or the <code>row_number()</code> function (in combination with <code>filter()</code>) will be useful here.</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.starwars <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">arrange</span>(species, <span class="kw">desc</span>(height)) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">group_by</span>(species) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="co"># top_n(1, wt = species) %&gt;% # you can either use this, or filter() in the next row</span>
-<span class="st">  </span><span class="kw">filter</span>(<span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(species, name, eye_color)</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1">df.starwars <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="st">  </span><span class="kw">arrange</span>(species, <span class="kw">desc</span>(height)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="st">  </span><span class="kw">group_by</span>(species) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-4" title="4"><span class="st">  </span><span class="co"># top_n(1, wt = height) %&gt;% # you can either use this, or filter() in the next row</span></a>
+<a class="sourceLine" id="cb5-5" title="5"><span class="st">  </span><span class="kw">filter</span>(<span class="kw">row_number</span>() <span class="op">==</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-6" title="6"><span class="st">  </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-7" title="7"><span class="st">  </span><span class="kw">select</span>(species, name, eye_color)</a></code></pre></div>
 <pre><code># A tibble: 38 x 3
    species   name                  eye_color
    &lt;chr&gt;     &lt;chr&gt;                 &lt;chr&gt;    
@@ -522,77 +515,80 @@ $(document).ready(function () {
 <div id="practice-2" class="section level2">
 <h2><span class="header-section-number">5.3</span> Practice 2</h2>
 <p>Load this data frame first.</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.practice2 =<span class="st"> </span><span class="kw">tibble</span>(
-  <span class="dt">participant =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,
-  <span class="dt">initial =</span> <span class="kw">c</span>(<span class="st">&quot;AR&quot;</span>, <span class="st">&quot;FA&quot;</span>, <span class="st">&quot;IR&quot;</span>, <span class="st">&quot;NC&quot;</span>, <span class="st">&quot;ER&quot;</span>, <span class="st">&quot;PI&quot;</span>, <span class="st">&quot;DH&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;WT&quot;</span>, <span class="st">&quot;JD&quot;</span>), 
-  <span class="dt">judgment_1 =</span> <span class="kw">c</span>(<span class="dv">12</span>, <span class="dv">13</span>, <span class="dv">1</span>, <span class="dv">14</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">41</span>, <span class="dv">100</span>, <span class="dv">33</span>),
-  <span class="dt">judgment_2 =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">10</span>, <span class="dv">89</span>, <span class="dv">94</span>, <span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">19</span>, <span class="dv">57</span>, <span class="dv">74</span>),
-  <span class="dt">judgment_3 =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">10</span>, <span class="dv">89</span>, <span class="dv">94</span>, <span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">19</span>, <span class="dv">57</span>, <span class="dv">74</span>)
-)</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">df.practice2 =<span class="st"> </span><span class="kw">tibble</span>(</a>
+<a class="sourceLine" id="cb7-2" title="2">  <span class="dt">participant =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">10</span>,</a>
+<a class="sourceLine" id="cb7-3" title="3">  <span class="dt">initial =</span> <span class="kw">c</span>(<span class="st">&quot;AR&quot;</span>, <span class="st">&quot;FA&quot;</span>, <span class="st">&quot;IR&quot;</span>, <span class="st">&quot;NC&quot;</span>, <span class="st">&quot;ER&quot;</span>, <span class="st">&quot;PI&quot;</span>, <span class="st">&quot;DH&quot;</span>, <span class="st">&quot;CN&quot;</span>, <span class="st">&quot;WT&quot;</span>, <span class="st">&quot;JD&quot;</span>), </a>
+<a class="sourceLine" id="cb7-4" title="4">  <span class="dt">judgment_1 =</span> <span class="kw">c</span>(<span class="dv">12</span>, <span class="dv">13</span>, <span class="dv">1</span>, <span class="dv">14</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">41</span>, <span class="dv">100</span>, <span class="dv">33</span>),</a>
+<a class="sourceLine" id="cb7-5" title="5">  <span class="dt">judgment_2 =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">10</span>, <span class="dv">89</span>, <span class="dv">94</span>, <span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">19</span>, <span class="dv">57</span>, <span class="dv">74</span>),</a>
+<a class="sourceLine" id="cb7-6" title="6">  <span class="dt">judgment_3 =</span> <span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">20</span>, <span class="dv">10</span>, <span class="dv">89</span>, <span class="dv">94</span>, <span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">19</span>, <span class="dv">57</span>, <span class="dv">74</span>)</a>
+<a class="sourceLine" id="cb7-7" title="7">)</a></code></pre></div>
 <ul>
 <li>Make the <code>df.practice2</code> data framey tidy (by turning into a long format).</li>
 <li>Compute the z-score of each participants’ judgments (using the <code>scale()</code> function).</li>
 <li>Calculate the mean and standard deviation of each participants’ z-scored judgments.</li>
 <li>Notice anything interesting? Think about what <a href="https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/z-score/">z-scoring</a> does …</li>
 </ul>
-<pre class="sourceCode r"><code class="sourceCode r">df.practice2 <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">gather</span>(<span class="dt">key =</span> <span class="st">&quot;index&quot;</span>, <span class="dt">value =</span> <span class="st">&quot;judgment&quot;</span>, <span class="op">-</span><span class="kw">c</span>(participant, initial)) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">group_by</span>(participant) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">judgment =</span> <span class="kw">scale</span>(judgment)) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">mean =</span> <span class="kw">mean</span>(judgment),
-            <span class="dt">sd =</span> <span class="kw">sd</span>(judgment))</code></pre>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">df.practice2 <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
+<a class="sourceLine" id="cb8-3" title="3">               <span class="dt">values_to =</span> <span class="st">&quot;judgment&quot;</span>,</a>
+<a class="sourceLine" id="cb8-4" title="4">               <span class="dt">cols =</span> <span class="op">-</span><span class="kw">c</span>(participant, initial)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-5" title="5"><span class="st">  </span><span class="kw">group_by</span>(participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-6" title="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">judgment =</span> <span class="kw">scale</span>(judgment)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-7" title="7"><span class="st">  </span><span class="kw">summarize</span>(<span class="dt">mean =</span> <span class="kw">mean</span>(judgment),</a>
+<a class="sourceLine" id="cb8-8" title="8">            <span class="dt">sd =</span> <span class="kw">sd</span>(judgment))</a></code></pre></div>
 <pre><code># A tibble: 10 x 3
    participant      mean    sd
          &lt;int&gt;     &lt;dbl&gt; &lt;dbl&gt;
- 1           1  7.40e-17 1.000
- 2           2 -2.96e-16 1.000
- 3           3  0.       1.000
- 4           4  0.       1.000
- 5           5  1.48e-16 1.000
- 6           6  0.       1.000
- 7           7  7.40e-17 1.000
- 8           8  7.40e-17 1    
- 9           9  1.48e-16 1.000
-10          10 -7.40e-17 1    </code></pre>
+ 1           1  7.40e-17  1.00
+ 2           2 -2.96e-16  1.00
+ 3           3  0.        1.00
+ 4           4  0.        1.00
+ 5           5  1.48e-16  1.00
+ 6           6  0.        1.00
+ 7           7  7.40e-17  1.00
+ 8           8  7.40e-17  1   
+ 9           9  1.48e-16  1.00
+10          10 -7.40e-17  1   </code></pre>
 </div>
 <div id="practice-3" class="section level2">
 <h2><span class="header-section-number">5.4</span> Practice 3</h2>
 <p>Load these three data frames first:</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">1</span>)
-
-df.judgments =<span class="st"> </span><span class="kw">tibble</span>(
-  <span class="dt">participant =</span> <span class="kw">rep</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>, <span class="dt">each =</span> <span class="dv">5</span>),
-  <span class="dt">stimulus =</span> <span class="kw">rep</span>(<span class="kw">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>), <span class="dv">5</span>),
-  <span class="dt">judgment =</span> <span class="kw">sample</span>(<span class="dv">0</span><span class="op">:</span><span class="dv">100</span>, <span class="dt">size =</span> <span class="dv">15</span>, <span class="dt">replace =</span> T)
-)
-
-df.information =<span class="st"> </span><span class="kw">tibble</span>(
-  <span class="dt">number =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>, <span class="dt">to =</span> <span class="dv">100</span>, <span class="dt">length.out =</span> <span class="dv">5</span>),
-  <span class="dt">color =</span> <span class="kw">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;white&quot;</span>)
-)</code></pre>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb10-2" title="2"></a>
+<a class="sourceLine" id="cb10-3" title="3">df.judgments =<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">participant =</span> <span class="kw">rep</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>, <span class="dt">each =</span> <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb10-4" title="4">                      <span class="dt">stimulus =</span> <span class="kw">rep</span>(<span class="kw">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>), <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb10-5" title="5">                      <span class="dt">judgment =</span> <span class="kw">sample</span>(<span class="dv">0</span><span class="op">:</span><span class="dv">100</span>,</a>
+<a class="sourceLine" id="cb10-6" title="6">                                        <span class="dt">size =</span> <span class="dv">15</span>,</a>
+<a class="sourceLine" id="cb10-7" title="7">                                        <span class="dt">replace =</span> T))</a>
+<a class="sourceLine" id="cb10-8" title="8"></a>
+<a class="sourceLine" id="cb10-9" title="9">df.information =<span class="st"> </span><span class="kw">tibble</span>(<span class="dt">number =</span> <span class="kw">seq</span>(<span class="dt">from =</span> <span class="dv">0</span>,</a>
+<a class="sourceLine" id="cb10-10" title="10">               <span class="dt">to =</span> <span class="dv">100</span>,</a>
+<a class="sourceLine" id="cb10-11" title="11">               <span class="dt">length.out =</span> <span class="dv">5</span>),</a>
+<a class="sourceLine" id="cb10-12" title="12">               <span class="dt">color =</span> <span class="kw">c</span>(<span class="st">&quot;red&quot;</span>, <span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>, <span class="st">&quot;black&quot;</span>, <span class="st">&quot;white&quot;</span>))</a></code></pre></div>
 <p>Create a new data frame called <code>df.join</code> that combines the information from both <code>df.judgments</code> and <code>df.information</code>. Note that column with the colors is called <code>stimulus</code> in <code>df.judgments</code> and <code>color</code> in <code>df.information</code>. At the end, you want a data frame that contains the following columns: <code>participant</code>, <code>stimulus</code>, <code>number</code>, and <code>judgment</code>.</p>
-<pre class="sourceCode r"><code class="sourceCode r">df.judgments <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">left_join</span>(df.information,
-            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;stimulus&quot;</span> =<span class="st"> &quot;color&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>judgment, <span class="kw">everything</span>(), judgment)</code></pre>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">df.join =<span class="st"> </span>df.judgments <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(df.information,</a>
+<a class="sourceLine" id="cb11-3" title="3">            <span class="dt">by =</span> <span class="kw">c</span>(<span class="st">&quot;stimulus&quot;</span> =<span class="st"> &quot;color&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-4" title="4"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>judgment, <span class="kw">everything</span>(), judgment)</a>
+<a class="sourceLine" id="cb11-5" title="5">df.join</a></code></pre></div>
 <pre><code># A tibble: 15 x 4
    participant stimulus number judgment
          &lt;int&gt; &lt;chr&gt;     &lt;dbl&gt;    &lt;int&gt;
- 1           1 red           0       26
- 2           1 green        25       37
- 3           1 blue         50       57
- 4           1 red           0       91
- 5           1 green        25       20
- 6           2 blue         50       90
- 7           2 red           0       95
- 8           2 green        25       66
- 9           2 blue         50       63
-10           2 red           0        6
-11           3 green        25       20
-12           3 blue         50       17
-13           3 red           0       69
-14           3 green        25       38
-15           3 blue         50       77</code></pre>
+ 1           1 red           0       67
+ 2           1 green        25       38
+ 3           1 blue         50        0
+ 4           1 red           0       33
+ 5           1 green        25       86
+ 6           2 blue         50       42
+ 7           2 red           0       13
+ 8           2 green        25       81
+ 9           2 blue         50       58
+10           2 red           0       50
+11           3 green        25       96
+12           3 blue         50       84
+13           3 red           0       20
+14           3 green        25       53
+15           3 blue         50       73</code></pre>
 </div>
 </div>
 
@@ -613,6 +609,23 @@ $(document).ready(function () {
 
 
 </script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

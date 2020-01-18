@@ -39,7 +39,6 @@ df.starwars = starwars
 Find out what the average `height` and `mass` (as well as the standard deviation) is from different `species` in different `homeworld`s. Why is the standard deviation `NA` for many groups?  
 
 ```{r summarize_practice1}
-
 df.starwars %>% 
   group_by(species, homeworld) %>% 
   summarize(mean_height = mean(height, na.rm = T),
@@ -55,11 +54,10 @@ The standard deviation is `NA` for many groups since the group size is 1.
 Who is the tallest member of each species? What eye color do they have? The `top_n()` function or the `row_number()` function (in combination with `filter()`) will be useful here. 
 
 ```{r summarize_practice2}
-
 df.starwars %>% 
   arrange(species, desc(height)) %>% 
   group_by(species) %>% 
-  # top_n(1, wt = species) %>% # you can either use this, or filter() in the next row
+  # top_n(1, wt = height) %>% # you can either use this, or filter() in the next row
   filter(row_number() == 1) %>% 
   ungroup() %>% 
   select(species, name, eye_color)
@@ -86,7 +84,9 @@ df.practice2 = tibble(
 
 ```{r reshaping-practice2}
 df.practice2 %>% 
-  gather(key = "index", value = "judgment", -c(participant, initial)) %>% 
+  pivot_longer(names_to = "index",
+               values_to = "judgment",
+               cols = -c(participant, initial)) %>% 
   group_by(participant) %>% 
   mutate(judgment = scale(judgment)) %>% 
   summarize(mean = mean(judgment),
@@ -100,25 +100,26 @@ Load these three data frames first:
 ```{r joining-practice1}
 set.seed(1)
 
-df.judgments = tibble(
-  participant = rep(1:3, each = 5),
-  stimulus = rep(c("red", "green", "blue"), 5),
-  judgment = sample(0:100, size = 15, replace = T)
-)
+df.judgments = tibble(participant = rep(1:3, each = 5),
+                      stimulus = rep(c("red", "green", "blue"), 5),
+                      judgment = sample(0:100,
+                                        size = 15,
+                                        replace = T))
 
-df.information = tibble(
-  number = seq(from = 0, to = 100, length.out = 5),
-  color = c("red", "green", "blue", "black", "white")
-)
+df.information = tibble(number = seq(from = 0,
+               to = 100,
+               length.out = 5),
+               color = c("red", "green", "blue", "black", "white"))
 ```
 
 Create a new data frame called `df.join` that combines the information from both `df.judgments` and `df.information`. Note that column with the colors is called `stimulus` in `df.judgments` and `color` in `df.information`. At the end, you want a data frame that contains the following columns: `participant`, `stimulus`, `number`, and `judgment`. 
 
 ```{r joining-practice2}
-df.judgments %>% 
+df.join = df.judgments %>% 
   left_join(df.information,
             by = c("stimulus" = "color")) %>% 
   select(-judgment, everything(), judgment)
+df.join
 ```
 
 
