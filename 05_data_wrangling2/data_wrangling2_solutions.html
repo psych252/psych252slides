@@ -529,9 +529,9 @@ summary {
 <li>Notice anything interesting? Think about what <a href="https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/z-score/">z-scoring</a> does …</li>
 </ul>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">df.practice2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb8-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
-<a class="sourceLine" id="cb8-3" title="3">               <span class="dt">values_to =</span> <span class="st">&quot;judgment&quot;</span>,</a>
-<a class="sourceLine" id="cb8-4" title="4">               <span class="dt">cols =</span> <span class="op">-</span><span class="kw">c</span>(participant, initial)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span><span class="kw">c</span>(participant, initial),</a>
+<a class="sourceLine" id="cb8-3" title="3">               <span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
+<a class="sourceLine" id="cb8-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;judgment&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-5" title="5"><span class="st">  </span><span class="kw">group_by</span>(participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-6" title="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">judgment =</span> <span class="kw">scale</span>(judgment)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb8-7" title="7"><span class="st">  </span><span class="kw">summarize</span>(<span class="dt">mean =</span> <span class="kw">mean</span>(judgment),</a>

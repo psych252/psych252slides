@@ -706,9 +706,9 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Here, I’ve generated data from two participants with three observations. This data frame is not tidy since each row contains more than a single observation. Data frames that have one row per participant but many observations are called <em>wide</em> data frames.</p>
 <p>We can make it tidy using the <code>pivot_longer()</code> function.</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1">df.reshape.long =<span class="st"> </span>df.reshape <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb25-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
-<a class="sourceLine" id="cb25-3" title="3">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb25-4" title="4">               <span class="dt">cols =</span> <span class="op">-</span>participant) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb25-3" title="3">               <span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
+<a class="sourceLine" id="cb25-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>) <span class="op">%&gt;%</span></a>
 <a class="sourceLine" id="cb25-5" title="5"><span class="st">  </span><span class="kw">arrange</span>(participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb25-6" title="6"><span class="st">  </span><span class="kw">print</span>()</a></code></pre></div>
 <pre><code>#&gt; # A tibble: 6 x 3
@@ -724,9 +724,9 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>The <code>pivot_longer()</code> function takes at least four arguments:</p>
 <ol style="list-style-type: decimal">
 <li>the data which I’ve passed to it via the pipe <code>%&gt;%</code></li>
+<li>a specification for which columns we want to gather – here I’ve specified that we want to gather the values from all columns except the <code>participant</code> column</li>
 <li>a <code>names_to</code> argument which specifies the name of the column which will contain the column names of the original data frame</li>
 <li>a <code>values_to</code> argument which specifies the name of the column which will contain the values that were spread across different columns in the original data frame</li>
-<li>a specification for which columns we want to gather – here I’ve specified that we want to gather the values from all columns except the <code>participant</code> column</li>
 </ol>
 <p><code>pivot_wider()</code> is the counterpart of <code>pivot_longer()</code>. We can use it to go from a data frame that is in <em>long</em> format, to a data frame in <em>wide</em> format, like so:</p>
 <div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" title="1">df.reshape.wide =<span class="st"> </span>df.reshape.long <span class="op">%&gt;%</span><span class="st"> </span></a>
@@ -757,11 +757,11 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 #&gt; # … with 1 more variable: observation_3 &lt;dbl&gt;</code></pre>
 <p>The data frame contains in each row: which stimuli a participant saw, and what rating she gave. The participants saw a picture of a flower, car, and house, and rated how much they liked the picture on a scale from 0 to 100. The order at which the pictures were presented was randomized between participants. I will use a combination of <code>pivot_longer()</code>, and <code>pivot_wider()</code> to turn this into a data frame in long format.</p>
 <div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" title="1">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb31-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
-<a class="sourceLine" id="cb31-3" title="3">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
-<a class="sourceLine" id="cb31-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb31-5" title="5">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>),</a>
-<a class="sourceLine" id="cb31-6" title="6">               <span class="dt">cols =</span> <span class="op">-</span>participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb31-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb31-3" title="3">               <span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
+<a class="sourceLine" id="cb31-4" title="4">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
+<a class="sourceLine" id="cb31-5" title="5">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
+<a class="sourceLine" id="cb31-6" title="6">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb31-7" title="7"><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> <span class="st">&quot;index&quot;</span>,</a>
 <a class="sourceLine" id="cb31-8" title="8">              <span class="dt">values_from =</span> <span class="st">&quot;rating&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb31-9" title="9"><span class="st">  </span><span class="kw">mutate_at</span>(<span class="dt">.vars =</span> <span class="kw">vars</span>(order, observation), <span class="dt">.funs =</span> <span class="op">~</span><span class="st"> </span><span class="kw">as.numeric</span>(.)) <span class="op">%&gt;%</span><span class="st"> </span></a>
@@ -778,11 +778,11 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Voilà! Getting the desired data frame involved a few new tricks. Let’s take it step by step.</p>
 <p>First, I use <code>pivot_longer()</code> to make a long table.</p>
 <div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" title="1">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb33-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
-<a class="sourceLine" id="cb33-3" title="3">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
-<a class="sourceLine" id="cb33-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb33-5" title="5">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>),</a>
-<a class="sourceLine" id="cb33-6" title="6">               <span class="dt">cols =</span> <span class="op">-</span>participant)</a></code></pre></div>
+<a class="sourceLine" id="cb33-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb33-3" title="3">               <span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
+<a class="sourceLine" id="cb33-4" title="4">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
+<a class="sourceLine" id="cb33-5" title="5">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
+<a class="sourceLine" id="cb33-6" title="6">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>))</a></code></pre></div>
 <pre><code>#&gt; # A tibble: 12 x 4
 #&gt;    participant index       order rating
 #&gt;          &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt; &lt;chr&gt; 
@@ -801,11 +801,11 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Notice how I’ve used a combination of the <code>names_to =</code> and <code>names_sep =</code> arguments to create two columns. Because I’m combining data of two different types (“character” and “numeric”), I needed to specify what I want the resulting data type to be via the <code>values_ptypes =</code> argument.</p>
 <p>I would like to have the information about the stimulus and the observation in the same row. That is, I want to see what rating a participant gave to the flower stimulus, for example. To get there, I can use the <code>pivot_wider()</code> function to make a separate column for each entry in <code>index</code> that contains the values in <code>rating</code>.</p>
 <div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" title="1">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb35-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
-<a class="sourceLine" id="cb35-3" title="3">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
-<a class="sourceLine" id="cb35-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb35-5" title="5">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>),</a>
-<a class="sourceLine" id="cb35-6" title="6">               <span class="dt">cols =</span> <span class="op">-</span>participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb35-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb35-3" title="3">               <span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
+<a class="sourceLine" id="cb35-4" title="4">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
+<a class="sourceLine" id="cb35-5" title="5">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
+<a class="sourceLine" id="cb35-6" title="6">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb35-7" title="7"><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> <span class="st">&quot;index&quot;</span>,</a>
 <a class="sourceLine" id="cb35-8" title="8">              <span class="dt">values_from =</span> <span class="st">&quot;rating&quot;</span>)</a></code></pre></div>
 <pre><code>#&gt; # A tibble: 6 x 4
@@ -819,11 +819,11 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 #&gt; 6           2 3     house    45</code></pre>
 <p>That’s pretty much it. Now, each row contains information about the order in which a stimulus was presented, what the stimulus was, and the judgment that a participant made in this trial.</p>
 <div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb37-1" title="1">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb37-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
-<a class="sourceLine" id="cb37-3" title="3">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
-<a class="sourceLine" id="cb37-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb37-5" title="5">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>),</a>
-<a class="sourceLine" id="cb37-6" title="6">               <span class="dt">cols =</span> <span class="op">-</span>participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb37-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb37-3" title="3">               <span class="dt">names_to =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
+<a class="sourceLine" id="cb37-4" title="4">               <span class="dt">names_sep =</span> <span class="st">&quot;_&quot;</span>,</a>
+<a class="sourceLine" id="cb37-5" title="5">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
+<a class="sourceLine" id="cb37-6" title="6">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;character&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb37-7" title="7"><span class="st">  </span><span class="kw">pivot_wider</span>(<span class="dt">names_from =</span> <span class="st">&quot;index&quot;</span>,</a>
 <a class="sourceLine" id="cb37-8" title="8">              <span class="dt">values_from =</span> <span class="st">&quot;rating&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb37-9" title="9"><span class="st">  </span><span class="kw">mutate_at</span>(<span class="dt">.vars =</span> <span class="kw">vars</span>(order, observation), <span class="dt">.funs =</span> <span class="op">~</span><span class="st"> </span><span class="kw">as.numeric</span>(.)) <span class="op">%&gt;%</span><span class="st"> </span></a>
@@ -846,10 +846,10 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <h4><span class="header-section-number">1.3.2.2</span> <code>separate()</code> and <code>unite()</code></h4>
 <p>Sometimes, we want to separate one column into multiple columns. For example, we could have achieved the same result we did above slightly differently, like so:</p>
 <div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb39-1" title="1">df.reshape2 <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb39-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
-<a class="sourceLine" id="cb39-3" title="3">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
-<a class="sourceLine" id="cb39-4" title="4">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;numeric&quot;</span>),</a>
-<a class="sourceLine" id="cb39-5" title="5">               <span class="dt">cols =</span> <span class="op">-</span>participant) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb39-2" title="2"><span class="st">  </span><span class="kw">pivot_longer</span>(<span class="dt">cols =</span> <span class="op">-</span>participant,</a>
+<a class="sourceLine" id="cb39-3" title="3">               <span class="dt">names_to =</span> <span class="st">&quot;index&quot;</span>,</a>
+<a class="sourceLine" id="cb39-4" title="4">               <span class="dt">values_to =</span> <span class="st">&quot;rating&quot;</span>,</a>
+<a class="sourceLine" id="cb39-5" title="5">               <span class="dt">values_ptypes =</span> <span class="kw">list</span>(<span class="dt">rating =</span> <span class="st">&quot;numeric&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
 <a class="sourceLine" id="cb39-6" title="6"><span class="st">  </span><span class="kw">separate</span>(<span class="dt">col =</span> index,</a>
 <a class="sourceLine" id="cb39-7" title="7">           <span class="dt">into =</span> <span class="kw">c</span>(<span class="st">&quot;index&quot;</span>, <span class="st">&quot;order&quot;</span>),</a>
 <a class="sourceLine" id="cb39-8" title="8">           <span class="dt">sep =</span> <span class="st">&quot;_&quot;</span>)</a></code></pre></div>
@@ -1251,8 +1251,8 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <div id="cheatsheets" class="section level3">
 <h3><span class="header-section-number">1.6.1</span> Cheatsheets</h3>
 <ul>
-<li><a href="figures/cheatsheets/data-wrangling.pdf">wrangling data</a> –&gt; wrangling data using <code>dplyr</code> and <code>tidyr</code></li>
-<li><a href="figures/cheatsheets/data-import.pdf">importing &amp; saving data</a> –&gt; importing and saving data with <code>readr</code></li>
+<li><a href="figures/data-wrangling.pdf">wrangling data</a> –&gt; wrangling data using <code>dplyr</code> and <code>tidyr</code></li>
+<li><a href="figures/data-import.pdf">importing &amp; saving data</a> –&gt; importing and saving data with <code>readr</code></li>
 </ul>
 </div>
 <div id="data-camp-courses" class="section level3">

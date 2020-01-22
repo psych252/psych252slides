@@ -84,9 +84,9 @@ df.practice2 = tibble(
 
 ```{r reshaping-practice2}
 df.practice2 %>% 
-  pivot_longer(names_to = "index",
-               values_to = "judgment",
-               cols = -c(participant, initial)) %>% 
+  pivot_longer(cols = -c(participant, initial),
+               names_to = "index",
+               values_to = "judgment") %>% 
   group_by(participant) %>% 
   mutate(judgment = scale(judgment)) %>% 
   summarize(mean = mean(judgment),

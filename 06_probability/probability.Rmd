@@ -182,12 +182,11 @@ ggplot(data = df.samples,
 
 ## The random secretary
 
-A secretary types four letters to four people and addresses the four envelopes. If he inserts the letters at random, each in a different envelope, what is the probability that exactly three letters will go into the right envelope? [Gardner, p. 39].
+A secretary types four letters to four people and addresses the four envelopes. If he inserts the letters at random, each in a different envelope, what is the probability that exactly three letters will go into the right envelope?
 
 ```{r}
 df.letters = permutations(x = 1:4, n = 4) %>% 
-  as_tibble(.name_repair = "minimal") %>% 
-  set_names(str_c("person_", 1:4)) %>% 
+  as_tibble(.name_repair = ~ str_c("person_", 1:4)) %>%
   mutate(n_correct = (person_1 == 1) + 
            (person_2 == 2) + 
            (person_3 == 3) +

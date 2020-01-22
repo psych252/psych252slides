@@ -1,7 +1,7 @@
 ---
 title: "06_Probability"
 author: "Tobias Gerstenberg"
-date: "1/18/2019"
+date: "1/17/2020"
 output: 
   html_document:
     toc: true
@@ -12,7 +12,6 @@ output:
 
 ```{r setup, include=FALSE}
 library("knitr")
-library("DT")
 library("tidyverse")
 opts_chunk$set(echo = TRUE)
 theme_set(
@@ -26,32 +25,34 @@ theme_set(
 
 ## Student feedback 
 
-> I think the lecture can benefit from two key changes: __(1) spending more time motivating each new concept. It was unclear to me, for instance, why is it that we care about having fewer parameters__. Answering the question: __(2) I think the rain/sprinklers example was not effective at illustrating what seeing the world through Bayesian networks buys us (still unclear to me)__. Perhaps a more intuitive example, in addition to contrasting how a frequentist would approach the same question, may get us there. Thanks again for your hard work. It's not easy to communicate these concepts!
+No feedback collected this time 
 
-> I like the lecture, but a few things: __1) can you please upload the the lecture note before class?__ Concepts of probability are hard and it makes the class even harder to follow when there was no notes and I wasn't able to mark my notes on the lecture notes. __2) perhaps you may consider to be time efficient in spending less time at the beginning about feedback and homework, but spending more time to explain something abstract, important and the "core component" of the lecture!__ Thanks, generally, the class is still good, but really needs to be time-efficient and not to rush at the end (happens a number of time)
+## Homework 1
 
-> It was a little fast for me but packed a lot of information which was good to learn! __I think I had trouble with the intuition for how this would track onto the kind of experiments/analyses/data we would be looking at for psychological studies, but the last slide with the A-> B and B->A helped__
-
-> Are there recommendations for reading more about the material today posted on the website, like what you put at the bottom of the Rmd files in the past? Also, could we take time to work out the math of some of the equations you used?
-
-> Thank you for a great lecture. Will we be reviewing probability again or should we review additional materials if we are still confused? If so, do you have any suggestions?
-
-```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-6.csv") %>% 
+```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE, results='hide'}
+df.hw1_hours = read.csv("how-many-hours-did-it-1.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
   set_names(c("response", "date")) %>% 
-  select(response) %>% 
-  datatable()
+  mutate(response = factor(response,
+                           levels = c(1:14, "15\nor more"))) %>% 
+  count(response) %>% 
+  complete(response)
+
+ggplot(data = df.hw1_hours,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity",
+           fill = "lightblue",
+           color = "black") +
+  scale_y_continuous(breaks = seq(0, 50, 2),
+                     expand = c(0, 0)) +
+  labs(y = "number of students", x = "", title = "How many hours did you spend on homework 1?")
 ```
 
 ## What to do next time
 
-- too much material, ran out of time at the end (might have spent too much time discussing previous plots)
-- keep the Bayesian reasoning example 
-- provide more signposting at the beginning to give a sense for where this class is going 
-- put numbers on slides 
-- maybe: make slides available before class?!
-- maybe: find a more intuitive example than the sprinkler example 
-- briefly discuss causality again at the beginning of next class 
-- didn't have time to ask pace and overall question 
-- add readings 
-- maybe use this shinyapp for illustration in class: https://research-methods-dojo.shinyapps.io/causality_and_regression/
+- class went well this time 
+- added exercise on the secretary problem helped to foster the intuition behind the naive definition of probability (and for using programming / simulation as a way of answering the problem)
+- highlighted the importance of getting the intuition behind the patterns of inference that happen in Bayes nets 
+- made the point that regression assumes no structure between the predictors (but they are often causally related in the real world)
+- maybe: make the point clearer how RCTs are a form of intervention in a CBN 
+- maybe: use this shinyapp for illustration in class: https://research-methods-dojo.shinyapps.io/causality_and_regression/

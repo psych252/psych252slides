@@ -191,9 +191,9 @@ We can make it tidy using the `pivot_longer()` function.
 
 ```{r data-wrangling2-15}
 df.reshape.long = df.reshape %>% 
-  pivot_longer(names_to = "index",
-               values_to = "rating",
-               cols = -participant) %>%
+  pivot_longer(cols = -participant,
+               names_to = "index",
+               values_to = "rating") %>%
   arrange(participant) %>% 
   print()
 ```
@@ -203,9 +203,9 @@ df.reshape.long = df.reshape %>%
 The `pivot_longer()` function takes at least four arguments: 
 
 1. the data which I've passed to it via the pipe `%>%` 
-2. a `names_to` argument which specifies the name of the column which will contain the column names of the original data frame
-3. a `values_to` argument which specifies the name of the column which will contain the values that were spread across different columns in the original data frame
-4. a specification for which columns we want to gather -- here I've specified that we want to gather the values from all columns except the `participant` column
+2. a specification for which columns we want to gather -- here I've specified that we want to gather the values from all columns except the `participant` column
+3. a `names_to` argument which specifies the name of the column which will contain the column names of the original data frame
+4. a `values_to` argument which specifies the name of the column which will contain the values that were spread across different columns in the original data frame
 
 `pivot_wider()` is the counterpart of `pivot_longer()`. We can use it to go from a data frame that is in _long_ format, to a data frame in _wide_ format, like so: 
 
@@ -236,11 +236,11 @@ The data frame contains in each row: which stimuli a participant saw, and what r
 
 ```{r data-wrangling2-18}
 df.reshape2 %>% 
-  pivot_longer(names_to = c("index", "order"),
+  pivot_longer(cols = -participant,
+               names_to = c("index", "order"),
                names_sep = "_",
                values_to = "rating",
-               values_ptypes = list(rating = "character"),
-               cols = -participant) %>% 
+               values_ptypes = list(rating = "character")) %>% 
   pivot_wider(names_from = "index",
               values_from = "rating") %>% 
   mutate_at(.vars = vars(order, observation), .funs = ~ as.numeric(.)) %>% 
@@ -253,11 +253,11 @@ First, I use `pivot_longer()` to make a long table.
 
 ```{r data-wrangling2-19}
 df.reshape2 %>% 
-  pivot_longer(names_to = c("index", "order"),
+  pivot_longer(cols = -participant,
+               names_to = c("index", "order"),
                names_sep = "_",
                values_to = "rating",
-               values_ptypes = list(rating = "character"),
-               cols = -participant)
+               values_ptypes = list(rating = "character"))
 ```
 
 Notice how I've used a combination of the `names_to = ` and `names_sep = ` arguments to create two columns. Because I'm combining data of two different types ("character" and "numeric"), I needed to specify what I want the resulting data type to be via the `values_ptypes = ` argument. 
@@ -266,11 +266,11 @@ I would like to have the information about the stimulus and the observation in t
 
 ```{r data-wrangling2-20}
 df.reshape2 %>% 
-  pivot_longer(names_to = c("index", "order"),
+  pivot_longer(cols = -participant,
+               names_to = c("index", "order"),
                names_sep = "_",
                values_to = "rating",
-               values_ptypes = list(rating = "character"),
-               cols = -participant) %>% 
+               values_ptypes = list(rating = "character")) %>% 
   pivot_wider(names_from = "index",
               values_from = "rating")
 ```
@@ -279,11 +279,11 @@ That's pretty much it. Now, each row contains information about the order in whi
 
 ```{r data-wrangling2-21}
 df.reshape2 %>% 
-  pivot_longer(names_to = c("index", "order"),
+  pivot_longer(cols = -participant,
+               names_to = c("index", "order"),
                names_sep = "_",
                values_to = "rating",
-               values_ptypes = list(rating = "character"),
-               cols = -participant) %>% 
+               values_ptypes = list(rating = "character")) %>% 
   pivot_wider(names_from = "index",
               values_from = "rating") %>% 
   mutate_at(.vars = vars(order, observation), .funs = ~ as.numeric(.)) %>% 
@@ -304,10 +304,10 @@ Sometimes, we want to separate one column into multiple columns. For example, we
 
 ```{r}
 df.reshape2 %>% 
-  pivot_longer(names_to = "index",
+  pivot_longer(cols = -participant,
+               names_to = "index",
                values_to = "rating",
-               values_ptypes = list(rating = "numeric"),
-               cols = -participant) %>% 
+               values_ptypes = list(rating = "numeric")) %>% 
   separate(col = index,
            into = c("index", "order"),
            sep = "_")
@@ -627,8 +627,8 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 
 ### Cheatsheets 
 
-- [wrangling data](figures/cheatsheets/data-wrangling.pdf) --> wrangling data using `dplyr` and `tidyr`
-- [importing & saving data](figures/cheatsheets/data-import.pdf) --> importing and saving data with `readr`
+- [wrangling data](figures/data-wrangling.pdf) --> wrangling data using `dplyr` and `tidyr`
+- [importing & saving data](figures/data-import.pdf) --> importing and saving data with `readr`
 
 ### Data camp courses 
 
