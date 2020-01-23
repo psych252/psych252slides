@@ -515,7 +515,7 @@ tmp.height = 175
 df.camp %>% 
   filter(height == tmp.height) %>% 
   count(sport) %>% 
-  spread(sport, n) %>% 
+  pivot_wider(names_from = sport, values_from = n) %>% 
   summarize(prob_basketball = basketball/(basketball + chess))
 ```
 
@@ -530,7 +530,8 @@ df.camp %>%
           left = tmp.height - tmp.margin,
           right = tmp.height + tmp.margin)) %>% 
   count(sport) %>% 
-  spread(sport, n) %>% 
+  pivot_wider(names_from = sport,
+              values_from = n) %>% 
   summarize(prob_basketball = basketball/(basketball + chess))
 ```
 

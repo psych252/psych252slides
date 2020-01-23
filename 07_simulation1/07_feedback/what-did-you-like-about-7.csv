@@ -1,32 +1,35 @@
-Response,Created At
-NA,2019-01-23 12:26:31
-"The class is okay. Right now it is difficult to map what's learn to what we will use it later. So hopefully for later classes, it will be okay. The major problem for me is that I was not able to make notes on the lecture notes. I understand that it is difficult to prepare notes several days in advance, but I hope you can at least post the notes 10 min before the class, so students can download it and make notes when attending the class",2019-01-23 11:51:55
-"The causality examples at the beginning were really helpful (experiments 1, 2, and 3). I also thought that the walk through of the intuition for the analytic solution was really clear. For the sampling example, it was helpful when you showed what the output of the code/tables would look like/what each chunk of code is accomplishing (for me visuals are super helpful, like when you drew the tables)",2019-01-23 11:50:50
-Overall I followed it well and felt good about where we left off. The one thing I would find useful is having definitions of some of the more obscure arguments in functions (such as Kernel) that we haven't seen before,2019-01-23 11:50:33
-For midterm would like the 24hrs to have a weekend day Perhaps? Always have a lot of meetings and studies planned for weekday that is difficult to move to the weekend. Or could it be 48 hrs?,2019-01-23 11:50:15
-Good job handling and taking the right pace on the student questions. Perhaps make a better motivation for using sampling? The basketball example could have been analyticially solved (which you do admit),2019-01-23 11:50:09
-"My comment is about the homework. I am a bit concerned about how the questions were answered on piazza. I got most of my answers from stackoverflow and I felt very upset when I couldn't receive any hint on how  to fix the error in my code,  when I spent countless of hours on it.",2019-01-23 11:49:51
-I reaallllyyy appreciate you all asking us about the homework and recognizing the time that was put into it. Thank you for asking those questions in the beginning and making this weeks homework more manageable. The slide numbers were helpful today.,2019-01-23 11:49:40
-"For the midterm, I was wondering how many days we have to work on it. It seemed like it was only 24 hrs and over a weekday. I wonder if it might make more sense to extend this or give it over a weekend to allow people to work on it that may have other classes/exams/etc.",2019-01-23 11:49:32
-It could be more interactive. We could get some time for brainstorming and pondering on a question with another student.,2019-01-23 11:49:22
-"Today's class was much better than last time. The examples were easier to follow and the pace was right. I would recommend switching the order of how you present some materials. Specifically, it is difficult to be given a series of tools without understanding the ultimate goal of why we need them. I would recommend you start by really digging into why we need these tools and how we would be contained without them.",2019-01-23 11:49:15
-"I appreciate the step-by-step nature of the slides today, at the concept and plot level. Could we do more little class check ins: ask us our intuitive expectations of the examples.",2019-01-23 11:49:12
-"I  found hw2 to be super time consuming and difficult, which is making me pretty nervous about future assignments. As for the material covered today in class, I wish we stopped a bit longer at the code slides to delve step by step into what was going on.",2019-01-23 11:49:02
-Good pace. Drawing parallel between theoretical and empirical. Feel like I always see them separate but it's good to see the connection.,2019-01-23 11:48:48
-I think it would have been nice to have some interactive elements - looking at code without being able to run it and see what's its doing is kind of hard sometimes,2019-01-23 11:48:46
-"Loved the ""understanding density()"" section. The animation really helped to visualize what the function does. Thanks for the lecture",2019-01-23 11:48:44
-"I liked the concrete examples we worked through about calculating probabilities, as well as the symmetric functions we can use in R.",2019-01-23 11:48:42
-Lecture was clear and helpful. Honestly I'm till a little confused about Bayesian networks stuff from last class (just throwing that in here in case that's useful info),2019-01-23 11:48:41
-Just wondering when we should be simulating data. Is is appropriate to simulate data when the real data isn't normally distributed?,2019-01-23 11:48:40
-"Demonstrations (e.g., density on slide 53) are really helpful. I can also tell this won't click at all until we test it out ourselves. So I'm hopeful that the homework will help us do that in a structured way.",2019-01-23 11:48:40
-"We don't have a formal opportunity to provide feedback on HW, which is arguably very important!",2019-01-23 11:48:39
-"still kind of lost as to why we do certain fundamental things--create samples, quantiles, etc.",2019-01-23 11:48:37
-Intro activity felt a little bit like wasting time,2019-01-23 11:48:36
-I liked the basketball and chess summer camp examples. I just wish there were more real-world examples like that throughout the lecture,2019-01-23 11:48:35
-The example was great in understanding the material. More examples would be really helpful because some of these topics are highly conceptual.,2019-01-23 11:48:33
-I enjoyed the very concrete examples and walking step-by-step through different methods to achieve answers.,2019-01-23 11:48:31
-I thought pacing was really good today! Well done,2019-01-23 11:48:28
-can you also take open ended feedback abt homework or course in general? like maybe an anonymous feedback form on the website or something,2019-01-23 11:48:28
-Tobi is so amazing he could cut a hot knife with butter.,2019-01-23 11:48:22
-found distributions at the beginning confusing. second half was more clear,2019-01-23 11:48:18
-Very interesting!,2019-01-23 11:48:12
+﻿Response,Created At
+"I have feedback about the homework. The first problem, with the pivot_longer and pivot_wider, was WAY TOO DIFFICULT. We are all of us new to the pivot functions, so none of us have yet built up an intuition for what the functions are doing. The hw should have had 3-4 easy examples with the pivot functions, so we could build up an intuition for what the functions do, before leading us to a harder problem. The hard problem was way too hard, and worst, it did not teach me ANYTHING. My guess is that, if you asked the class to do a very basic pivot_longer, at least half the class would struggle with the most basic version of pivot_longer. So the HW should have started with the easy versions of pivot_longer, before leading us to a much harder version. Overall, the first problem of the HW was VERY badly designed and did not effectively teach us how to use pivot_longer",2020-01-22 14:37:36
+I would've liked more context for knowing how and why different distribution shapes matter.,2020-01-22 14:37:07
+"I'm general, I understand things better when I actively engage with them in R.",2020-01-22 14:36:25
+"The slides were well-designed and I loved the animations. However, I think the lecture could have been broken up into chunks and guiding questions that would have allowed some small group talk, which would have helped with understanding these more abstract concepts.",2020-01-22 14:36:11
+"I think the class was a little too theoretical -- not because theory is bad, but because it wasn't really anchored by anything. I'm not sure what is important for me to know or not, or what the ""key points"" I should've taken away are. It was also a bit strange to think about these probabilities outside the context of hypotheses, for example. In any case, a more ""narrative"" lecture would've been helpful for me, personally.",2020-01-22 14:36:00
+I liked that we did the analytic and the empirical solutions to the chess/basketball camp. I liked the way Tobi explained the difference between probability and likelihood. I had never understood this difference before. In some cases I would have liked him to explain in a little more detail what some of the code was doing.,2020-01-22 14:35:58
+The content was very useful. I think it would have been more efficient if we would have gone through the RMarkdown file and ran the plots shown on the slide from there. Kind of like what we did  with visualization,2020-01-22 14:35:57
+I enjoyed the visuals presented in today's class!,2020-01-22 14:35:42
+"I wish that today's class had focused a bit more on the code, alongside the theory. Though ""in theory"" I now understand density plots and quantile-quantile plots, when I looked at all of the code in the R file I was completely unable to follow along. I'm afraid that I won't understand the material when I go over the notes later.",2020-01-22 14:35:38
+"I liked seeing the plots produced using the different functions we learned about (e.g., qnorm, quantile). I would have found it helpful to spend some time manipulating these plots during class time, just to get a better sense of how they work. Thanks so much!",2020-01-22 14:35:36
+"I would like to see, at the start, where these concepts we are learning will be used in the future. It is obvious that they are building blocks for useful skills we will learn. An example showcasing how these are used will better motivate the lecture.",2020-01-22 14:35:35
+"I enjoyed the class overall! Sometimes I found it difficult to follow exactly what was going on in the R code, particularly in the more abstract sections. I plan to play around with the RMD, but it could also be useful to go over that in a bit more detail during lecture.",2020-01-22 14:35:34
+I really liked the combination of r code and abstract examples in the class notes (without spending time going through actual r examples in class). it helped me feel like I could actually go and apply the material to my own work later this afternoon.,2020-01-22 14:35:32
+Would like more time for questions and maybe self-twicking(?) the codes,2020-01-22 14:35:32
+The code was well written out in such a way that facilitates private learning.,2020-01-22 14:35:32
+"Today's lecture felt very abstract, especially during the second half – I think it would have been more helpful to have more examples (similar to the summer camp example). I'm also wondering how these basic concepts relate to regression and think it might be helpful to understand that more broadly",2020-01-22 14:35:31
+Helpful tools for understanding your data,2020-01-22 14:35:29
+"It'd be great if you can walk through the codes more thoroughly and slowly. Some of the codes had a few functions 
+ or arguments that I was not familiar with.",2020-01-22 14:35:27
+It was good to have a high-level review and have some of the R code explained in the way it was in the slides. Looking forward to getting some hands-on experience using the notebook.,2020-01-22 14:35:26
+I like this class--the minor details that could make it better aren't even interesting enough to raise.,2020-01-22 14:35:26
+"I thought some of the more challenging audience participation exercises sometimes feel like you're putting the room on the spot a bit. I still think they're good, but maybe giving a bit more time to think it over might be useful.",2020-01-22 14:35:25
+I think adding in concrete examples whenever possible would be helpful. I found the basketball & chess camp example very helpful in understanding bayesian probability in practice.,2020-01-22 14:35:21
+the difference between probability and likelihood is still unclear,2020-01-22 14:35:18
+"good pace, would have liked to go over some more examples for distributions at the end",2020-01-22 14:35:17
+I think working with the code while going through the plots would be useful practice.,2020-01-22 14:35:13
+"Sometimes felt more separate from how it might be applicable in research than previous lectures, so it might have been nice to have more of a sense of when you want to use these features.",2020-01-22 14:35:12
+It would have been nice to actually walk through an example from beginning to end. I think all of the examples were complete at the very beginning.,2020-01-22 14:35:10
+It would be extra awesome if we did a simulation on the Monty Hall problem.,2020-01-22 14:35:09
+"The description of density. Clearest explanation of it I've had to-date. Really liked ""seeing whats under the hood.""",2020-01-22 14:35:08
+Would have liked more depth in probability distributions,2020-01-22 14:35:07
+I think the class went a little fast. I got lost at the end. Maybe more examples and applications would be useful to understand these abstract topics,2020-01-22 14:35:05
+really great class -- am realizing that my stats knowledge felt a bit lacking in understanding today's material; any suggestions on how i can work on that? thanks! :),2020-01-22 14:35:01
+great!,2020-01-22 14:34:42
