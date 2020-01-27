@@ -173,10 +173,8 @@ Play around with the code below to see how using (1) the sum of absolute errors,
 value_predicted = seq(0, 50, 0.1)
 # value_predicted = seq(0, 10, 1)
 
-df.data = tibble(
-  observation = 1:5,
-  value = c(1, 3, 5, 9, 140)
-)
+df.data = tibble(observation = 1:5,
+                 value = c(1, 3, 5, 9, 140))
 
 # function that calculates the sum absolute error
 fun.sum_absolute_error = function(prediction){
