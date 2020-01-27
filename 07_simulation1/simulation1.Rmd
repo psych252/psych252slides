@@ -994,6 +994,213 @@ ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
 include_graphics("figures/qqplots.png")
 ```
 
+## Relationship between probability and likelihood 
+
+```{r probability-likelihood1, fig.cap="Probability is the area under the curve of the density"}
+
+margin = 1
+point = 0
+
+ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point - margin, point + margin),
+                fill = "red", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+```
+
+```{r probability-likelihood2, fig.cap="Likelihood is a particular value."}
+point = 0
+param_mean = 1
+param_sd = 1
+
+ggplot(data = tibble(x = c(-3, 3)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                size = 1,
+                args = list(mean = param_mean,
+                            sd = param_sd)) +
+  geom_segment(aes(
+    x = point,
+    y = 0,
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1
+  ) +
+  geom_segment(aes(
+    x = -3, 
+    y = dnorm(point, mean = param_mean, sd = param_sd),
+    xend = point,
+    yend = dnorm(point, mean = param_mean, sd = param_sd)),
+    color = "red",
+    size = 1) +
+  geom_point(x = point,
+             y = dnorm(point, mean = param_mean, sd = param_sd),
+             shape = 21,
+             fill = "red",
+             size = 4) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+```
+
+```{r probability-likelihood3, fig.cap="Relationship between density and cumulative probability distribution."}
+
+point = 1
+
+p1 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(-3, point),
+                fill = "red", 
+                alpha = 0.5) +
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_point(x = point,
+             y = dnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+p2 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "pnorm",
+                size = 1) + 
+  geom_segment(mapping = aes(x = -3, 
+                             y = pnorm(point),
+                             xend = point,
+                             yend = pnorm(point)),
+               color = "red",
+               size = 1) + 
+  geom_point(x = point,
+             y = pnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "cum prob") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1),
+                     expand = expand_scale(add = c(0.01, 0.1)))
+
+p1 + p2 +
+  plot_layout(ncol = 1)
+```
+
+```{r probability-likelihood4, fig.cap="The density is the first derivative of the cumulative probability distribution. The likelihood is the value of the slope in the cumulative probability distribution."}
+
+point = 0
+
+p1 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point),
+                             xend = point,
+                             yend = dnorm(point)),
+               color = "red",
+               size = 1) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_point(x = point,
+             y = dnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+p2 = ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "pnorm",
+                size = 1) + 
+  geom_abline(slope = dnorm(point),
+              intercept = pnorm(point) - dnorm(point) * point,
+              color = "red",
+              size = 1) +
+  geom_point(x = point,
+             y = pnorm(point),
+             shape = 21,
+             fill = "red",
+             size = 3) +
+  labs(y = "cum prob") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1),
+                     expand = expand_scale(add = c(0.01, 0.1)))
+
+p1 + p2 +
+  plot_layout(ncol = 1)
+```
+
+```{r probability-likelihood5, fig.cap="The relative likelihood of two observations is the same as the relative probability of two areas under the curve as the margin of these areas goes to 0."}
+margin = 0.1
+point_blue = -1
+point_red = 0
+
+ggplot(data = tibble(x = c(-3, 3)),
+            mapping = aes(x = x)) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point_red - margin, point_red + margin),
+                fill = "red", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                geom = "area", 
+                xlim = c(point_blue - margin, point_blue + margin),
+                fill = "blue", 
+                alpha = 0.5) + 
+  stat_function(fun = "dnorm",
+                size = 1) +
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point_red),
+                             xend = point_red,
+                             yend = dnorm(point_red)),
+               color = "red",
+               size = 1) +
+  geom_segment(mapping = aes(x = -3, 
+                             y = dnorm(point_blue),
+                             xend = point_blue,
+                             yend = dnorm(point_blue)),
+               color = "blue",
+               size = 1) + 
+  geom_point(x = point_red,
+             y = dnorm(point_red),
+             shape = 21,
+             fill = "red",
+             size = 4) +
+  geom_point(x = point_blue,
+             y = dnorm(point_blue),
+             shape = 21,
+             fill = "blue",
+             size = 4) +
+  labs(y = "density") +
+  scale_x_continuous(breaks = -2:2,
+                     expand = c(0, 0)) +
+  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+
+(pnorm(point_red + margin) - pnorm(point_red - margin)) / 
+  (pnorm(point_blue + margin) - pnorm(point_blue - margin)) 
+
+dnorm(point_red) / dnorm(point_blue)
+```
+
+
 ## Additional resources 
 
 ### Cheatsheets 
