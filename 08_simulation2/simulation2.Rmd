@@ -218,7 +218,7 @@ df.sampling_distribution %>%
   filter(sample <= 10, draw <= 4) %>% 
   pivot_wider(names_from = draw,
               values_from = number) %>% 
-  set_names(c("sample", str_c("draw_", 1:(ncol(.)-1)))) %>% 
+  set_names(c("sample", str_c("draw_", 1:(ncol(.) - 1)))) %>% 
   mutate(sample_mean = rowMeans(.[, -1])) %>% 
     head(10) %>% 
     kable(digits = 2) %>% 
