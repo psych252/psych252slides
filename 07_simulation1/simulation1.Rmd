@@ -21,12 +21,12 @@ knitr::opts_chunk$set(comment = "#>",
 
 ## Load packages and set plotting theme  
 
-```{r install-packages, include=FALSE, eval=FALSE}
+```{r simulation1-01, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("kableExtra", "MASS"))
 ```
 
-```{r load-packages, message=FALSE}
+```{r simulation1-02, message=FALSE}
 library("knitr")
 library("kableExtra")
 library("MASS")
@@ -34,7 +34,7 @@ library("patchwork")
 library("tidyverse")
 ```
 
-```{r set-theme}
+```{r simulation1-03}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
 ```
@@ -43,7 +43,7 @@ theme_set(theme_classic() + #set the theme
 
 Every distribution that R handles has four functions. There is a root name, for example, the root name for the normal distribution is `norm`. This root is prefixed by one of the letters here:
 
-```{r distributions, echo=F}
+```{r simulation1-04, echo=F}
 tibble(letter = c("`d`","`p`","`q`","`r`"),
   description = c('for "__density__", the density function (probability function (for _discrete_ variables) or probability density function (for _continuous_ variables))',
                   'for "__probability__", the cumulative distribution function',
@@ -62,7 +62,7 @@ You can get more info about the distributions that come with R via running `help
 ### Plotting distributions 
 
 Here's an easy way to plot distributions in `ggplot2` using the `stat_function()` function. 
-```{r plotting-normal, results = "hold"}
+```{r simulation1-05, results = "hold"}
 ggplot(data = tibble(x = c(-5, 5)),
        mapping = aes(x = x)) +
   stat_function(fun = "dnorm")
@@ -72,7 +72,7 @@ Note that the data frame I created with `tibble()` only needs to have the minimu
 
 The `stat_function()` is very flexible. We can define our own functions and plot these like here: 
 
-```{r plotting-function, results='hold'}
+```{r simulation1-06, results='hold'}
 # define the breakpoint function 
 fun.breakpoint = function(x, breakpoint){
   x[x < breakpoint] = breakpoint
@@ -91,7 +91,7 @@ Note how I used the `args = ` argument in the `stat_function()` to supply the br
 
 Let's play around with the parameters of the normal distribution. The normal distribution takes two parameters, the mean and standard deviation. Again, I'm going to use the `args = ` argument to supply these parameters.  
 
-```{r plotting-normal2}
+```{r simulation1-07}
 tmp.mean = 0
 tmp.sd = 1
 
@@ -113,7 +113,7 @@ For each distribution, R provides a way of sampling random number from this dist
 
 So let's take some random samples and plot a histogram. 
 
-```{r sampling-distributions1}
+```{r simulation1-08}
 # make this example reproducible 
 set.seed(1)
 
@@ -138,7 +138,7 @@ rm(list = ls() %>% str_subset(pattern = "tmp."))
 
 Let's see how many samples it takes to closely approximate the shape of the normal distribution with our histogram of samples. 
 
-```{r sampling-distributions2}
+```{r simulation1-09}
 # make this example reproducible 
 set.seed(1)
 
@@ -189,7 +189,7 @@ With 10,000 samples, our histogram of samples already closely resembles the theo
 
 ### Cumulative probability distribution
 
-```{r cumulative1}
+```{r simulation1-10}
 ggplot(data = tibble(x = c(-5, 5)),
        mapping = aes(x = x)) +
   stat_function(fun = ~ pnorm(q = ., 
@@ -199,7 +199,7 @@ ggplot(data = tibble(x = c(-5, 5)),
 
 Let's find the cumulative probability of a particular value. 
 
-```{r cumulative2}
+```{r simulation1-11}
 tmp.x = 1
 tmp.y = pnorm(tmp.x, mean = 0, sd = 1)
 
@@ -239,7 +239,7 @@ rm(list = str_subset(string = ls(), pattern = "tmp."))
 
 Let's illustrate what this would look like using a normal density plot. 
 
-```{r cumulative3}
+```{r simulation1-12}
 ggplot(data = tibble(x = c(-5, 5)),
        mapping = aes(x = x)) + 
   stat_function(fun = "dnorm",
@@ -257,7 +257,7 @@ ggplot(data = tibble(x = c(-5, 5)),
 
 ### Inverse cumulative distribution 
 
-```{r inverse1}
+```{r simulation1-13}
 ggplot(data = tibble(x = c(0, 1)),
        mapping = aes(x = x)) +
   stat_function(fun = ~ qnorm(p = ., 
@@ -267,7 +267,7 @@ ggplot(data = tibble(x = c(0, 1)),
 
 And let's compute the inverse cumulative probability for a particular value. 
 
-```{r inverse2}
+```{r simulation1-14}
 # tmp.x = 0.841
 tmp.x = 0.975
 tmp.y = qnorm(tmp.x, mean = 0, sd = 1)
@@ -312,7 +312,7 @@ rm(list = str_subset(string = ls(), pattern = "tmp."))
 
 Let's compute the probability of observing a particular value $x$ in a given range. 
 
-```{r computing1}
+```{r simulation1-15}
 # tmp.lower = -1
 # tmp.upper = 1
 
@@ -361,7 +361,7 @@ We find that 95% of the density in the normal distribution is between -1.96 and 
 
 We can also compute the probability of observing certain events using sampling. We first generate samples from the desired probability distribution, and then use these samples to compute our statistic of interest. 
 
-```{r sampling1}
+```{r simulation1-16}
 # let's compute the probability of observing a value within a certain range 
 tmp.lower = -1.96
 tmp.upper = 1.96
@@ -418,7 +418,7 @@ At the camp site, a child walks over to you and asks you where their gym is. You
 
 ### Analytic solution
 
-```{r bayesian1}
+```{r simulation1-17}
 height = 175
 
 # priors 
@@ -446,7 +446,7 @@ posterior_basketball %>% print()
 
 Let's do the same thing via sampling. 
 
-```{r bayesian2}
+```{r simulation1-18}
 # number of kids 
 tmp.nkids = 10000
 
@@ -483,7 +483,7 @@ Now we have a data frame with kids whose height was randomly sampled depending o
 
 Note that the solution above is not particularly efficient since it uses the `rowwise()` function to make sure that a different random value for height is drawn for each row. Running this code will get slow for large samples. A more efficient solution would be the following: 
 
-```{r bayesian3}
+```{r simulation1-19}
 # number of kids 
 tmp.nkids = 100000
 
@@ -509,7 +509,7 @@ In this solution, I take advantage of the fact that `rnorm()` is vectorized. Tha
 
 How can we now use these samples to answer our question of interest? Let's see what doesn't work first: 
 
-```{r bayesian4, eval=F}
+```{r simulation1-20, eval=F}
 tmp.height = 175
 
 df.camp %>% 
@@ -521,7 +521,7 @@ df.camp %>%
 
 The reason this doesn't work is because none of our kids is exactly 175cm tall. Instead, we need to filter kids that are within a certain height range. 
 
-```{r bayesian5}
+```{r simulation1-21}
 tmp.height = 175
 tmp.margin = 1
 
@@ -543,7 +543,7 @@ Here, I've used the `between()` function which is a shortcut for otherwise writi
 
 First, let's calculate the density for a set of observations and store them in a data frame.
 
-```{r density1, fig.cap='Density estimation.'}
+```{r simulation1-22, fig.cap='Density estimation.'}
 
 # calculate density
 observations = c(1, 1.2, 1.5, 2, 3)
@@ -566,7 +566,7 @@ df.density %>%
 
 Now, let's plot the density. 
 
-```{r density2}
+```{r simulation1-23}
 ggplot(data = df.density, 
        mapping = aes(x = x, y = y)) +
   geom_line(size = 2) +
@@ -577,7 +577,7 @@ ggplot(data = df.density,
 
 This density shows the sum of the densities of normal distributions that are centered at the observations with the specified bandwidth. 
 
-```{r density3}
+```{r simulation1-24}
 # add densities for the individual normal distributions
 for (i in 1:length(observations)){
   df.density[[str_c("observation_",i)]] = dnorm(df.density$x,
@@ -599,7 +599,7 @@ df.density %>%
 
 Now, let's plot the individual densities as well as the overall density.
 
-```{r density4}
+```{r simulation1-25}
 # colors of individual Gaussian distributions 
 colors = c("blue", "green", "red", "purple", "orange")
 
@@ -633,7 +633,7 @@ p # print the figure
 
 Here are the same results when specifying a different bandwidth: 
 
-```{r density5}
+```{r simulation1-26}
 # colors of individual Gaussian distributions 
 colors = c("blue", "green", "red", "purple", "orange")
 
@@ -695,7 +695,7 @@ p
 
 The `quantile()` function allows us to compute different quantiles of a sample. Boxplots are based on the quantiles of a distribution. To better understand this function, let's compute our own boxplot. 
 
-```{r quantile1}
+```{r simulation1-27}
 tmp.samples = 1000
 
 # make example reproducible 
@@ -716,7 +716,7 @@ kable_styling(bootstrap_options = "striped",
 
 Let's draw a boxplot using ggplot. 
 
-```{r quantile2}
+```{r simulation1-28}
 ggplot(data = df.quantile,
        mapping = aes(x = "", y = value)) +
   geom_boxplot()
@@ -730,22 +730,19 @@ Here is a reminder of what boxplots show from the help file of `geom_boxplot()`:
 
 So, let's compute the relevant values using the `quantile()` function.
 
-```{r quantile3}
-
-df.quantile_values = tibble(
-  median = quantile(df.quantile$value, 0.5),
-  quartile_first = quantile(df.quantile$value, 0.25),
-  quartile_third = quantile(df.quantile$value, 0.75),
-  iqr = quartile_third - quartile_first,
-  hinge_upper = quartile_third + 1.5 * iqr,
-  hinge_lower = quartile_first - 1.5 * iqr
-)
+```{r simulation1-29}
+df.quantile_values = tibble(median = quantile(df.quantile$value, 0.5),
+                            quartile_first = quantile(df.quantile$value, 0.25),
+                            quartile_third = quantile(df.quantile$value, 0.75),
+                            iqr = quartile_third - quartile_first,
+                            whisker_upper = quartile_third + 1.5 * iqr,
+                            whisker_lower = quartile_first - 1.5 * iqr)
 
 ```
 
 Now, let's check whether our values are correct by plotting them on top of the boxplot. 
 
-```{r quantile4}
+```{r simulation1-30}
 # original boxplot 
 ggplot(data = df.quantile,
        mapping = aes(x = 0, y = value)) +
@@ -780,15 +777,15 @@ ggplot(data = df.quantile,
            size = 6) +
   geom_segment(x = -0.75,
                xend = -0.05,
-               y = df.quantile_values$hinge_upper,
-               yend = df.quantile_values$hinge_upper,
+               y = df.quantile_values$whisker_upper,
+               yend = df.quantile_values$whisker_upper,
                arrow = arrow(type = "closed",
                              length = unit(0.5, "cm"))
                ) +
   annotate(geom = "text",
-           label = "upper hinge",
+           label = "upper whisker",
            x = -0.8,
-           y = df.quantile_values$hinge_upper,
+           y = df.quantile_values$whisker_upper,
            hjust = 1,
            vjust = 0.5,
            size = 6) +
@@ -799,7 +796,7 @@ Neat! Now we know how boxplots are made.
 
 We can also use the quantile function to create an inverse cumulative probability plot (i.e. the equivalent of what we get from `qnorm()` for the normal distribution). 
 
-```{r quantile5}
+```{r simulation1-31}
 df.plot = df.quantile$value %>% 
   quantile(probs = seq(0, 1, 0.01)) %>% 
   as_tibble() %>% 
@@ -813,7 +810,7 @@ ggplot(data = df.plot,
 
 And we can calculate quantiles by hand in the following way: 
 
-```{r quantile6}
+```{r simulation1-32}
 
 tmp.samples = 1000
 
@@ -836,7 +833,7 @@ To compute the quantiles by hand, I've sorted the data frame, ranked the values,
 
 Let's check whether we get roughly the same result with our hand-calculated quantiles as we do from the `quantile()` function. 
 
-```{r quantile7}
+```{r simulation1-33}
 
 # by hand 
 df.quantile %>% 
@@ -853,7 +850,7 @@ As we can see, the results are very similar. Not identical since the `quantile()
 
 QQ plots, or quantile-quantile plots, are a good way of visually comparing two distributions. One common usage in statistics is to assess whether a variable is normally distributed. For example, let's say that we fit a regression model and want to now assess whether the residuals (i.e. the model errors) are normally distributed. (We will learn how to run regressions soon). Let's first just plot the residuals from the model we fit above. 
 
-```{r comparing1, fig.cap="Empirical distribution of residuals, and theoretical distribution."}
+```{r simulation1-34, fig.cap="Empirical distribution of residuals, and theoretical distribution."}
 
 df.residuals = tibble(residual = rnorm(n = 10000,
                                        mean = 0,
@@ -878,7 +875,7 @@ ggplot(data = df.residuals,
 
 Here, the empirical distribution of the errors and the theoretical normal distribution with a mean of 0 and a SD of 2 correspond very closely. Let's take a look at the corresponding QQ plot. 
 
-```{r comparing2}
+```{r simulation1-35, fig.cap="Quantile-Quantile plot."}
 ggplot(data = df.residuals, mapping = aes(sample = residual)) +
   geom_abline(intercept = 0,
               slope = 1,
@@ -889,11 +886,11 @@ ggplot(data = df.residuals, mapping = aes(sample = residual)) +
 
 Note that the QQ plot is sensitive to the general shape of the distribution. 
 
-I've used the `geom_qq()` and `geom_qq_line()` functions that are part of `ggplot`. By default, these functions assume a normal distribution as the theoretical distribution. This plot is just another way of showing the information in Figure \@ref(fig:empirical-theoretical-distribution). Intuitively, a QQ plot is built in the following way: imagine going with your finger from left to right along the x-axis on Figure \@ref(fig:empirical-theoretical-distribution), and then add a point on the QQ plot which captures the cumulative density for each distribution. 
+I've used the `geom_qq()` and `geom_qq_line()` functions that are part of `ggplot`. By default, these functions assume a normal distribution as the theoretical distribution. This plot is just another way of showing the information in Figure \@ref(fig:simulation1-35). Intuitively, a QQ plot is built in the following way: imagine going with your finger from left to right along the x-axis on Figure \@ref(fig:simulation1-35), and then add a point on the QQ plot which captures the cumulative density for each distribution. 
 
 Here are some more examples for what these plots would look like when comparing different theoretical distributions to the same empirical distribution. 
 
-```{r comparing3, warning=FALSE}
+```{r simulation1-36, message=FALSE, warning=FALSE}
 # data frame with parameters saved in a list column 
 df.parameters = tibble(parameters = list(params,
                                          list(mean = -10, sd = 10),
@@ -940,7 +937,7 @@ The line changes, but it's still a line. So the QQ plot helps us detect what kin
 
 Now, let's see what happens if distributions don't have the same shape. 
 
-```{r comparing4, warning=FALSE}
+```{r simulation1-37, warning=FALSE}
 
 #let's generate some "empirical" data from a beta distribution 
 set.seed(0)
@@ -987,16 +984,16 @@ wrap_plots(l.plots,
            nrow = 2,
            byrow = F)
 
-ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
+# ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
 ```
 
-```{r qqplots, echo=FALSE, out.width='90%', fig.cap="QQ plots indicating different deviations from normality."}
+```{r simulation1-38, echo=FALSE, out.width='90%', fig.cap="QQ plots indicating different deviations from normality."}
 include_graphics("figures/qqplots.png")
 ```
 
 ## Relationship between probability and likelihood 
 
-```{r probability-likelihood1, fig.cap="Probability is the area under the curve of the density"}
+```{r simulation1-39, fig.cap="Probability is the area under the curve of the density"}
 
 margin = 1
 point = 0
@@ -1016,7 +1013,7 @@ ggplot(data = tibble(x = c(-3, 3)),
   scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
 ```
 
-```{r probability-likelihood2, fig.cap="Likelihood is a particular value."}
+```{r simulation1-40, fig.cap="Likelihood is a particular value."}
 point = 0
 param_mean = 1
 param_sd = 1
@@ -1053,7 +1050,7 @@ ggplot(data = tibble(x = c(-3, 3)),
   scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
 ```
 
-```{r probability-likelihood3, fig.cap="Relationship between density and cumulative probability distribution."}
+```{r simulation1-41, fig.cap="Relationship between density and cumulative probability distribution."}
 
 point = 1
 
@@ -1101,7 +1098,7 @@ p1 + p2 +
   plot_layout(ncol = 1)
 ```
 
-```{r probability-likelihood4, fig.cap="The density is the first derivative of the cumulative probability distribution. The likelihood is the value of the slope in the cumulative probability distribution."}
+```{r simulation1-42, fig.cap="The density is the first derivative of the cumulative probability distribution. The likelihood is the value of the slope in the cumulative probability distribution."}
 
 point = 0
 
@@ -1148,7 +1145,7 @@ p1 + p2 +
   plot_layout(ncol = 1)
 ```
 
-```{r probability-likelihood5, fig.cap="The relative likelihood of two observations is the same as the relative probability of two areas under the curve as the margin of these areas goes to 0."}
+```{r simulation1-43, fig.cap="The relative likelihood of two observations is the same as the relative probability of two areas under the curve as the margin of these areas goes to 0."}
 margin = 0.1
 point_blue = -1
 point_red = 0

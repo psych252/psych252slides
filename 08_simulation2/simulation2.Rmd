@@ -20,7 +20,6 @@ knitr::opts_chunk$set(comment = "#>",
 # Simulation 2 
 
 In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
-
 - Central limit theorem 
 - Sampling distributions 
 - p-value
@@ -28,19 +27,19 @@ In which we figure out some key statistical concepts through simulation and plot
 
 ## Load packages and set plotting theme  
 
-```{r install-packages, include=FALSE, eval=FALSE}
+```{r simulation2-01, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("janitor"))
 ```
 
-```{r load-packages, message=FALSE}
+```{r simulation2-02, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r set-theme}
+```{r simulation2-03}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
 ```
@@ -58,7 +57,7 @@ Here are some nice interactive illustrations of the CLT:
 
 Let's first put the information we need for our population distribution in a data frame. 
 
-```{r clt1}
+```{r simulation2-04}
 # the distribution from which we want to sample (aka the heavy metal distribution)
 df.population = tibble(numbers = 1:6,
                        probability = c(1/3, 0, 1/6, 1/6, 0, 1/3))
@@ -66,7 +65,7 @@ df.population = tibble(numbers = 1:6,
 
 And then let's plot it: 
 
-```{r clt2}
+```{r simulation2-05}
 # plot the distribution 
 ggplot(data = df.population,
        mapping = aes(x = numbers,
@@ -82,7 +81,7 @@ ggplot(data = df.population,
 
 Here are the true mean and standard deviation of our population distribution: 
 
-```{r clt3}
+```{r simulation2-06}
 # mean and standard deviation (see: https://nzmaths.co.nz/category/glossary/standard-deviation-discrete-random-variable)
 
 df.population %>% 
@@ -97,7 +96,7 @@ df.population %>%
 
 Let's draw a single sample of size $n = 40$ from the population distribution and plot it: 
 
-```{r clt4}
+```{r simulation2-07}
 # make example reproducible 
 set.seed(1)
 
@@ -123,7 +122,7 @@ ggplot(data = df.sample,
 
 Here are the sample mean and standard deviation:
 
-```{r clt5}
+```{r simulation2-08}
 # print out sample mean and standard deviation 
 df.sample %>% 
   summarize(sample_mean = mean(number),
@@ -137,7 +136,7 @@ df.sample %>%
 
 And let's now create the sampling distribution (making the unrealistic assumption that we know the population distribution). 
 
-```{r clt6}
+```{r simulation2-09}
 # make example reproducible 
 set.seed(1)
 
@@ -179,7 +178,7 @@ df.sampling_distribution_means = df.sampling_distribution %>%
 
 And plot it: 
 
-```{r clt7}
+```{r simulation2-10}
 # plot a histogram of the means with density overlaid 
 df.plot = df.sampling_distribution_means %>% 
   sample_frac(size = 1, replace = T)
@@ -200,7 +199,7 @@ That's the central limit theorem in action! Even though our population distribut
 
 And here are the mean and standard deviation of the sampling distribution: 
 
-```{r clt8}
+```{r simulation2-11}
 # print out sampling distribution mean and standard deviation 
 df.sampling_distribution_means %>% 
   summarize(sampling_distribution_mean = mean(mean),
@@ -212,7 +211,7 @@ df.sampling_distribution_means %>%
 
 Here is a data frame that I've used for illustrating the idea behind how a sampling distribution is constructed from the population distribution. 
 
-```{r clt9}
+```{r simulation2-12}
 # data frame for illustration in class 
 df.sampling_distribution %>% 
   filter(sample <= 10, draw <= 4) %>% 
@@ -232,7 +231,7 @@ Of course, in actuality, we never have access to the population distribution. We
 
 It urns out that we can approximate the sampling distribution only using our actual sample. The idea is to take the sample that we drew, and generate new samples from it by drawing with replacement. Essentially, we are treating our original sample like the population from which we are generating random samples to derive the sampling distribution. 
 
-```{r boot1}
+```{r simulation2-13}
 # make example reproducible 
 set.seed(1)
 
@@ -255,7 +254,7 @@ df.bootstrap = tibble(bootstrap = 1:n_samples,
 
 Let's plot the bootstrapped sampling distribution: 
 
-```{r boot2}
+```{r simulation2-14}
 # plot the bootstrapped sampling distribution
 ggplot(data = df.bootstrap, 
        mapping = aes(x = average)) +
@@ -272,7 +271,7 @@ ggplot(data = df.bootstrap,
 
 And let's calculate the mean and standard deviation: 
 
-```{r boot3}
+```{r simulation2-15}
 # print out sampling distribution mean and standard deviation 
 df.sampling_distribution_means %>% 
   summarize(bootstrapped_distribution_mean = mean(mean),
@@ -292,7 +291,7 @@ How do sample size and the number of samples affect what the sampling distributi
 - the sample size for each sample 
 - the number of samples
 
-```{r limits1}
+```{r simulation2-16}
 ggplot(data = tibble(x = c(0, 20)), aes(x = x)) +
   stat_function(fun = "dnorm",
                 args = list(mean = 10,
@@ -332,7 +331,7 @@ ggplot(data = tibble(x = c(0, 20)), aes(x = x)) +
 ```
 
 
-```{r limits2}
+```{r simulation2-17}
 # Parameters for the simulation
 n_samples = c(10, 100, 1000, 10000)
 sample_size = c(5, 10, 25, 100)
@@ -412,7 +411,7 @@ An intutive way for illustrating (this rather unintuitive procedure) is the perm
 
 Let's start by generating some random data from two different normal distributions (simulating a possible experiment). 
 
-```{r permuation1}
+```{r simulation2-18}
 # make example reproducible 
 set.seed(1)
 
@@ -427,7 +426,7 @@ df.permutation = tibble(control = rnorm(25, mean = 5.5, sd = 2),
 
 Here is a summary of how each group performed: 
 
-```{r permuation2}
+```{r simulation2-19}
 df.permutation %>% 
   group_by(condition) %>%
   summarize(mean = mean(performance),
@@ -444,7 +443,7 @@ df.permutation %>%
 
 Let's plot the results: 
 
-```{r permuation3}
+```{r simulation2-20}
 ggplot(data = df.permutation, 
        mapping = aes(x = condition, y = performance)) +
   geom_point(position = position_jitter(height = 0, width = 0.1),
@@ -465,7 +464,7 @@ ggplot(data = df.permutation,
 
 We are interested in the difference in the mean performance between the two groups: 
 
-```{r permuation4}
+```{r simulation2-21}
 # calculate the difference between conditions
 difference_actual = df.permutation %>% 
   group_by(condition) %>% 
@@ -478,7 +477,7 @@ The difference in the mean rating between the control and experimental condition
 
 Let's answer the question using simulation. Here is the main idea: imagine that we were very sloppy in how we recorded the data, and now we don't remember anymore which participants were in the controld condition and which ones were in experimental condition (we still remember though, that we tested 25 participants in each condition). 
 
-```{r permuation5}
+```{r simulation2-22}
 set.seed(0)
 df.permutation = df.permutation %>% 
   mutate(permutation = sample(condition)) #randomly assign labels
@@ -495,7 +494,7 @@ Here, the difference between the two conditions is `r df.permutation %>% filter(
 
 After randomly shuffling the condition labels, this is how the results would look like: 
 
-```{r permuation6}
+```{r simulation2-23}
 ggplot(data = df.permutation, aes(x = permutation, y = performance))+
   geom_point(aes(color = condition), position = position_jitter(height = 0, width = 0.1)) +
   stat_summary(fun.data = mean_cl_boot, geom = 'linerange', size = 1) +
@@ -507,7 +506,7 @@ ggplot(data = df.permutation, aes(x = permutation, y = performance))+
 
 The idea is now that, similar to bootstrapping above, we can get a sampling distribution of the difference in the means between the two conditions (assuming that the null hypothesis were true), by randomly shuffling the labels and calculating the difference in means (and doing this many times). What we get is a distribution of the differences we would expect, if there was no effect of condition. 
 
-```{r permuation7}
+```{r simulation2-24}
 set.seed(1)
 
 n_permutations = 500
@@ -547,7 +546,7 @@ ggplot(data = df.permutations, aes(x = mean_difference)) +
 
 And we can then simply calculate the p-value by using some basic data wrangling (i.e. finding the proportion of differences that were as or more extreme than the one we observed).
 
-```{r permuation8}
+```{r simulation2-25}
 #calculate p-value of our observed result
 df.permutations %>% 
   summarize(p_value = sum(mean_difference <= difference_actual)/n())
@@ -566,7 +565,7 @@ For smaller sample sizes, we can use the $t$-distribution instead with $n-1$ deg
 
 So let's run a a simulation to check whether the definition of the confidence interval seems right. We will use our heavy metal distribution from above, take samples from the distribution, calculate the mean and confidende interval, and check how often the true mean of the population ($M = 3.5$) is contained within the confidence interval. 
 
-```{r confidence1}
+```{r simulation2-26}
 # make example reproducible 
 set.seed(1)
 
@@ -585,10 +584,10 @@ fun.confidence = function(sample_size, distribution){
               sd = sd(values),
               n = n(),
               # confidence interval assuming a normal distribution 
-              # error = qnorm(1 - (1 - confidence_level)*2) * sd / sqrt(n),
+              # error = qnorm(1 - (1 - confidence_level)/2) * sd / sqrt(n),
               # assuming a t-distribution (more conservative, appropriate for smaller
               # sample sizes)
-              error = qt(1 - (1 - confidence_level)/2, df = n-1) * sd / sqrt(n),
+              error = qt(1 - (1 - confidence_level)/2, df = n - 1) * sd / sqrt(n),
               conf_low = mean - error,
               conf_high = mean + error)
   return(df)
@@ -611,15 +610,14 @@ df.confidence = df.confidence %>%
                              'inside'))
 
 # plot the result
-ggplot(data = df.confidence, aes(x = sample, y = mean, color = conf_index))+
-  geom_hline(yintercept = 3.5, color = "red")+
-  geom_point()+
-  geom_linerange(aes(ymin = conf_low, ymax = conf_high))+
-  coord_flip()+
-  scale_color_manual(values = c("black", "red"), labels = c("inside", "outside"))+
+ggplot(data = df.confidence, aes(x = sample, y = mean, color = conf_index)) +
+  geom_hline(yintercept = 3.5, color = "red") +
+  geom_point() +
+  geom_linerange(aes(ymin = conf_low, ymax = conf_high)) +
+  coord_flip() +
+  scale_color_manual(values = c("black", "red"), labels = c("inside", "outside")) +
   theme(axis.text.y = element_text(size = 12),
         legend.position = "none")
-
 ```
 
 So, out of the `r sample_n` samples that we drew the 95% confidence interval of `r sum(df.confidence$conf_index == "outside")` sample did not contain the true mean. That makes sense! 
@@ -636,6 +634,6 @@ Feel free to play around with the code above. For example, change the sample siz
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r session}
+```{r simulation2-27}
 sessionInfo()
 ```

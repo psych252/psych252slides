@@ -1,7 +1,7 @@
 ---
 title: "Class 11"
 author: "Tobias Gerstenberg"
-date: "February 1st, 2019"
+date: "January 31st, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -15,21 +15,19 @@ nocite: '@*'
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Linear model 2
 
-```{r install-packages, include=FALSE, eval=FALSE}
+```{r linear-model2-01, include=FALSE, eval=FALSE}
 install.packages(c("corrr", "GGally"))
 ```
 
 ## Load packages and set plotting theme  
 
-```{r load-packages, message=FALSE}
+```{r linear-model2-02, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
@@ -43,7 +41,7 @@ library("tidyverse")  # for wrangling, plotting, etc.
 knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r set-theme}
+```{r linear-model2-03}
 theme_set(
   theme_classic() + #set the theme 
     theme(text = element_text(size = 20)) #set the default text size
@@ -54,7 +52,7 @@ theme_set(
 
 Let's load the data sets that we'll explore in this class: 
 
-```{r linear-model2-1, warning=F, message=FALSE}
+```{r linear-model2-04, warning=F, message=FALSE}
 # credit data set
 df.credit = read_csv("data/credit.csv") %>% 
   rename(index = X1) %>% 
@@ -66,7 +64,7 @@ df.ads = read_csv("data/advertising.csv") %>%
   rename(index = x1)
 ```
 
-```{r linear-model2-2, echo=F, fig.cap="Description of the different variables in the df.credit data set."}
+```{r linear-model2-05, echo=F, fig.cap="Description of the different variables in the df.credit data set."}
 tibble(
   variable = c("income", "limit", "rating", "cards", "age", "education",
                "gender", "student", "married", "ethnicity", "balance"),
@@ -87,55 +85,6 @@ tibble(
                 full_width = F)
 ```
 
-## Things that came up in class
-
-Can the density at a given point be greater than 1? Yes, since it's the area under the curve that has to sum to 1. Here is the density plot for a uniform distribution (note that the density is 1 uniformly).
-
-```{r linear-model2-3}
-# play around with this value to see how the density changes
-tmp.max = 5
-
-ggplot(data = tibble(x = c(0, tmp.max)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dunif",
-                geom = "area",
-                fill = "lightblue",
-                size = 1,
-                args = list(min = 0,
-                            max = tmp.max)) +
-  stat_function(fun = "dunif",
-                size = 1,
-                args = list(min = 0,
-                            max = tmp.max)) +
-  coord_cartesian(xlim = c(0, tmp.max),
-                  ylim = c(0, 6),
-                  expand = F)
-```
-
-And here is the density plot for a beta distribution:
-
-```{r linear-model2-4}
-# play around with these parameters
-tmp.shape1 = 1
-tmp.shape2 = 2
-
-ggplot(data = tibble(x = c(0, 1)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dbeta",
-                args = list(shape1 = tmp.shape1,
-                            shape2 = tmp.shape2),
-                geom = "area",
-                fill = "lightblue",
-                size = 1) +
-  stat_function(fun = "dbeta",
-                args = list(shape1 = tmp.shape1,
-                            shape2 = tmp.shape2),
-                size = 1) +
-  coord_cartesian(xlim = c(0, 1),
-                  ylim = c(0, 3),
-                  expand = F)
-```
-
 ## Multiple continuous variables 
 
 Let's take a look at a case where we have multiple continuous predictor variables. In this case, we want to make sure that our predictors are not too highly correlated with each other (as this makes the interpration of how much each variable explains the outcome difficult). So we first need to explore the pairwise correlations between variables. 
@@ -144,14 +93,14 @@ Let's take a look at a case where we have multiple continuous predictor variable
 
 The `corrr` package is great for exploring correlations between variables. To find out more how `corrr` works, take a look at this vignette: 
 
-```{r linear-model2-5, eval=F}
+```{r linear-model2-06, eval=F}
 vignette(topic = "using-corrr",
          package = "corrr")
 ```
 
 Here is an example that illustrates some of the key functions in the `corrr` package (using the advertisement data): 
 
-```{r linear-model2-6}
+```{r linear-model2-07}
 df.ads %>% 
   select_if(is.numeric) %>% 
   correlate(quiet = T) %>% 
@@ -163,7 +112,7 @@ df.ads %>%
 
 ##### Correlations with the dependent variable
 
-```{r linear-model2-7, fig.cap="Bar plot illustrating how strongly different variables correlate with income."}
+```{r linear-model2-08, fig.cap="Bar plot illustrating how strongly different variables correlate with income."}
 df.credit %>% 
   select_if(is.numeric) %>%
   correlate(quiet = T) %>%
@@ -186,7 +135,7 @@ df.credit %>%
 
 ##### All pairwise correlations
 
-```{r linear-model2-8, fig.caption = "Correlation plot showing the pairwise correlations between different variables."}
+```{r linear-model2-09, fig.caption = "Correlation plot showing the pairwise correlations between different variables."}
 tmp = df.credit %>%
   select_if(is.numeric) %>%
   correlate(diagonal = 0,
@@ -197,7 +146,7 @@ tmp = df.credit %>%
   corrplot()
 ```
 
-```{r linear-model2-9, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal."}
+```{r linear-model2-10, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal."}
 df.ads %>%
   select(-index) %>% 
   ggpairs()
@@ -205,7 +154,7 @@ df.ads %>%
 
 With some customization: 
 
-```{r linear-model2-10, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal (customized)."}
+```{r linear-model2-11, fig.cap="Pairwise correlations with scatter plots, correlation values, and densities on the diagonal (customized)."}
 df.ads %>% 
   select(-index) %>%
   ggpairs(lower = list(continuous = wrap("points",
@@ -222,7 +171,7 @@ Now that we've explored the correlations, let's have a go at the multiple regres
 
 We'll first take another look at the pairwise relationships: 
 
-```{r linear-model2-11}
+```{r linear-model2-12}
 tmp.x = "tv"
 # tmp.x = "radio"
 # tmp.x = "newspaper"
@@ -255,7 +204,7 @@ TV ads and radio ads aren't correlated. Yay!
 
 Let's see whether adding radio ads is worth it (over and above having TV ads).
 
-```{r linear-model2-12}
+```{r linear-model2-13}
 # fit the models 
 fit_c = lm(sales ~ 1 + tv, data = df.ads)
 fit_a = lm(sales ~ 1 + tv + radio, data = df.ads)
@@ -268,7 +217,7 @@ It's worth it!
 
 Let's evaluate how well the model actually does. We do this by taking a look at the residual plot, and check whether the residuals are normally distributed.
 
-```{r linear-model2-13}
+```{r linear-model2-14}
 tmp.fit = lm(sales ~ 1 + tv + radio, data = df.ads)
 
 df.plot = tmp.fit %>% 
@@ -298,7 +247,7 @@ There is a slight non-linear trend in the residuals. We can also see that the re
 
 Let's see how well the model does overall: 
 
-```{r linear-model2-14}
+```{r linear-model2-15}
 fit_a %>% 
   glance() %>% 
     kable(digits = 3) %>% 
@@ -312,7 +261,7 @@ As we can see, the model almost explains 90% of the variance. That's very decent
 
 Here is a way of visualizing how both tv ads and radio ads affect sales: 
 
-```{r linear-model2-15}
+```{r linear-model2-16}
 df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
   augment() %>% 
   clean_names()
@@ -330,7 +279,7 @@ We used color here to encode TV ads (and the x-axis for the radio ads).
 
 In addition, we might want to illustrate what relationship between radio ads and sales the model predicts for three distinct values for TV ads. Like so: 
 
-```{r linear-model2-16}
+```{r linear-model2-17}
 df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
   augment() %>% 
   clean_names()
@@ -354,7 +303,7 @@ ggplot(df.plot, aes(x = radio, y = sales, color = tv)) +
 
 Fitting the augmented model yields the following estimates for the coefficients in the model: 
 
-```{r linear-model2-17}
+```{r linear-model2-18}
 fit_a %>% 
   tidy(conf.int = T) %>% 
     head(10) %>% 
@@ -368,7 +317,7 @@ fit_a %>%
 
 One thing we can do to make different predictors more comparable is to standardize them. 
 
-```{r linear-model2-18}
+```{r linear-model2-19}
 df.ads = df.ads %>% 
   mutate_at(vars(tv, radio), funs(scaled = scale(.)[,]))
   
@@ -383,7 +332,7 @@ df.ads %>%
 
 We can standardize (z-score) variables using the `scale()` function.
 
-```{r linear-model2-19}
+```{r linear-model2-20}
 # tmp.variable = "tv"
 tmp.variable = "tv_scaled" 
 
@@ -416,7 +365,7 @@ Scaling a variable leaves the distribution intact, but changes the mean to 0 and
 
 Let's compare a compact model that only predicts the mean, with a model that uses the student variable as an additional predictor. 
 
-```{r linear-model2-20}
+```{r linear-model2-21}
 # fit the models
 fit_c = lm(balance ~ 1, data = df.credit)
 fit_a = lm(balance ~ 1 + student, data = df.credit)
@@ -434,7 +383,7 @@ The `summary()` shows that it's worth it: the augmented model explains a signifc
 
 Let's visualize the model predictions. Here is the compact model: 
 
-```{r linear-model2-21}
+```{r linear-model2-22}
 ggplot(df.credit,
        aes(x = index, 
            y = balance)) +
@@ -450,7 +399,7 @@ It just predicts the mean (the horizontal black line). The vertical lines from e
 
 And here is the augmented model:
 
-```{r linear-model2-22}
+```{r linear-model2-23}
 df.fit = fit_a %>% 
   tidy() %>% 
   mutate(estimate = round(estimate,2))
@@ -486,7 +435,7 @@ Note that this model predicts two horizontal lines. One for students, and one fo
 
 Let's make simple plot that shows the means of both groups with bootstrapped confidence intervals. 
 
-```{r linear-model2-23}
+```{r linear-model2-24}
 ggplot(data = df.credit,
        mapping = aes(x = student, y = balance, fill = student)) + 
   stat_summary(fun.y = "mean",
@@ -501,7 +450,7 @@ ggplot(data = df.credit,
 
 And let's double check that we also get a signifcant result when we run a t-test instead of our model comparison procedure: 
 
-```{r linear-model2-24}
+```{r linear-model2-25}
 t.test(x = df.credit$balance[df.credit$student == "No"],
        y = df.credit$balance[df.credit$student == "Yes"])
 ```
@@ -510,7 +459,7 @@ t.test(x = df.credit$balance[df.credit$student == "No"],
 
 When we put a variable in a linear model that is coded as a character or as a factor, R automatically recodes this variable using dummy coding. It uses level 1 as the reference category for factors, or the value that comes first in the alphabet for characters. 
 
-```{r linear-model2-25}
+```{r linear-model2-26}
 df.credit %>% 
   select(income, student) %>% 
   mutate(student_dummy = ifelse(student == "No", 0, 1))%>% 
@@ -524,7 +473,7 @@ df.credit %>%
 
 To report the results, we could show a plot like this:  
 
-```{r linear-model2-26}
+```{r linear-model2-27}
 df.plot = df.credit
 
 ggplot(df.plot,
@@ -542,7 +491,7 @@ ggplot(df.plot,
 
 And then report the means and standard deviations together with the result of our signifance test: 
 
-```{r linear-model2-27}
+```{r linear-model2-28}
 df.credit %>% 
   group_by(student) %>% 
   summarize(mean = mean(balance),
@@ -554,7 +503,7 @@ df.credit %>%
 
 Now let's take a look at a case where we have one continuous and one categorical predictor variable. Let's first formulate and fit our models: 
 
-```{r linear-model2-28}
+```{r linear-model2-29}
 # fit the models
 fit_c = lm(balance ~ 1 + income, df.credit)
 fit_a = lm(balance ~ 1 + income + student, df.credit)
@@ -569,7 +518,7 @@ We see again that it's worth it. The augmented model explains significantly more
 
 Let's visualize the model predictions again. Let's start with the compact model: 
 
-```{r linear-model2-29}
+```{r linear-model2-30}
 df.augment = fit_c %>% 
   augment() %>% 
   clean_names()
@@ -587,7 +536,7 @@ ggplot(df.augment,
 
 This time, the compact model still predicts just one line (like above) but note that this line is not horizontal anymore. 
 
-```{r linear-model2-30}
+```{r linear-model2-31}
 df.tidy = fit_a %>% 
   tidy() %>% 
   mutate(estimate = round(estimate,2))
@@ -638,7 +587,7 @@ Let's check whether there is an interaction between how income affects balance f
 
 Let's take a look at the data first. 
 
-```{r linear-model2-31}
+```{r linear-model2-32}
 ggplot(data = df.credit,
        mapping = aes(x = income,
                      y = balance,
@@ -659,7 +608,7 @@ But is the interaction in the model worth it? That is, does a model that include
 
 Let's check: 
 
-```{r linear-model2-32}
+```{r linear-model2-33}
 # fit models 
 fit_c = lm(formula = balance ~ income + student, data = df.credit)
 fit_a = lm(formula = balance ~ income * student, data = df.credit)
@@ -686,7 +635,7 @@ Nope, not worth it! The F-test comes out non-significant.
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r session}
+```{r linear-model2-34}
 sessionInfo()
 ```
 

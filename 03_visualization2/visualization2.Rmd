@@ -109,7 +109,7 @@ If we are interested in comparing proportions and we don't have too many data po
 
 Often we want to compare the data from many different conditions. And sometimes, it's also useful to get a sense for what the individual participant data look like. Here is a plot that achieves both. 
 
-```{r visualization2-08, fig.cap='Price of differently colored diamonds. Red circles are means, black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
+```{r visualization2-08, fig.cap='Price of differently colored diamonds. Large yellow circles are means, small black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
 ggplot(data = df.diamonds[1:150, ],
        mapping = aes(x = color, y = price)) +
   # individual data points (jittered horizontally)
