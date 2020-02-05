@@ -1,0 +1,90 @@
+---
+title: "12_Modeling Data"
+author: "Tobias Gerstenberg"
+date: "2/3/2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+## Student feedback 
+
+> I felt like with some of the content, the key understanding was not put in the slides. Like the game with the bars. The explanation was verbal, and reviewing the slides will be less useful
+
+> The past few classes have been incredibly helpful for thinking through the computations that underlie regression models and ANOVAs. I've encountered these in past courses, but I feel like I only now really understand what these tests are doing.
+
+> If the class examples are from real psych/social science research, it'd be easier to grasp the application of the functions that we learn.
+
+> I'd love to learn more about type I, II and III sums of squares. I've tried reading about them but I've found them difficult to understand. So I'd really appreciate it if we could delve into it a little bit.
+
+> Really like going through the same visual representations of model a vs. model c and then code chunks in the presentation! It's very helpful and helps me make sense of it over a few classes. Also like the model comparison approach to stats
+
+> i would love to know the answer to the confidence interval/error bar question! I actually still dont really understand the difference between the two (are they the same thing??) Thank you!!
+
+> I was shocked that I was so bad at guessing which effects were significant in the interaction plots!
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-12.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-12.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-12.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+```
+
+## What to do next time
+
+- maybe: explain a little more about interactions and main effects before the competition 
+- explain the solutions to the competition more slowly -- maybe go through all of the examples one by one 
+- link back to the previous lecture on interpreting interactions (as significantly different slopes)
+- add some text explaining these in the slides (or notes), so that students can remind themselves later 

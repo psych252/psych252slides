@@ -21,6 +21,18 @@ knitr::opts_chunk$set(comment = "#>",
 
 # Linear model 2
 
+## Learning goals
+
+- Multiple regression. 
+  - Appreciate model assumptions. 
+- Several continuous predictors. 
+  - Hypothesis tests. 
+  - Interpreting parameters. 
+  - Reporting results. 
+- One categorical predictor. 
+- Both continuous and categorical predictors. 
+- Interpreting interactions. 
+
 ```{r linear-model2-01, include=FALSE, eval=FALSE}
 install.packages(c("corrr", "GGally"))
 ```
