@@ -1,7 +1,7 @@
 ---
 title: "Class 13"
 author: "Tobias Gerstenberg"
-date: "February 6th, 2019"
+date: "February 5th, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -33,10 +33,10 @@ knitr::opts_chunk$set(
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("broom")    # for tidying up linear models 
-library("afex")    # for running ANOVAs
-library("emmeans")    # for calculating constrasts
-library("car")    # for calculating ANOVAs
+library("broom")      # for tidying up linear models 
+library("afex")       # for running ANOVAs
+library("emmeans")    # for calculating contrasts
+library("car")        # for calculating ANOVAs
 library("tidyverse")  # for wrangling, plotting, etc.
 
 # include references for used packages
@@ -68,87 +68,7 @@ df.poker = read_csv("data/poker.csv") %>%
                         labels = c("fixed", "none")),
          participant = 1:n()) %>% 
   select(participant, everything())
-
-df.poker.unbalanced = df.poker %>% 
-  filter(!participant %in% 1:10)
 ```
-
-## ANOVA with unbalanced design
-
-For the standard `anova()` function, the order of the independent predictors matters when the design is unbalanced. 
-
-```{r linear-model4-10}
-# one order 
-lm(formula = balance ~ skill + hand, 
-         data = df.poker.unbalanced) %>% 
-  anova()
-
-# another order 
-lm(formula = balance ~ hand + skill, 
-         data = df.poker.unbalanced) %>% 
-  anova()
-```
-
-For unbalanced designs, we should compute an ANOVA with type 3 sums of squares. 
-
-```{r linear-model4-11}
-# one order
-lm(formula = balance ~ hand + skill,
-   data = df.poker,
-   contrasts = list(hand = "contr.sum", 
-                    skill = "contr.sum")) %>% 
-  Anova(type = "3")
-
-# another order
-lm(formula = balance ~ skill + hand,
-   data = df.poker,
-   contrasts = list(hand = "contr.sum", 
-                    skill = "contr.sum")) %>% 
-  Anova(type = "3")
-```
-
-Now, the order of the independent variables doesn't matter anymore. 
-
-We can also use the `aov_ez()` function from the `afex` package. 
-
-```{r linear-model4-12}
-fit = aov_ez(id = "participant",
-             dv = "balance",
-             data = df.poker,
-             between = c("hand", "skill"))
-fit$Anova
-```
-
-## Two-way ANOVA (with interaction)
-
-Let's firt a two-way ANOVA with the interaction term. 
-
-```{r linear-model4-13}
-fit = lm(formula = balance ~ hand * skill, data = df.poker)
-fit %>% 
-  anova()
-```
-
-And let's compute how the the sums of squares are decomposed:
-
-```{r linear-model4-14}
-df.poker %>% 
-  mutate(mean_grand = mean(balance)) %>% 
-  group_by(skill) %>% 
-  mutate(mean_skill = mean(balance)) %>% 
-  group_by(hand) %>% 
-  mutate(mean_hand = mean(balance)) %>%
-  group_by(hand, skill) %>% 
-  mutate(mean_hand_skill = mean(balance)) %>%
-  ungroup() %>%
-  summarize(variance_total = sum((balance - mean_grand)^2),
-            variance_skill = sum((mean_skill - mean_grand)^2),
-            variance_hand = sum((mean_hand - mean_grand)^2),
-            variance_hand_skill = sum((mean_hand_skill - mean_skill - mean_hand + mean_grand)^2),
-            variance_residual = variance_total - variance_skill - variance_hand - variance_hand_skill
-            )
-```
-
 
 ## Planned contrasts 
 
@@ -177,7 +97,7 @@ df.plot = df.poker %>%
 df.tidy = fit.contrast %>% 
   tidy() %>% 
   select_if(is.numeric) %>% 
-  mutate_all(funs(round, .args = list(digits = 2)))
+  mutate_all(~ round(., 2))
 
 df.augment = fit.contrast %>% 
   augment() %>%
@@ -193,24 +113,21 @@ ggplot(data = df.plot,
                aes(x = 0.6,
                    xend = 1.4,
                    y = df.tidy$estimate[1]-df.tidy$estimate[2],
-                   yend = df.tidy$estimate[1]-df.tidy$estimate[2]
-                   ),
+                   yend = df.tidy$estimate[1]-df.tidy$estimate[2]),
                color = "red",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1],
-                   yend = df.tidy$estimate[1]
-                   ),
+                   yend = df.tidy$estimate[1]),
                color = "orange",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
-                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]
-                   ),
+                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "green",
                size = 1) +
   geom_segment(data = df.augment,
@@ -353,24 +270,21 @@ ggplot(data = df.plot,
                aes(x = 0.6,
                    xend = 1.4,
                    y = df.tidy$estimate[1]-df.tidy$estimate[2],
-                   yend = df.tidy$estimate[1]-df.tidy$estimate[2]
-                   ),
+                   yend = df.tidy$estimate[1]-df.tidy$estimate[2]),
                color = "red",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1],
-                   yend = df.tidy$estimate[1]
-                   ),
+                   yend = df.tidy$estimate[1]),
                color = "orange",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
-                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]
-                   ),
+                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "green",
                size = 1) +
   geom_segment(data = df.augment,
@@ -421,6 +335,26 @@ contrast(leastsquare,
          adjust = "bonferroni")
 ```
 
+```{r}
+fit = lm(formula = performance ~ group,
+         data = df.development)
+
+# check factor levels 
+levels(df.development$group)
+
+# define the contrasts of interest 
+contrasts = list(young_vs_old = c(-1, -1, 2),
+                 three_vs_five = c(-0.5, 0.5, 0))
+
+# compute estimated marginal means
+leastsquare = emmeans(fit, "group")
+
+# run analyses
+contrast(leastsquare,
+         contrasts,
+         adjust = "bonferroni")
+```
+
 ### Post-hoc tests
 
 Post-hoc tests for a single predictor:
@@ -447,6 +381,7 @@ leastsquare = emmeans(fit, c("hand", "skill"))
 pairs(leastsquare,
       adjust = "bonferroni")
 ```
+
 
 ## Session info 
 

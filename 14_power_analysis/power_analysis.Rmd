@@ -130,7 +130,7 @@ fit %>%
   anova %>% 
   tidy() %>% 
   pull(sumsq) %>% 
-  divide_by(sum(.)) %>% 
+  magrittr::divide_by(sum(.)) %>% 
   magrittr::extract(1)
 ```
 
@@ -232,12 +232,12 @@ pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50),
 set.seed(1)
 
 # number of simulations
-n_simulations = 100
+n_simulations = 1000
 
 # run simulation
-df.power = crossing(n = seq(10, 50, 1),
+df.power = crossing(n = seq(20, 40, 1),
                     simulation = 1:n_simulations,
-                    p = c(0.75, 0.8, 0.85)) %>%
+                    p = 0.75) %>%
   mutate(index = 1:n()) %>% # add an index column
   group_by(index, n, simulation) %>% 
   mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
@@ -266,7 +266,8 @@ ggplot(data = df.plot,
 
 # based on simulations
 df.plot %>%
-  filter(p == 0.75, near(power, 0.8, tol = 0.02))
+  filter(p == 0.75, near(power, 0.8, tol = 0.05)) %>% 
+  summarize(n = mean(n))
   
  
 # analytic solution
