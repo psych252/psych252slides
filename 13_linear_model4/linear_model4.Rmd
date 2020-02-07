@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 # Linear model 4
 
 ```{r install-packages, include=FALSE, eval=FALSE}
-# install.packages("afex")
+install.packages("afex")
 ```
 
 ## Load packages and set plotting theme  
