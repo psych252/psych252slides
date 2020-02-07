@@ -33,7 +33,6 @@ knitr::opts_chunk$set(
   - Understanding `map()` and its children. 
   - Understanding `nest()` and `unnest()`.
 
-
 ```{r power-analysis-01, include=FALSE, eval=FALSE}
 install.packages(c("lsr", "pwr"))
 ```
@@ -920,6 +919,8 @@ set.seed(1)
 - [Visualize power](https://rpsychologist.com/d3/NHST/)
 - [Calculating and reporting effect sizes to facilitate cumulative science: a practical primer for t-tests and ANOVAs](https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00863/full)
 - [purrr tutorial](https://emoriebeck.github.io/R-tutorials/purrr/)
+- [simr](https://cran.r-project.org/web/packages/simr/index.html): R Package for running power analysis for generalized linear mixed effects models. 
+- [simglm](https://cran.r-project.org/web/packages/simglm/index.html): Alternative R package for running power analysis via simulation. 
 
 ## Session info 
 
