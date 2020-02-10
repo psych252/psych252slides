@@ -1,5 +1,5 @@
 ---
-title: "Class 14"
+title: "Class 14: Solutions"
 author: "Tobias Gerstenberg"
 date: "February 7th, 2020"
 output:
@@ -13,23 +13,11 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Power analysis
-
-## Learning goals 
-
-- Making decisions based on statistical inference.
-- The concept of statistical power. 
-- Calculating power. 
-- Common effect size measures. 
-- Determining sample size via simulation.
-  - Understanding `map()` and its children. 
-  - Understanding `nest()` and `unnest()`.
 
 ## Load packages and set plotting theme  
 
@@ -46,7 +34,7 @@ theme_set(theme_classic() + #set the theme
     theme(text = element_text(size = 20))) #set the default text size
 ```
 
-##### Practice 1 
+## Practice 1 
 
 Use the `map2_dbl()` function to create a new variable in this data frame that's the maximum of each row across columns `a` and `b`. 
 
@@ -87,7 +75,7 @@ df2 = df %>%
 toc()
 ```
 
-##### Practice 2 
+## Practice 2 
 
 In the `mtcars` data set, run separate linear models with `cyl` (number of cylinders) and `am` (whether the car has automatic or manual transmission) as predictors (including their interaction), and `mpg` (miles per galon), and `hp` (horse power) as dependent variables. Create a data frame that contains one column with the names of the dependent variables, one column with the names of the predictors, and one column with the p-value for each predictor. 
 
@@ -110,7 +98,7 @@ mtcars %>%
   select(source, term, p.value)
 ```
 
-##### Practice 3 -- Simulation of an interaction effect
+## Practice 3 -- Simulation of an interaction effect
 
 Try to run a simulation to determine how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction based on the following pilot data set:  
 
@@ -268,6 +256,12 @@ ggplot(data = df.power4,
   geom_smooth(method = "loess",
               color = "black") +
   geom_point(shape = 21)
+```
+
+## Session info 
+
+```{r}
+sessionInfo()
 ```
 
 

@@ -522,10 +522,8 @@ func_permutations = function(df){
 }
 
 # data frame with permutation results 
-df.permutations = tibble(
-  permutation = 1:n_permutations, 
-  mean_difference = replicate(n = n_permutations, func_permutations(df.permutation))
-)
+df.permutations = tibble(permutation = 1:n_permutations, 
+  mean_difference = replicate(n = n_permutations, func_permutations(df.permutation)))
 
 #plot the distribution of the differences 
 ggplot(data = df.permutations, aes(x = mean_difference)) +

@@ -15,10 +15,8 @@ nocite: '@*'
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Power analysis
@@ -45,6 +43,7 @@ library("kableExtra") # for making nice tables
 library("broom")      # for tidying up model fits
 library("magrittr")   # for going all in with the pipe
 library("lsr")        # for computing effect size measures
+library("effectsize") # for computing effect size measures
 library("pwr")        # for power calculations
 library("tidyverse")  # for wrangling, plotting, etc. 
 
@@ -729,6 +728,11 @@ df.ttest = tibble(group1 = rnorm(n = n,
 The two groups in our sample don't differ significantly from each other. 
 
 ```{r power-analysis-45}
+ggplot(data = df.ttest,
+       mapping = aes(x = name,
+                     y = value)) + 
+  stat_summary(fun.data = "mean_cl_boot")
+
 t.test(formula = value ~ name, 
          data = df.ttest)
 ```
@@ -761,7 +765,7 @@ d
 Let's double check that we got it right: 
 
 ```{r power-analysis-47}
-cohensD(formula = value ~ name, 
+cohens_d(x = value ~ name, 
          data = df.ttest)
 ```
 
@@ -795,12 +799,12 @@ df.power2 = crossing(n = seq(10, 60, 2),
                                            sd = sd2)) %>% 
                        pivot_longer(cols = everything()))) %>% 
   group_by(index, n, simulation) %>% 
-  mutate(fit = map(data, 
+  mutate(fit = map(data,
                    ~ t.test(formula = value ~ name,
-                              data = .x))) %>% 
-  mutate(coef = map(fit, tidy)) %>% 
-  select(simulation, n, index, coef) %>% 
-  unnest(cols = coef) %>% 
+                              data = .x))) %>%
+  mutate(coef = map(fit, tidy)) %>%
+  select(simulation, n, index, coef) %>%
+  unnest(cols = coef) %>%
   group_by(n) %>% 
   summarize(power = sum(p.value < 0.05) / n())
 
