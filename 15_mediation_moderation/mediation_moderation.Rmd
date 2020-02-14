@@ -511,8 +511,8 @@ g
 ##### Regression 
 
 ```{r}
-set.seed(1)
-n = 1000
+set.seed(2)
+n = 100
 b_xy = 2
 b_xz = 2
 b_yz = 2

@@ -1,7 +1,7 @@
 ---
 title: "Class 16"
 author: "Tobias Gerstenberg"
-date: "February 15th, 2019"
+date: "February 14th, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -48,63 +48,16 @@ theme_set(
 )
 ```
 
-
-## Power simulation
-
-```{r}
-# make reproducible 
-set.seed(1)
-
-# number of simulations
-n_simulations = 10
-
-# run simulation
-df.power = crossing(n = seq(10, 50, 1),
-                    simulation = 1:n_simulations,
-                    p = c(0.1, 0.8, 0.85)) %>%
-  mutate(index = 1:n()) %>% # add an index column
-  mutate(response = rbinom(n = n(), size = n, prob = p)) %>% # generate random data
-  group_by(index, simulation, p) %>% 
-  nest() %>% # put data in list column
-  mutate(fit = map(data, 
-                   ~ binom.test(x = .$response, # define formula
-                          n = .$n,
-                          p = 0.5,
-                          alternative = "greater")),
-         p.value = map_dbl(fit, ~ .$p.value)) %>% # run binomial test and extract p-value
-  unnest(data) %>% 
-  select(-fit)
-
-# data frame for plot   
-df.plot = df.power %>% 
-  group_by(n, p) %>% 
-  summarize(power = sum(p.value < 0.05) / n()) %>% 
-  ungroup() %>% 
-  mutate(p = as.factor(p))
-
-# plot data 
-ggplot(data = df.plot, 
-       mapping = aes(x = n, y = power, color = p, group = p)) +
-  geom_smooth(method = "loess")
-
-# based on simulations
-df.plot %>%
-  filter(p == 0.75, near(power, 0.8, tol = 0.02))
-  
-# analytic solution
-pwr.p.test(h = ES.h(0.5, 0.75),
-           power = 0.8,
-           alternative = "two.sided")
-```
-
 ## LOO crossvalidation
+
+### generate the data
 
 ```{r}
 # make example reproducible 
 set.seed(1)
 
 # parameters
-sample_size = 100
+sample_size = 20
 b0 = 1
 b1 = 2
 b2 = 3
@@ -118,14 +71,29 @@ df.data = tibble(
 ) 
 ```
 
+### visualize the result
+
+```{r}
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, degree = 2, raw = TRUE))
+```
+
+
 
 ```{r}
 df.cross = df.data %>% 
-  crossv_mc(n = 50, test = 0.5) %>% 
+  # crossv_mc(n = 50, test = 0.5) %>% 
+  crossv_loo() %>% 
   mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
          model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
          model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
-  gather("model", "fit", contains("model")) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model",
+               values_to = "fit") %>% 
   mutate(rmse = map2_dbl(.x = fit, .y = test, ~ rmse(.x, .y)))
 
 df.cross %>% 

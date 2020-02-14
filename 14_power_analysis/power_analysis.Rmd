@@ -771,7 +771,7 @@ cohens_d(x = value ~ name,
 
 We did! 
 
-So let's now calculate the means and standard deviations based on our pilot data and run a power analysis to determine how many participants we would need to have an 80% of rejecting the null hypothesis for the estimated effect size. 
+So let's now calculate the means and standard deviations based on our pilot data and run a power analysis to determine how many participants we would need, to have an 80% chance of rejecting the null hypothesis for the estimated effect size. 
 
 ```{r power-analysis-48}
 # make reproducible 
@@ -784,10 +784,11 @@ sd1 = df$sd[1]
 sd2 = df$sd[2]
 
 # number of simulations
-n_simulations = 50
+n_simulations = 10
+# n_simulations = 50
 
 # run simulation 
-df.power2 = crossing(n = seq(10, 60, 2),
+df.power2 = crossing(n = seq(from = 10, to = 60, by = 2),
                      simulation = 1:n_simulations) %>%
   mutate(index = 1:n()) %>% 
   group_by(index, n, simulation) %>% 
@@ -799,12 +800,12 @@ df.power2 = crossing(n = seq(10, 60, 2),
                                            sd = sd2)) %>% 
                        pivot_longer(cols = everything()))) %>% 
   group_by(index, n, simulation) %>% 
-  mutate(fit = map(data,
+  mutate(p.value = map(data,
                    ~ t.test(formula = value ~ name,
-                              data = .x))) %>%
-  mutate(coef = map(fit, tidy)) %>%
-  select(simulation, n, index, coef) %>%
-  unnest(cols = coef) %>%
+                              data = .x)$p.value)) %>%
+  # mutate(coef = map(fit, tidy)) %>%
+  # select(simulation, n, index, coef) %>%
+  # unnest(cols = coef) %>%
   group_by(n) %>% 
   summarize(power = sum(p.value < 0.05) / n())
 
@@ -818,7 +819,8 @@ ggplot(data = df.power2,
              size = 0.1) + 
   geom_smooth(method = "loess",
               color = "black") +
-  geom_point(shape = 21)
+  geom_point(shape = 21) + 
+  scale_x_discrete()
 ```
 
 Let's compare to what we'd get from the `pwr` package. 
