@@ -1,7 +1,7 @@
 ---
 title: "16 Model comparison"
 author: "Tobias Gerstenberg"
-date: "2/15/2019"
+date: "2/14/2020"
 output: 
   html_document:
     toc: true
@@ -24,18 +24,21 @@ theme_set(
 )
 ```
 
+> Pacing feels fast. Are you rushing to get to a certain point in 10 weeks? Many concepts could be done with greater depth, possibly resulting in deeper levels of understanding. In terms of the mid-term, the primary tension in the class manifested: is this an R class, or a statistics class? The class, as it's designed, is great at breaking down the bigger statistical concepts, albeit a bit too fast. But the R learning is secondary by a long shot. I spent 90% of the time on the midterm stressing and fretting about code. I would just prefer to stress over concepts more than knitting. Analysis and interpretation was pushed aside. If you give me data, and a visualization, then my focus is the interpretation. If you ask me do elaborate code, then my focus is the coding. If I'm supposed to learn coding on my own, then why make it such a integral part of nearly every assignment? Any ability that I have to interpret data or understand certain methods of data analysis is constantly limited by my R knowledge. Assessment would be better if you found a way to separate the two domains of knowledge, at least on occasion.
+
+> Way too hard and too long, the midterm!
+
+> I think it's great that you changed the late policy for the midterm to be more lenient. However, I strongly disagree with your approach (that you suggested you might follow in future) of keeping the late policy secret until after these test. Transparency with students and respecting their ability to make decisions after having all the information about the policy seems best.
+
+> I thought the midterm was pretty fair overall, but quite long and some questions were more difficult than they needed to be to get that we understood the material (like replicating the plot). I also felt like some questions (specifically the simulations) tested our coding ability more than our theoretical understanding of the material.
+
+> Great class today. Thank you for the explanation about controlling for variables. I understood it better than the other day. The class today was very interesting. I had heard many times about crossvalidation, but had no idea about how to do it, so I found this class very helpful.
+
+> Today's class exemplified for me a larger issue with the course is that I often don't understand is there is a unifying approach to what we're learning--I know that generally we're learning about building models but if we could use more examples about how to map that onto theory that would be useful.
+
+> The midterm was extremely long. I heard that the students from last year also found it extremely long.
+
 ## Student feedback 
-
-> I can see how much you put in the class. I think the class is ambitious to teach students (who don't really have a lot of programming skills) simulations. There are way too much information over there, in addition to the goal of teaching students other important concepts. I completely failed to follow the simulation r code. __On the other hand, I also failed to understand other concepts, such as the leave-one-out approach. Perhaps you need to explain much more clearly why this can help to solve the problems of the "anova()" in r.__ I can understand what it is doing but I can't understand why it solves the problems of comparing two models with "non-overlapped" predictors.
-
-> The midterm took me 18 hours to finish, but I actually appreciate it! I reviewed and learned so much in the process of finishing the midterm. This is the only midterm that I would save a copy as a reference of R codes for future data analysis.
-
-> the midterm was really too long. it also felt long for no reason, eg __questions tested redundant knowledge (and it felt like the hws in that it was really testing if I could find the relevant R code in the rmd files uploaded with lecture instead of testing more independent problem solving)__. I hope future students get to take a more concise one.
-
-> __A little too much of reciting code in class today__, I think (as opposed to more conceptual content). You lost me a bit. One thing that did come up in the midterm though: why does lm() output a t value and anova output an F value. __And what's the difference/relationship between the two.__
-
-> You need to give us a chance to discuss feedback on the midterm. Clearly, it was not a 6-hour exam (please report the mean length), and even if it was, you should not have assigned a 6-hour exam to begin with. The purpose of the take-home exam is to offer an exam in a more flexible format. __Stanford's exam policy specifies that (final!) exams fit within a 3-hour slot.__ Unless you have a substantial reason why you cannot evaluate your course material in such a format, you should not use the take-home option as a mechanism to simply assign a longer exam (Stanford even has formal channels for students to bring such practices to the attention of University administrators). Moreover, the exam clearly did not need to be so long, as its length was not due to challenging questions but rather to a great deal of repetitive material. If we can interpret coefficients in a linear regression once, we don't need to do it 3 times more. The classmates with which I spoke shared the sentiment that the midterm was disrespectful of our time (in a fashion similar to that of HW2).
-
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-16.csv") %>% 
@@ -44,59 +47,23 @@ read_csv("what-did-you-like-about-16.csv") %>%
   datatable()
 ```
 
-### PollEverywhere results 
-
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read.csv("how-was-the-pace-of-16.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
-                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
-
-ggplot(data = df.pace,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-# ggsave("pace.pdf", width = 8, height = 6)
-```
-
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-16.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
-  mutate(response = as.numeric(response),
-         response = factor(response, levels = 1:5,
-                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
-
-ggplot(data = df.overall,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
-  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
-  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
-  theme(title = element_text(size = 18))
-# ggsave("overall.pdf", width = 8, height = 6)
-```
-
 ## Midterm
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
-df.midterm_hours = read.csv("how-many-hours-midterm.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response,
-                           levels = c(1:14, "15 or more"),
-                           labels = c(1:14, "15\nor more"))) %>% 
-  count(response) %>% 
-  complete(response)
+df.midterm_hours = read_csv("how-many-hours-midterm.csv") %>%
+  set_names(c("response", "date"))
 
 ggplot(data = df.midterm_hours,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on the midterm?") +
+       mapping = aes(x = response)) + 
+  geom_histogram(fill = "lightblue", color = "black") +
+  labs(x = "hours",
+       y = "number of students",
+       title = "How many hours did you spend on the midterm?") +
+  scale_x_continuous(breaks = seq(2, 40, 2),
+                     labels = seq(2, 40, 2)) +
+  coord_cartesian(xlim = c(4.5, 36.5),
+                  ylim = c(0, 8.1),
+                  expand = F) + 
   theme(title = element_text(size = 16),
         plot.margin = margin(r = 1, unit = "cm"))
 # ggsave("midterm_hours.pdf", width = 8, height = 6)
@@ -105,8 +72,12 @@ ggplot(data = df.midterm_hours,
 
 ## What to do next time
 
-- shorten midterm considerably 
-- introduce simulating power based on a more straightforward example before showing the more involved simulation (that manipulates n and effect size)
-- maybe have some practical exercises with map() before going into the simulation 
-- both the power and the cross-validation code examples are very heavy; maybe only introduce one in class; or focus more on the conceptual part, and have students go through the R code in sections and for the homework
-- better motivate the need for model comparison that goes beyond the F-test that we've used in class so far  
+- midterm feedback: 
+  - still too long 
+  - part 3 on power analysis was too challenging 
+  - remove the need to draw arrows in the plot from the midterm
+  - plotting the model predictions on different facets wasn't easy 
+- provide some concrete examples for which "controlling" for variables goes wrong (not just in the abstract)
+- generally: more examples that make things concrete 
+- class still feels rushed to some (maybe try and do less but in more detail)
+- some additional work on intepreting model parameters might be needed 

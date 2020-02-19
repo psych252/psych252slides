@@ -927,6 +927,7 @@ set.seed(1)
 - [purrr tutorial](https://emoriebeck.github.io/R-tutorials/purrr/)
 - [simr](https://cran.r-project.org/web/packages/simr/index.html): R Package for running power analysis for generalized linear mixed effects models. 
 - [simglm](https://cran.r-project.org/web/packages/simglm/index.html): Alternative R package for running power analysis via simulation. 
+- [cautionary tale about using pilot studies for power calculations](https://nccih.nih.gov/grants/whatnccihfunds/pilot_studies)
 
 ## Session info 
 

@@ -440,7 +440,7 @@ df.data %>%
             high = quantile(estimate, 0.975))
 ```
 
-Note the somewhat weird construction `~ mean(.$data$x[.$idx]))`. This is just because the `bootstrap` function stores the information about each boostrapped data set in that way. Each boostrapped sample simply points to the original data set, and then uses a different set of indices `idx` to indicate which values from the original data set it sampled (with replacement). 
+Note the somewhat weird construction `~ mean(.$data$x[.$idx]))`. This is just because the `bootstrap` function stores the information about each boostrapped data set in that way. Each bootstrapped sample simply points to the original data set, and then uses a different set of indices `idx` to indicate which values from the original data set it sampled (with replacement). 
 
 ### AIC and BIC 
 
@@ -462,10 +462,8 @@ Calculating AIC and BIC in R is straightforward. We simply need to fit a linear 
 set.seed(0)
 
 # let's generate some data 
-df.example = tibble(
-  x = runif(20, min = 0, max = 1),
-  y = 1 + 3 * x + rnorm(20, sd = 2)
-)
+df.example = tibble(x = runif(20, min = 0, max = 1),
+                    y = 1 + 3 * x + rnorm(20, sd = 2))
 
 # fit a linear model 
 fit = lm(formula = y ~ 1 + x,
@@ -481,8 +479,13 @@ BIC(fit)
 We can also just use the `broom` package to get that information: 
 
 ```{r model-comparison-15}
+# fit %>% 
+#   summary()
+
 fit %>% 
-  glance()
+  glance() %>% 
+  kable(digits = 2) %>% 
+  kable_styling(full_width = F)
 ```
 
 Both AIC and BIC take the number of parameters and the model's likelihood into account. BIC additionally considers the number of observations. But how is the likelihood of a linear model determined? 
@@ -519,7 +522,7 @@ Let's make a plot that shows a normal distribution alongside the residuals:
 # define a normal distribution 
 df.normal = tibble(
   y = seq(-5, 5, 0.1),
-  x = dnorm(y, sd = 2) + 3.9
+  x = dnorm(y, sd = 2) + 3.75
 )
 
 # show the residual plot together with the normal distribution
@@ -557,6 +560,19 @@ print(aic)
 print(bic)
 
 ```
+
+```{r}
+fit %>% 
+  augment() %>% 
+  mutate(likelihood = dnorm(.resid, sd = sigma)) %>% 
+  clean_names() %>% 
+  select(x, y, fitted, resid, likelihood) %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(full_width = F)
+```
+
+
 
 Cool! The values are the same as when we use the `glance()` function like so (except for a small difference due to rounding): 
 

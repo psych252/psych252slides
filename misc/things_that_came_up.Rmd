@@ -632,3 +632,49 @@ fit2 = lm(formula = balance ~ 1 + hand_fct * skill_fct,
 
 ```
 
+# centering with multiple continuous predictors 
+
+```{r}
+df.tmp = tibble(hand = rep(1:3, 2),
+                skill = rep(1:2, each = 3),
+                hand_skill = hand * skill,
+                hand_c = scale(hand, scale = F),
+                skill_c = scale(skill, scale = F),
+                hand_skill_c = hand_c * skill_c)
+
+df.tmp %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+df.tmp %>% 
+  cor()
+```
+
+# using a pilot to determine sample size 
+
+```{r}
+set.seed(1)
+population.sd = 5
+sample_n = 100
+pilot_n = 10 
+n_pilots = 10000
+
+sample_sd = rnorm(n = sample_n, sd = population.sd) %>% 
+  sd()
+
+df.plot = tibble(sd = map_dbl(1:n_pilots, ~ rnorm(n = pilot_n, sd = population.sd) %>% 
+  sd()))
+
+ggplot(df.plot,
+       aes(x = sd)) + 
+  geom_histogram(color = "black",
+                 fill = "lightblue") + 
+  geom_vline(xintercept = 5,
+             linetype = 2) + 
+  geom_vline(xintercept = mean(df.plot$sd),
+             color = "red")
+
+```
+
+
