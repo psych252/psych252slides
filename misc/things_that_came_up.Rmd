@@ -26,6 +26,8 @@ library("broom")      # for tidying up model fits
 library("ggsignif")   # for showing significant differences in plots
 library("kableExtra") # for nice tables
 library("corrr")      # for correlation tables
+library("lme4")       # for linear mixed effects models 
+library("MASS")       # for additional function (e.g. multivariate Gaussian)
 library("tidyverse")  # for everything else 
 
 theme_set(theme_classic() + #set the theme 
@@ -677,4 +679,209 @@ ggplot(df.plot,
 
 ```
 
+
+# Comparing t-test with F-test in `lm()`
+
+What's the difference between the t-test on individual predictors in the model and the F-test comparing two models (one with, and one without the predictor)? 
+
+Let's generate some data first: 
+
+```{r lmer1-1}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 100
+b0 = 1
+b1 = 0.5
+b2 = 0.5
+sd = 0.5
+
+# sample
+df.data = tibble(
+  participant = 1:sample_size,
+  x1 = runif(sample_size, min = 0, max = 1),
+  x2 = runif(sample_size, min = 0, max = 1),
+  # simple additive model
+  y = b0 + b1 * x1 + b2 * x2 + rnorm(sample_size, sd = sd) 
+) 
+
+# fit linear model 
+fit = lm(formula = y ~ 1 + x1 + x2,
+         data = df.data)
+
+# print model summary 
+fit %>% summary()
+```
+
+Let's visualize the data: 
+
+```{r lmer1-2}
+df.data %>% 
+  ggplot(data = .,
+         mapping = aes(x = x1,
+                       y = y,
+                       color = x2)) +
+  geom_smooth(method = "lm",
+              color = "black") + 
+  geom_point()
+```
+
+## Global F-test 
+
+The global F-test which is shown by the F-statistic at the bottom of the `summary()` output compares the full model with a  model that only has an intercept. So, to use our model comparison approach, we would compare the following two models: 
+
+```{r lmer1-3}
+# fit models 
+model_compact = lm(formula = y ~ 1,
+                   data = df.data)
+
+model_augmented = lm(formula = y ~ 1 + x1 + x2,
+                     data = df.data)
+
+# compare models using the F-test
+anova(model_compact, model_augmented)
+
+```
+
+Note how the result of the F-test using the `anova()` function which compares the two models is identical to the F-statistic reported at the end of the `summary` function.
+
+## Test for individual predictors
+
+To test for individual predictors in the model, we compare two models, a compact model without that predictor, and an augmented model with that predictor. Let's test the significance of `x1`. 
+
+```{r lmer1-4}
+# fit models 
+model_compact = lm(formula = y ~ 1 + x2,
+                   data = df.data)
+
+model_augmented = lm(formula = y ~ 1 + x1 + x2,
+                     data = df.data)
+
+# compare models using the F-test
+anova(model_compact, model_augmented)
+```
+
+Note how the p-value that we get from the F-test is equivalent to the one that we get from the t-test reported in the `summary()` function. The F-test statistic (in the `anova()` result) and the t-value (in the `summary()` of the linear model) are deterministically related. In fact, the relationship is just: 
+
+$$
+t = \sqrt{F}
+$$
+
+Let's check that that's correct: 
+
+```{r lmer1-5, warning=FALSE}
+# get the t-value from the fitted lm
+t_value = fit %>% 
+  tidy() %>% 
+  filter(term == "x1") %>% 
+  pull(statistic)
+
+# get the F-value from comparing the compact model (without x1) with the 
+# augmented model (with x1)
+
+f_value = anova(model_compact, model_augmented) %>% 
+  tidy() %>% 
+  pull(statistic) %>% 
+  .[2]
+
+# t-value 
+print(str_c("t_value: ", t_value))
+
+# square root of f_value 
+print(str_c("sqrt of f_value: ", sqrt(f_value)))
+```
+
+Yip, they are the same. 
+
+# Difference between `replicate()` and `map()`
+
+`replicate()` comes with base R whereas `map()` is part of the tidyverse. `map()` can do everything that `replicate()` can do and more. However, if you just want to run the same function (without changing the parameters) multiple times, you might as well use `replicate()`. 
+
+Here are some examples for what you can do with `replicate()` and `map()`.
+
+```{r lmer2-1}
+# draw from a normal distribution and take mean
+fun.normal_means = function(n, mean, sd){
+  mean(rnorm(n = n, mean = mean, sd = sd))
+}
+
+# execute the function 4 times
+replicate(n = 4, fun.normal_means(n = 20, mean = 1, sd = 0.5))
+
+# same same but different 
+map_dbl(.x = c(20, 20, 20, 20), ~ fun.normal_means(n = .x, mean = 1, sd = 0.5))
+
+# and more flexible
+map_dbl(.x = c(1, 1, 10, 10), ~ fun.normal_means(n = 20, mean = .x, sd = 0.5))
+```
+
+# One-tailed vs. two-tailed tests
+
+## t distribution
+
+Some code to draw a t-distribution: 
+
+```{r}
+tibble(x = c(-4, 4)) %>% 
+  ggplot(data = ., 
+         mapping = aes(x = x)) + 
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                # xlim = c(qt(0.95, df = 20), qt(0.999, df = 20))) +
+                # xlim = c(qt(0.001, df = 20), qt(0.05, df = 20))) +
+                xlim = c(qt(0.001, df = 20), qt(0.025, df = 20))) +
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                xlim = c(qt(0.975, df = 20), qt(0.999, df = 20))) +
+  stat_function(fun = "dt",
+                args = list(df = 20),
+                size = 1) +
+  coord_cartesian(expand = F)
+```
+
+## F distribution
+
+Some code to draw an F-distribution
+
+```{r}
+tibble(x = c(0, 5)) %>% 
+  ggplot(data = ., 
+         mapping = aes(x = x)) +
+  stat_function(fun = "df",
+                args = list(df1 = 100, df2 = 10),
+                size = 1,
+                geom = "area",
+                fill = "red",
+                xlim = c(qf(0.95, df1 = 100, df2 = 10), qf(0.999, df1 = 100, df2 = 10))) +
+  stat_function(fun = "df",
+                args = list(df1 = 100, df2 = 10),
+                size = 1) +
+  coord_cartesian(expand = F)
+```
+
+
+## Multivariate Gaussians 
+
+```{r}
+sigma = matrix(data = c(1, -0.5, 0, 1),
+               nrow = 2,
+               ncol = 2)
+
+mvrnorm(n = 10000,
+        mu = rep(0, 2),
+        Sigma = sigma) %>% 
+  as_tibble(.name_repair = ~ set_names(c("x", "y"))) %>% 
+  ggplot(mapping = aes(x = x,
+                       y = y)) + 
+  stat_density_2d(aes(fill = stat(level)),
+                  geom = "polygon",
+                  show.legend = F)
+```
 

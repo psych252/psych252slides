@@ -15,10 +15,8 @@ nocite: '@*'
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Model comparison
@@ -43,10 +41,8 @@ knitr::write_bib(.packages(), "packages.bib")
 ```
 
 ```{r model-comparison-03}
-theme_set(
-  theme_classic() + #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
+theme_set(theme_classic() + #set the theme 
+            theme(text = element_text(size = 20))) #set the default text size
 ```
 
 ## Model comparison 
@@ -423,17 +419,15 @@ set.seed(1)
 sample_size = 10 
 
 # sample
-df.data = tibble(
-  participant = 1:sample_size,
-  x = runif(sample_size, min = 0, max = 1)
-) 
+df.data = tibble(participant = 1:sample_size,
+                 x = runif(sample_size, min = 0, max = 1)) 
 
 # mean of the actual sample
 mean(df.data$x)
 
 # bootstrap to get confidence intervals around the mean 
 df.data %>%
-  bootstrap(n = 1000) %>% # create 1000 boostrapped samples
+  bootstrap(n = 1000) %>% # create 1000 bootstrapped samples
   mutate(estimate = map_dbl(strap, ~ mean(.$data$x[.$idx]))) %>% # get the sample mean
   summarize(mean = mean(estimate),
             low = quantile(estimate, 0.025), # calculate the 2.5 / 97.5 percentiles
@@ -560,19 +554,6 @@ print(aic)
 print(bic)
 
 ```
-
-```{r}
-fit %>% 
-  augment() %>% 
-  mutate(likelihood = dnorm(.resid, sd = sigma)) %>% 
-  clean_names() %>% 
-  select(x, y, fitted, resid, likelihood) %>% 
-  head(10) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(full_width = F)
-```
-
-
 
 Cool! The values are the same as when we use the `glance()` function like so (except for a small difference due to rounding): 
 

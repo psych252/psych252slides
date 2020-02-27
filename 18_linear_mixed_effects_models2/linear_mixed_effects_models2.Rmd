@@ -1,7 +1,7 @@
 ---
 title: "Class 18"
 author: "Tobias Gerstenberg"
-date: "February 20th, 2019"
+date: "February 21st, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -15,65 +15,37 @@ nocite: '@*'
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Linear mixed effects models 2
 
 ## Load packages and set plotting theme  
 
-```{r load-packages, message=FALSE}
+```{r lmer2-01, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
-library("broom")    # for tidying up linear models 
-library("patchwork")    # for making figure panels
-library("lme4")    # for linear mixed effects models
+library("broom")      # for tidying up linear models 
+library("patchwork")  # for making figure panels
+library("lme4")       # for linear mixed effects models
 library("tidyverse")  # for wrangling, plotting, etc. 
 
 # include references for used packages
 knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r set-theme}
-theme_set(
-  theme_classic() + #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
-```
-
-## Things that came up in class 
-
-### Difference between `replicate()` and `map()`
-
-`replicate()` comes with base R whereas `map()` is part of the tidyverse. `map()` can do everything that `replicate()` can do and more. However, if you just want to run the same function (without changing the parameters) multiple times, you might as well use `replicate()`. 
-
-Here are some examples for what you can do with `replicate()` and `map()`.
-
-```{r lmer2-1}
-# draw from a normal distribution and take mean
-fun.normal_means = function(n, mean, sd){
-  mean(rnorm(n = n, mean = mean, sd = sd))
-}
-
-# execute the function 4 times
-replicate(n = 4, fun.normal_means(n = 20, mean = 1, sd = 0.5))
-
-# same same but different 
-map_dbl(.x = c(20, 20, 20, 20), ~ fun.normal_means(n = .x, mean = 1, sd = 0.5))
-
-# and more flexible
-map_dbl(.x = c(1, 1, 10, 10), ~ fun.normal_means(n = 20, mean = .x, sd = 0.5))
+```{r lmer2-02}
+theme_set(theme_classic() + #set the theme 
+            theme(text = element_text(size = 20))) #set the default text size
 ```
 
 ## Simulating a linear mixed effects model 
 
 To generate some data for a linear mixed effects model with random intercepts, we do pretty much what we are used to doing when we generated data for a linear model. However, this time, we have an additional parameter that captures the variance in the intercepts between participants. So, we draw a separate (offset from the global) intercept for each participant from this distribution.  
 
-```{r lmer2-2}
+```{r lmer2-03}
 # make example reproducible 
 set.seed(1)
 
@@ -88,9 +60,8 @@ sd_participant = 0.5
 intercepts = rnorm(sample_size, sd = sd_participant)
 
 # generate the data 
-df.mixed = tibble(
-  condition = rep(0:1, each = sample_size), 
-  participant = rep(1:sample_size, 2)) %>% 
+df.mixed = tibble(condition = rep(0:1, each = sample_size), 
+                  participant = rep(1:sample_size, 2)) %>% 
   group_by(condition) %>% 
   mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
   ungroup %>% 
@@ -98,9 +69,22 @@ df.mixed = tibble(
          participant = as.factor(participant))
 ```
 
+Let's take a look at the simulated data set: 
+
+```{r lmer2-04}
+df.mixed %>% 
+  select(participant, condition, value) %>% 
+  arrange(participant) %>% 
+  head(8) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+
 Let's fit a model to this data now and take a look at the summary output: 
 
-```{r lmer2-3}
+```{r lmer2-05}
 # fit model
 fit.mixed = lmer(formula = value ~ 1 + condition + (1 | participant),
                 data = df.mixed)
@@ -111,7 +95,7 @@ fit.mixed %>%
 
 Let's visualize the model's predictions: 
 
-```{r lmer2-4}
+```{r lmer2-06}
 fit.mixed %>%
   augment() %>%
   clean_names() %>%
@@ -129,7 +113,7 @@ fit.mixed %>%
 
 Let's simulate some data from this fitted model: 
 
-```{r lmer2-5}
+```{r lmer2-07}
 # simulated data 
 fit.mixed %>% 
   simulate() %>% 
@@ -146,7 +130,7 @@ Even though we only fitted random intercepts in this model, when we simulate fro
 
 Let's see whether fitting random intercepts was worth it in this case: 
 
-```{r lmer2-6}
+```{r lmer2-08}
 # using chisq test
 fit.compact = lm(formula = value ~ 1 +  condition,
                 data = df.mixed)
@@ -163,18 +147,18 @@ Nope, it's not worth it in this case. That said, even though having random inter
 
 Let's take 20 participants from our `df.mixed` data set, and make one of the participants be an outlier: 
 
-```{r lmer2-7}
+```{r lmer2-09}
 # let's make one outlier
 df.outlier = df.mixed %>%
   mutate(participant = participant %>% as.character() %>% as.numeric()) %>% 
-  filter(participant <= 20) %>% 
+  filter(participant <= 20) %>%
   mutate(value = ifelse(participant == 20, value + 30, value),
          participant = as.factor(participant))
 ```
 
 Let's fit the model and look at the summary: 
 
-```{r lmer2-8}
+```{r lmer2-10}
 # fit model
 fit.outlier = lmer(formula = value ~ 1 + condition + (1 | participant),
                    data = df.outlier)
@@ -187,7 +171,7 @@ The variance for the participants' intercepts has increased dramatically!
 
 Let's visualize the data together with the model's predictions: 
 
-```{r lmer2-9}
+```{r lmer2-11}
 fit.outlier %>%
   augment() %>%
   clean_names() %>%
@@ -205,7 +189,7 @@ fit.outlier %>%
 
 The model is still able to capture the participants quite well. But note what its simulated data looks like now: 
 
-```{r lmer2-10}
+```{r lmer2-12}
 # simulated data from lmer with outlier
 fit.outlier %>% 
   simulate() %>% 
@@ -224,7 +208,7 @@ The simulated data doesn't look like our original data. This is because one norm
 
 Let's generate data where the effect of condition is different for participants: 
 
-```{r lmer2-11}
+```{r lmer2-13}
 # make example reproducible 
 set.seed(1)
 
@@ -242,7 +226,7 @@ df.slopes = tibble(
 
 Let's fit a model with random intercepts. 
 
-```{r lmer2-12}
+```{r lmer2-14}
 fit.slopes = lmer(formula = value ~ 1 + condition + (1 | participant),
                 data = df.slopes)
 
@@ -253,7 +237,7 @@ Note how the summary says "singular fit", and how the variance for random interc
 
 How about fitting random slopes? 
 
-```{r lmer2-13, eval=F}
+```{r lmer2-15, eval=F}
 # fit model
 lmer(formula = value ~ 1 + condition + (1 + condition | participant),
      data = df.slopes)
@@ -267,7 +251,7 @@ Taking dependence in the data into account is extremely important. The Simpson's
 
 Let's start by simulating some data to demonstrate the paradox. 
 
-```{r lmer2-14}
+```{r lmer2-16}
 # make example reproducible 
 set.seed(2)
 
@@ -287,7 +271,7 @@ df.simpson = tibble(x = runif(n_participants * n_observations, min = 0, max = 1)
 
 Let's visualize the overall relationship between `x` and `y` with a simple linear model. 
 
-```{r lmer2-15}
+```{r lmer2-17}
 # overall effect 
 ggplot(data = df.simpson,
        mapping = aes(x = x,
@@ -299,7 +283,7 @@ ggplot(data = df.simpson,
 
 As we see, overall, there is a positive relationship between `x` and `y`.
 
-```{r lmer2-16}
+```{r lmer2-18}
 lm(formula = y ~ x,
    data = df.simpson) %>% 
   summary()
@@ -309,7 +293,7 @@ And this relationship is significant.
 
 Let's take another look at the data use different colors for the different participants.
 
-```{r lmer2-17}
+```{r lmer2-19}
 # effect by participant 
 ggplot(data = df.simpson,
        mapping = aes(x = x,
@@ -323,7 +307,7 @@ ggplot(data = df.simpson,
 
 And let's fit a different regression for each participant:
 
-```{r lmer2-18}
+```{r lmer2-20}
 # effect by participant 
 ggplot(data = df.simpson,
        mapping = aes(x = x,
@@ -340,7 +324,7 @@ What this plot shows, is that for almost all individual participants, the relati
 
 Let's fit a linear mixed effects model with random intercepts: 
 
-```{r lmer2-19}
+```{r lmer2-21}
 fit.lmer = lmer(formula = y ~ 1 + x + (1 | participant),
      data = df.simpson)
 
@@ -350,7 +334,7 @@ fit.lmer %>%
 
 As we can see, the fixed effect for `x` is now negative! 
 
-```{r lmer2-20}
+```{r lmer2-22}
 
 fit.lmer %>% 
   augment() %>% 
@@ -382,7 +366,7 @@ Lesson learned: taking dependence into account is critical for drawing correct i
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r session}
+```{r lmer2-23}
 sessionInfo()
 ```
 
