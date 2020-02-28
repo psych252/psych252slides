@@ -113,7 +113,7 @@ Now, let's fit a Bayesian regression model using the `brm()` function:
 ```{r bda3-4}
 fit.brm1 = brm(formula = balance ~ 1 + hand,
                data = df.poker,
-               file = "brm1")
+               file = "cache/brm1")
 
 fit.brm1 %>% summary()
 ```
@@ -288,12 +288,12 @@ Another way of testing hypothesis is via the Bayes factor. Let's fit the two mod
 fit.brm2 = brm(formula = balance ~ 1 + hand,
                data = df.poker,
                save_all_pars = T,
-               file = "brm2")
+               file = "cache/brm2")
 
 fit.brm3 = brm(formula = balance ~ 1 + hand + skill,
                data = df.poker,
                save_all_pars = T,
-               file = "brm3")
+               file = "cache/brm3")
 ```
 
 And then compare the models useing the `bayes_factor()` function: 
@@ -345,7 +345,7 @@ fit.brm4 = brm(
   iter = 4000,
   warmup = 1000,
   chains = 4,
-  file = "brm4",
+  file = "cache/brm4",
   seed = 1
 )
 
@@ -415,7 +415,7 @@ fit.brm5 = brm(
   iter = 4000,
   warmup = 1000,
   chains = 2,
-  file = "brm5"
+  file = "cache/brm5"
 )
 ```
 
@@ -460,7 +460,7 @@ fit.brm6 = brm(
   warmup = 1000,
   chains = 2,
   seed = 1,
-  file = "brm6"
+  file = "cache/brm6"
 )
 ```
 
@@ -518,7 +518,7 @@ fit.brm7 = brm(
   formula = bf(response ~ group,
                sigma ~ group),
   data = df.variance,
-  file = "brm7"
+  file = "cache/brm7"
 )
 ```
 
@@ -568,7 +568,7 @@ df.cars %>% str()
 fit.brm8 = brm(formula = cyl ~ mpg,
                data = df.cars,
                family = "cumulative",
-               file = "brm8",
+               file = "cache/brm8",
                seed = 1)
 ```
 

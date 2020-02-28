@@ -885,3 +885,45 @@ mvrnorm(n = 10000,
                   show.legend = F)
 ```
 
+## `ggtext()`
+
+```{r}
+
+n = 100
+
+df.plot = tibble(x = rep(1, n),
+                 y = rep(1, n),
+                 text = "test")
+
+ggplot(data = df.plot,
+       mapping = aes(x = x,
+                     y = y)) + 
+  geom_text(aes(label = text),
+            size = 10)
+  # annotate(geom = "text",
+  #          x = 1, 
+  #          y = 1,
+  #          label = "test",
+  #          size = 10)
+```
+
+```{r}
+df.plot = tibble(x = c(1, 2),
+                 y = c(1, 2),
+                 panel = c("A", "B"),
+                 text = c("test1", "test2"))
+
+ggplot(data = df.plot,
+       mapping = aes(x = x,
+                     y = y)) + 
+  geom_text(aes(label = text),
+            size = 10) + 
+  facet_grid(cols = vars(panel)) + 
+  coord_cartesian(xlim = c(0.5, 2.5),
+                  ylim = c(0.5, 2.5))
+
+df.plot %>% 
+  kable() %>% 
+  kable_styling()
+```
+
