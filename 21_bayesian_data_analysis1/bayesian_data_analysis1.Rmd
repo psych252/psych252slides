@@ -13,127 +13,277 @@ output:
 
 ```{r setup, include=FALSE}
 # these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
+knitr::opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 ```
 
 # Bayesian data analysis
 
-In this lecture, we did not perform any Bayesian data analysis. I discussed the costs and benefits of Bayesian analysis and introduced the Bayesian model of multi-modal integration based on the Plinko task. 
-
 ## Load packages and set plotting theme  
 
-```{r load-packages, message=FALSE}
+```{r bda1-01, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
-library("kableExtra") # for making nice tables
-library("modelr")     # for permutation test 
+library("patchwork")  # for figure panels
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r set-theme}
-theme_set(
-  theme_classic() + #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
+```{r bda1-02}
+theme_set(theme_classic() + #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
 ```
 
-## Things that came up 
+## Doing Bayesian inference "by hand"
 
-### Bias in Cosyne 2019 conference admission? 
+### Sequential updating based on the Beta distribution 
 
-Code up the data: 
+```{r bda1-03}
+# data 
+data = c(0, 1, 1, 0, 1, 1, 1, 1)
 
-```{r bda1-1}
-# data frame 
-df.conference = tibble(sex = rep(c("female", "male"), c(264, 677)),
-  accepted = rep(c("yes", "no", "yes", "no"), c(83, 264 - 83, 255, 677 - 255))) %>%
-  mutate(accepted = factor(accepted, levels = c("no", "yes"), labels = 0:1),
-    sex = as.factor(sex))
+# whether observation is a success or failure 
+success = c(0, cumsum(data)) 
+failure = c(0, cumsum(1 - data))
+# I've added 0 at the beginning to show the prior
+
+# plotting function
+fun.plot_beta = function(success, failure){
+  ggplot(data = tibble(x = c(0, 1)),
+         mapping = aes(x = x)) +
+    stat_function(fun = "dbeta",
+                  args = list(shape1 = success + 1, shape2 = failure + 1),
+                  geom = "area",
+                  color = "black",
+                  fill = "lightblue") +
+    coord_cartesian(expand = F) +
+    scale_x_continuous(breaks = seq(0.25, 0.75, 0.25)) + 
+    theme(axis.title = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          plot.margin = margin(r = 1, t = 0.5, unit = "cm"))
+}
+
+# generate the plots 
+plots = map2(success, failure, ~ fun.plot_beta(.x, .y))
+
+# make a grid of plots
+wrap_plots(plots, ncol = 3)
+```
+
+### Coin flip example 
+
+Is the coin biased? 
+
+```{r bda1-04}
+# data 
+data = rep(0:1, c(8, 2))
+
+# parameters 
+theta = c(0.1, 0.5, 0.9)
+
+# prior 
+prior = c(0.25, 0.5, 0.25)
+# prior = c(0.1, 0.1, 0.8) # alternative setting of the prior
+# prior = c(0.000001, 0.000001, 0.999998) # another prior setting 
+
+# likelihood 
+likelihood = dbinom(sum(data == 1), size = length(data), prob = theta)
+
+# posterior 
+posterior = likelihood * prior / sum(likelihood * prior)
+
+# store in data frame 
+df.coins = tibble(theta = theta,
+                  prior = prior,
+                  likelihood = likelihood,
+                  posterior = posterior) 
+
 ```
 
 Visualize the results: 
 
-```{r bda1-2}
-df.conference %>% 
+```{r bda1-05}
+df.coins %>% 
+  pivot_longer(cols = -theta,
+               names_to = "index",
+               values_to = "value") %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         theta = factor(theta, labels = c("p = 0.1", "p = 0.5", "p = 0.9"))) %>% 
   ggplot(data = .,
-         mapping = aes(x = sex, fill = accepted)) + 
-  geom_bar(color = "black") + 
-  scale_fill_brewer(palette = "Set1") +
-  coord_flip() +
-  theme(legend.direction = "horizontal",
-        legend.position = "top") + 
-  guides(fill = guide_legend(reverse = T))
+         mapping = aes(x = theta,
+                       y = value,
+                       fill = index)) + 
+  geom_bar(stat = "identity",
+           color = "black") +
+  facet_grid(rows = vars(index),
+             switch = "y",
+             scales = "free") + 
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.line = element_blank())
 ```
 
-Run a logistic regression with one binary predictor (Binomial test):
+### Bayesian inference by discretization
 
-```{r bda1-3}
-# logistic regression
-fit.glm = glm(formula = accepted ~ 1 + sex,
-              family = "binomial",
-              data = df.conference)
+### Effect of the prior 
 
-# model summary 
-fit.glm %>% 
-  summary()
-```
+```{r bda1-06, fig.cap="Illustration of how the prior affects the posterior."}
+# grid
+theta = seq(0, 1, 0.01)
 
-The results of the logistic regression are not quite significant (at least when considering a two-tailed test) with $p = .0741$. 
+# data
+data = rep(0:1, c(8, 2))
 
-Let's run a permutation test (as suggested by the tweet I showed in class):
+# calculate posterior
+df.prior_effect = tibble(theta = theta, 
+                  prior_uniform = dbeta(theta, shape1 = 1, shape2 = 1),
+                  prior_normal = dbeta(theta, shape1 = 5, shape2 = 5),
+                  prior_biased = dbeta(theta, shape1 = 8, shape2 = 2)) %>% 
+  pivot_longer(cols = -theta,
+               names_to = "prior_index",
+               values_to = "prior") %>% 
+  mutate(likelihood = dbinom(sum(data == 1),
+                             size = length(data),
+                             prob = theta)) %>% 
+  group_by(prior_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -c(theta, prior_index),
+               names_to = "index",
+               values_to = "value")
 
-```{r bda1-4, cache=TRUE}
-# make example reproducible 
-set.seed(1)
-
-# difference in proportion 
-fun.difference = function(df){
-  df %>% 
-    as_tibble() %>% 
-    count(sex, accepted) %>% 
-    group_by(sex) %>% 
-    mutate(proportion = n / sum(n)) %>% 
-    filter(accepted == 1) %>% 
-    select(sex, proportion) %>% 
-    spread(sex, proportion) %>% 
-    mutate(difference = male - female) %>% 
-    pull(difference)  
-}
-
-# actual difference 
-difference = df.conference %>% 
-  fun.difference()
-
-# permutation test 
-df.permutation = df.conference %>% 
-  permute(n = 1000, sex) %>% 
-  mutate(difference = map_dbl(perm, ~ fun.difference(.)))
-```
-
-Let's calculate the p-value based on the permutation test: 
-
-```{r bda1-5}
-sum(df.permutation$difference > difference) / nrow(df.permutation)
-```
-
-And let's visualize the result (showing our observed value and comparing it to the sampling distribution under the null hypothesis):  
-
-```{r bda1-6}
-df.permutation %>% 
+# make the plot
+df.prior_effect %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         prior_index = factor(prior_index,
+                              levels = c("prior_uniform", "prior_normal", "prior_biased"),
+                              labels = c("uniform", "symmetric", "asymmetric"))) %>% 
   ggplot(data = .,
-         mapping = aes(x = difference)) +
-  stat_density(geom = "line") + 
-  geom_vline(xintercept = difference, 
-             color = "red",
-              size = 1)
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(prior_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank())
+```
+
+### Effect of the likelihood 
+
+```{r bda1-07, fig.cap="Illustration of how the likelihood of the data affects the posterior."}
+# grid
+theta = seq(0, 1, 0.01)
+
+df.likelihood_effect = tibble(theta = theta, 
+                              prior = dbeta(theta, shape1 = 2, shape2 = 8),
+                              likelihood_left = dbeta(theta, shape1 = 1, shape2 = 9),
+                              likelihood_center = dbeta(theta, shape1 = 5, shape2 = 5),
+                              likelihood_right = dbeta(theta, shape1 = 9, shape2 = 1)) %>% 
+  pivot_longer(cols = -c(theta, prior),
+               names_to = "likelihood_index",
+               values_to = "likelihood") %>% 
+  group_by(likelihood_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -c(theta, likelihood_index),
+               names_to = "index",
+               values_to = "value")
+
+df.likelihood_effect %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         likelihood_index = factor(likelihood_index,
+                                   levels = c("likelihood_left", "likelihood_center", "likelihood_right"),
+                                   labels = c("left", "center", "right"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(likelihood_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank(),
+        strip.text.x = element_blank())
+  
+```
+
+### Effect of the sample size  
+
+```{r bda1-08}
+# grid
+theta = seq(0, 1, 0.01)
+
+df.sample_size_effect = tibble(theta = theta, 
+                               prior = dbeta(theta, shape1 = 5, shape2 = 5),
+                               likelihood_low = dbeta(theta, shape1 = 2, shape2 = 8),
+                               likelihood_medium = dbeta(theta, shape1 = 10, shape2 = 40),
+                               likelihood_high = dbeta(theta, shape1 = 20, shape2 = 80)) %>% 
+  pivot_longer(cols = -c(theta, prior),
+               names_to = "likelihood_index",
+               values_to = "likelihood") %>% 
+  group_by(likelihood_index) %>% 
+  mutate(posterior = likelihood * prior / sum(likelihood * prior)) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -c(theta, likelihood_index),
+               names_to = "index",
+               values_to = "value")
+
+df.sample_size_effect %>% 
+  mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
+         likelihood_index = factor(likelihood_index,
+                                   levels = c("likelihood_low", "likelihood_medium", "likelihood_high"),
+                                   labels = c("n = low", "n = medium", "n = high"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = theta,
+                       y = value,
+                       color = index)) +
+  geom_line(size = 1) + 
+  facet_grid(cols = vars(likelihood_index),
+             rows = vars(index),
+             scales = "free",
+             switch = "y") +
+  scale_x_continuous(breaks = seq(0, 1, 0.2)) +
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank())
 ```
 
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r session}
+```{r bda1-09}
 sessionInfo()
 ```
