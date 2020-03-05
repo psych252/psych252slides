@@ -461,6 +461,7 @@ df.rain_given_sprinkler_and_rain %>%
 
 - [Statistics 110: Probability; course at Harvard](https://projects.iq.harvard.edu/stat110)  
 - [Bayes theorem and making probability intuitive](https://www.youtube.com/watch?v=HZGCoVF3YvM&feature=youtu.be)
+- [Causal inference with Bayes rule](https://gradientinstitute.org/blog/6/)
   
 ## Session info 
 

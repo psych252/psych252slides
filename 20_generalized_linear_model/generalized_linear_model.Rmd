@@ -548,13 +548,13 @@ Here is a visualization of what the odds and log odds transformation look like.
 # odds 
 ggplot(data = tibble(x = seq(0, 1, 0.1)),
        mapping = aes(x = x)) + 
-  stat_function(fun = ~ ./(1-.),
+  stat_function(fun = ~ ./(1 - .),
                 size = 1)
 
 # logg odds 
 ggplot(data = tibble(x = seq(0, 1, 0.1)),
        mapping = aes(x = x)) + 
-  stat_function(fun = ~ log(./(1-.)),
+  stat_function(fun = ~ log(./(1 - .)),
                 size = 1)
 
 ```

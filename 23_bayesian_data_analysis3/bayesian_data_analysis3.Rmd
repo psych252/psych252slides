@@ -19,26 +19,32 @@ knitr::opts_chunk$set(comment = "#>",
 
 # Bayesian data analysis 3
 
-```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
+```{r bda3-01, echo=FALSE, eval=FALSE, include=FALSE}
 install.packages(c("brms", "bayesplot", "rstanarm"))
 ```
 
 ## Load packages and set plotting theme  
 
-```{r load-packages, message=FALSE}
-library("knitr")      # for knitting RMarkdown 
-library("kableExtra") # for making nice tables
-library("janitor")    # for cleaning column names
-library("tidybayes")  # tidying up results from Bayesian models
-library("brms")       # Bayesian regression models with Stan
-library("patchwork")  # for making figure panels
-library("gganimate")  # for animations
-library("GGally")     # for pairs plot
-library("bayesplot")  # for visualization of Bayesian model fits 
-library("tidyverse")  # for wrangling, plotting, etc. 
+```{r bda3-02, message=FALSE}
+library("knitr")       # for knitting RMarkdown 
+library("kableExtra")  # for making nice tables
+library("janitor")     # for cleaning column names
+library("tidybayes")   # tidying up results from Bayesian models
+library("brms")        # Bayesian regression models with Stan
+library("patchwork")   # for making figure panels
+library("gganimate")   # for animations
+library("GGally")      # for pairs plot
+library("broom")       # for tidy lm results
+library("broom.mixed") # for tidy lmer results
+library("bayesplot")   # for visualization of Bayesian model fits 
+library("modelr")      # for modeling functions
+library("lme4")        # for linear mixed effects models 
+library("ggeffects")   # for help with logistic regressions
+library("titanic")     # titanic dataset
+library("tidyverse")   # for wrangling, plotting, etc. 
 ```
 
-```{r set-theme}
+```{r bda3-03}
 theme_set(theme_classic() + # set the theme 
             theme(text = element_text(size = 20))) # set the default text size
 ```
@@ -47,7 +53,7 @@ theme_set(theme_classic() + # set the theme
 
 Load the poker data set. 
 
-```{r bda3-1, message=FALSE}
+```{r bda3-04, message=FALSE}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -69,7 +75,7 @@ df.poker = read_csv("data/poker.csv") %>%
 
 Let's visualize the data first: 
 
-```{r bda3-2}
+```{r bda3-05}
 df.poker %>% 
   ggplot(mapping = aes(x = hand,
                        y = balance,
@@ -92,7 +98,7 @@ df.poker %>%
 
 And let's now fit a simple (frequentist) regression model: 
 
-```{r bda3-3}
+```{r bda3-06}
 fit.lm = lm(formula = balance ~ 1 + hand,
             data = df.poker)
 
@@ -103,7 +109,7 @@ fit.lm %>% summary()
 
 Now, let's fit a Bayesian regression model using the `brm()` function:
 
-```{r bda3-4}
+```{r bda3-07}
 fit.brm1 = brm(formula = balance ~ 1 + hand,
                data = df.poker,
                file = "cache/brm1")
@@ -117,33 +123,24 @@ I use the `file = ` argument to save the model's results so that when I run this
 
 Let's visualize what the posterior for the different parameters looks like. We use the `geom_halfeyeh()` function from the "tidybayes" package to do so: 
 
-```{r bda3-5}
+```{r bda3-08}
 fit.brm1 %>% 
   posterior_samples() %>% 
   select(-lp__) %>% 
-  gather("variable", "value") %>% 
+  pivot_longer(cols = everything(),
+               names_to = "variable",
+               values_to = "value") %>% 
   ggplot(data = .,
-         mapping = aes(y = variable, x = value)) +
-  geom_halfeyeh()
-```
-
-And let's look at how the samples from the posterior are correlated with each other: 
-
-```{r bda3-6, message=FALSE}
-fit.brm1 %>% 
-  posterior_samples() %>% 
-  select(b_Intercept:sigma) %>% 
-  ggpairs(lower = list(continuous = wrap("points", alpha = 0.03)),
-          upper = list(continuous = wrap("cor", size = 6))) + 
-  theme(panel.grid.major = element_blank(),
-        text = element_text(size = 12))
+         mapping = aes(y = variable,
+                       x = value)) +
+  geom_halfeyeh(fun.data = mode_hdih)
 ```
 
 #### Compute highest density intervals 
 
 To compute the MAP (maximum a posteriori probability) estimate and highest density interval, we use the `mode_hdi()` function that comes with the "tidybayes" package.
 
-```{r bda3-7}
+```{r bda3-09}
 fit.brm1 %>% 
   posterior_samples() %>% 
   clean_names() %>% 
@@ -166,7 +163,7 @@ fit.brm1 %>%
 
 To check whether the model did a good job capturing the data, we can simulate what future data the Baysian model predicts, now that it has learned from the data we feed into it.  
 
-```{r bda3-8}
+```{r bda3-10}
 pp_check(fit.brm1, nsamples = 100)
 ```
 
@@ -174,7 +171,7 @@ This looks good! The predicted shaped of the data based on samples from the post
 
 Let's make a hypothetical outcome plot that shows what concrete data sets the model would predict: 
 
-```{r bda3-9, message=FALSE}
+```{r bda3-11, message=FALSE}
 # generate predictive samples 
 df.predictive_samples = fit.brm1 %>% 
   posterior_samples() %>% 
@@ -218,13 +215,42 @@ animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 # anim_save("poker_posterior_predictive.gif")
 ```
 
+Here is the same plot, but this time we make our life much easier by using the `add_predicted_draws()` function from the `"tidybayes"` package.
+
+```{r bda3-12}
+df.predictive_samples2 = df.poker %>% 
+  add_predicted_draws(fit.brm1, n = 10)
+
+p =  ggplot(data = df.predictive_samples2,
+            mapping = aes(x = hand,
+                          y = .prediction,
+                          fill = hand)) + 
+  geom_point(alpha = 0.2,
+             position = position_jitter(height = 0, width = 0.1)) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) + 
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               shape = 21,
+               size = 4) +
+  labs(y = "final balance (in Euros)") + 
+  scale_fill_manual(values = c("red", "orange", "green")) +
+  theme(legend.position = "none") + 
+  transition_manual(.draw)
+
+animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
+```
+
+
+
 #### Test hypothesis
 
 One key advantage of Bayesian over frequentist analysis is that we can test hypothesis in a very flexible manner by directly probing our posterior samples in different ways. 
 
 We may ask, for example, what the probability is that the parameter for the difference between a bad hand and a neutral hand (`b_handneutral`) is greater than 0. Let's plot the posterior distribution together with the criterion: 
 
-```{r bda3-10}
+```{r bda3-13}
 fit.brm1 %>% 
   posterior_samples() %>% 
   select(b_handneutral) %>% 
@@ -242,25 +268,34 @@ We see that the posterior is definitely greater than 0.
 
 We can ask many different kinds of questions about the data by doing basic arithmetic on our posterior samples. The `hypothesis()` function makes this even easier. Here are some examples: 
 
-```{r bda3-11}
+```{r bda3-14}
 # the probability that the posterior for handneutral is less than 0
 hypothesis(fit.brm1,
            hypothesis = "handneutral < 0")
 ```
 
-```{r}
+```{r bda3-15}
 # the probability that the posterior for handneutral is greater than 4
 hypothesis(fit.brm1,
            hypothesis = "handneutral > 4")
 ```
 
-```{r}
+```{r bda3-16}
 # the probability that good hands make twice as much as bad hands
 hypothesis(fit.brm1,
            hypothesis = "Intercept + handgood > 2 * Intercept")
 ```
 
-```{r}
+We can also make a plot of what the posterior distribution of the hypothesis looks like: 
+
+```{r bda3-17}
+hypothesis(fit.brm1,
+           hypothesis = "Intercept + handgood > 2 * Intercept") %>% 
+  plot()
+```
+
+
+```{r bda3-18}
 # the probability that neutral hands make less than the average of bad and good hands
 hypothesis(fit.brm1,
            hypothesis = "Intercept + handneutral < (Intercept + Intercept + handgood) / 2")
@@ -268,7 +303,7 @@ hypothesis(fit.brm1,
 
 Let's double check one example, and calculate the result directly based on the posterior samples: 
 
-```{r bda3-12}
+```{r bda3-19}
 df.hypothesis = fit.brm1 %>% 
   posterior_samples() %>% 
   clean_names() %>% 
@@ -281,11 +316,13 @@ df.hypothesis %>%
   summarize(p = sum(hypothesis)/n())
 ```
 
-#### Bayes factor 
+#### Model comparison
+
+##### Bayes factor 
 
 Another way of testing hypothesis is via the Bayes factor. Let's fit the two models we are interested in comparing with each other: 
 
-```{r bda3-13, message=FALSE}
+```{r bda3-20, message=FALSE}
 fit.brm2 = brm(formula = balance ~ 1 + hand,
                data = df.poker,
                save_all_pars = T,
@@ -299,9 +336,25 @@ fit.brm3 = brm(formula = balance ~ 1 + hand + skill,
 
 And then compare the models useing the `bayes_factor()` function: 
 
-```{r bda3-14}
+```{r bda3-21}
 bayes_factor(fit.brm3, fit.brm2)
 ```
+
+##### Approximate cross-validation 
+
+```{r bda3-22}
+fit.brm2 = add_criterion(fit.brm2,
+                         criterion = c("loo", "waic"),
+                         reloo = T)
+
+fit.brm3 = add_criterion(fit.brm3,
+                         criterion = c("loo", "waic"),
+                         reloo = T)
+
+loo_compare(fit.brm2,
+            fit.brm3)
+```
+
 
 #### Full specification
 
@@ -311,14 +364,14 @@ So far, we have used the defaults that `brm()` comes with and not bothered about
 
 Notice that we didn't specify any priors in the model. By default, "brms" assigns weakly informative priors to the parameters in the model. We can see what these are by running the following command: 
 
-```{r bda3-15}
+```{r bda3-23}
 fit.brm1 %>% 
   prior_summary()
 ```
 
 We can also get information about which priors need to be specified before fitting a model:
 
-```{r bda3-16}
+```{r bda3-24}
 get_prior(formula = balance ~ 1 + hand,
           family = "gaussian",
           data = df.poker)
@@ -326,7 +379,7 @@ get_prior(formula = balance ~ 1 + hand,
 
 Here is an example for what a more complete model specification could look like: 
 
-```{r bda3-17, message=FALSE}
+```{r bda3-25, message=FALSE}
 fit.brm4 = brm(formula = balance ~ 1 + hand,
                family = "gaussian",
                data = df.poker,
@@ -344,29 +397,90 @@ fit.brm4 = brm(formula = balance ~ 1 + hand,
                file = "cache/brm4",
                seed = 1)
 
-fit.brm4 %>% summary()
+fit.brm4 %>%
+  summary()
 ```
 
 We can also take a look at the Stan code that the `brm()` function creates: 
 
-```{r bda3-18}
-fit.brm4 %>% stancode()
+```{r bda3-26}
+fit.brm4 %>%
+  stancode()
 ```
 
 One thing worth noticing: by default, "brms" centers the predictors which makes it easier to assign a default prior over the intercept. 
+
+##### Prior predictive check 
+
+```{r bda3-27}
+fit.brm4.prior = brm(formula = balance ~ 0 + intercept + hand,
+               family = "gaussian",
+               data = df.poker,
+               prior = c(prior(normal(0, 10), class = "b"),
+                         prior(student_t(3, 0, 10), class = "sigma")),
+               iter = 4000,
+               warmup = 1000,
+               chains = 4,
+               file = "cache/brm4prior",
+               sample_prior = "only",
+               seed = 1)
+
+# generate prior samples 
+df.prior_samples = fit.brm4.prior %>% 
+  posterior_samples() %>% 
+  clean_names() %>% 
+  select(contains("b_"), sigma) %>% 
+  sample_n(size = 20) %>% 
+  mutate(sample = 1:n()) %>% 
+  group_by(sample) %>% 
+  nest() %>% 
+  mutate(bad = map(data, ~ .$b_intercept + rnorm(100, sd = .$sigma)),
+         neutral = map(data, ~ .$b_intercept + .$b_handneutral + rnorm(100, sd = .$sigma)),
+         good = map(data, ~ .$b_intercept + .$b_handgood + rnorm(100, sd = .$sigma))) %>% 
+  unnest(c(bad, neutral, good)) %>% 
+  select(-data)
+
+# plot the results as an animation
+p = df.prior_samples %>% 
+  pivot_longer(cols = -sample,
+               names_to = "hand",
+               values_to = "balance") %>% 
+  mutate(hand = factor(hand, levels = c("bad", "neutral", "good"))) %>% 
+  ggplot(mapping = aes(x = hand,
+                       y = balance,
+                       fill = hand)) + 
+  geom_point(alpha = 0.2,
+             position = position_jitter(height = 0, width = 0.1)) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) + 
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               shape = 21,
+               size = 4) +
+  labs(y = "final balance (in Euros)") + 
+  scale_fill_manual(values = c("red", "orange", "green")) +
+  theme(legend.position = "none") + 
+  transition_manual(sample)
+
+animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
+
+# anim_save("poker_prior_predictive.gif")
+```
+
 
 
 #### Inference diagnostics
 
 So far, we've assumed that the inference has worked out. We can check this by running plot() on our brm object:  
 
-```{r bda3-19}
+```{r bda3-28, fig.height=8, fig.width=10}
 plot(fit.brm1)
 ```
 
 Let's make our own version of a trace plot for one parameter in the model:
 
-```{r bda3-20}
+```{r bda3-29}
 fit.brm1 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
@@ -377,7 +491,7 @@ fit.brm1 %>%
 
 We can also take a look at the auto-correlation plot. Ideally, we want to generate independent samples from the posterior. So we don't want subsequent samples to be strongly correlated with each other. Let's take a look: 
 
-```{r bda3-21}
+```{r bda3-30}
 variables = fit.brm1 %>%
   get_variables() %>%
   .[1:4]
@@ -394,7 +508,7 @@ Looking good! The autocorrelation should become very small as the lag increases 
 
 Let's try to fit a model to very little data (just two observations) with extremely uninformative priors: 
 
-```{r bda3-22}
+```{r bda3-31}
 df.data = tibble(y = c(-1, 1))
 
 fit.brm5 = brm(data = df.data,
@@ -412,7 +526,7 @@ fit.brm5 = brm(data = df.data,
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r bda3-23}
+```{r bda3-32}
 summary(fit.brm5)
 ```
 
@@ -420,11 +534,11 @@ Not looking good -- The estimates and credible intervals are off the charts. And
 
 Let's visualize the trace plots:
 
-```{r bda3-24}
+```{r bda3-33, fig.height=6, fig.width=12}
 plot(fit.brm5)
 ```
 
-```{r bda3-25}
+```{r bda3-34}
 fit.brm5 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
@@ -438,7 +552,7 @@ fit.brm5 %>%
 
 Given that we have so little data in this case, we need to help the model a little bit by providing some slighlty more specific priors. 
 
-```{r bda3-26}
+```{r bda3-35}
 fit.brm6 = brm(data = df.data,
                family = gaussian,
                formula = y ~ 1,
@@ -453,7 +567,7 @@ fit.brm6 = brm(data = df.data,
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r bda3-27}
+```{r bda3-36}
 summary(fit.brm6)
 ```
 
@@ -461,11 +575,11 @@ This looks much better. There is still quite a bit of uncertainty in our paremet
 
 Let's visualize the trace plots:
 
-```{r bda3-28}
+```{r bda3-37}
 plot(fit.brm6)
 ```
 
-```{r bda3-29}
+```{r bda3-38}
 fit.brm6 %>% 
   spread_draws(b_Intercept, sigma) %>% 
   clean_names() %>% 
@@ -481,18 +595,335 @@ fit.brm6 %>%
 
 Looking mostly good!
 
+## Sleep study 
+
+```{r bda3-39}
+df.sleep = sleepstudy %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  mutate(subject = as.character(subject)) %>% 
+  select(subject, days, reaction) %>% 
+  bind_rows(tibble(subject = "374",
+                   days = 0:1,
+                   reaction = c(286, 288)),
+            tibble(subject = "373",
+                   days = 0,
+                   reaction = 245))
+```
+
+### Frequentist analysis 
+
+```{r bda3-40}
+fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
+                data = df.sleep)
+```
+
+
+```{r bda3-41}
+fit.lmer %>% 
+  summary()
+
+fit.lmer %>% 
+  confint()
+```
+
+### Bayesian analysis 
+
+#### Fit the model
+
+```{r bda3-42}
+fit.brm7 = brm(formula = reaction ~ 1 + days + (1 + days | subject),
+               data = df.sleep,
+               file = "cache/brm7")
+```
+
+#### Check the model diagnostics
+
+```{r bda3-43, fig.height=16, fig.width=8}
+fit.brm7 %>% 
+  summary()
+
+fit.brm7 %>% 
+  plot(N = 6)
+```
+
+#### Validate the model 
+
+```{r bda3-44}
+pp_check(fit.brm7,
+         nsamples = 100)
+```
+
+#### Interpret the parameters 
+
+```{r bda3-45}
+fit.brm7 %>% 
+  tidy() %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+
+#### Visualize the results 
+
+##### Summary of posterior distributions 
+
+```{r bda3-46}
+fit.brm7 %>% 
+  posterior_samples() %>% 
+  select(-c(lp__, contains("subject"))) %>%
+  pivot_longer(cols = everything(),
+               names_to = "variable",
+               values_to = "value") %>% 
+  ggplot(data = .,
+         mapping = aes(y = variable,
+                       x = value)) +
+  geom_halfeyeh(fun.data = mode_hdih)
+```
+
+##### Comparison with data 
+
+###### Model prediction with credible intervals 
+
+```{r bda3-47}
+fit.brm7 %>% 
+  fitted() %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  bind_cols(df.sleep) %>% 
+  ggplot(data = .,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_ribbon(aes(ymin = q2_5,
+                  ymax = q97_5),
+              fill = "lightblue") +
+  geom_line(aes(y = estimate),
+            color = "blue") +
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+###### Model prediction for random samples
+
+```{r bda3-48}
+df.model = df.sleep %>% 
+  complete(subject, days) %>% 
+  add_fitted_draws(newdata = .,
+                   model = fit.brm7,
+                   n = 10,
+                   seed = 1)
+
+df.sleep %>% 
+  ggplot(data = .,
+         mapping = aes(x = days,
+                       y = reaction)) + 
+  geom_line(data = df.model,
+            aes(y = .value,
+                group = .draw),
+            color = "lightblue",
+            alpha = 0.5) + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12))
+```
+
+###### Animated model prediction for random samples
+
+```{r bda3-49}
+df.model = df.sleep %>% 
+  complete(subject, days) %>% 
+  add_fitted_draws(newdata = .,
+                   model = fit.brm7,
+                   n = 10,
+                   seed = 1)
+
+p = df.sleep %>% 
+  ggplot(data = .,
+         mapping = aes(x = days,
+                       y = reaction)) + 
+  geom_line(data = df.model,
+            aes(y = .value,
+                group = .draw),
+            color = "black") + 
+  geom_point() +
+  facet_wrap(~subject, ncol = 5) +
+  labs(x = "Days of sleep deprivation", 
+       y = "Average reaction time (ms)") + 
+  scale_x_continuous(breaks = 0:4 * 2) +
+  theme(strip.text = element_text(size = 12),
+        axis.text.y = element_text(size = 12)) + 
+  transition_states(.draw, 0, 1) +
+  shadow_mark(past = TRUE, alpha = 1/5, color = "gray50")
+
+animate(p, nframes = 10, fps = 2.5, width = 800, height = 600, res = 96, type = "cairo")
+
+anim_save("sleep_posterior_predictive.gif")
+```
+
+
+## Titanic study 
+
+```{r bda3-50}
+df.titanic = titanic_train %>% 
+  clean_names() %>% 
+  mutate(sex = as.factor(sex))
+```
+
+### Frequentist analysis 
+
+#### Fit the model 
+
+```{r bda3-51}
+fit.glm = glm(formula = survived ~ 1 + fare + sex,
+              family = "binomial",
+              data = df.titanic)
+
+fit.glm %>% 
+  summary()
+```
+
+#### Visualize the results
+
+```{r bda3-52}
+df.titanic %>% 
+  mutate(sex = as.factor(sex)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = fare,
+                       y = survived,
+                       color = sex)) +
+  geom_point(alpha = 0.1, size = 2) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.2,
+              aes(fill = sex)) +
+  scale_color_brewer(palette = "Set1")
+```
+
+### Bayesian anaysis 
+
+#### Fit the model 
+
+```{r bda3-53}
+fit.brm8 = brm(formula = survived ~ 1 + fare + sex,
+               family = "bernoulli",
+               data = df.titanic,
+               file = "cache/brm8",
+               seed = 1)
+```
+
+#### Check the model diagnostics
+
+```{r bda3-54, fig.height=8, fig.width=10}
+fit.brm8 %>% 
+  summary()
+
+fit.brm8 %>% 
+  plot()
+```
+
+#### Validate the model 
+
+```{r bda3-55}
+pp_check(fit.brm8,
+         nsamples = 100)
+```
+
+Let's visualize what the posterior predictive would have looked like for a linear model (instead of a logistic model). 
+
+```{r bda3-56}
+fit.brm9 = brm(formula = survived ~ 1 + fare + sex,
+               data = df.titanic,
+               file = "cache/brm9",
+               seed = 1)
+
+pp_check(fit.brm9,
+         nsamples = 100)
+```
+
+
+#### Interpret the parameters 
+
+```{r bda3-57}
+fit.brm8 %>% 
+  tidy() %>% 
+  select(estimate:conf.high) %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+
+```{r bda3-58}
+fit.brm8 %>% 
+  ggpredict(terms = c("fare [0:500]", "sex")) %>% 
+  plot()
+```
+
+
+#### Visualize the results 
+
+##### Summary of posterior distributions 
+
+```{r bda3-59}
+fit.brm8 %>% 
+  posterior_samples() %>% 
+  select(-lp__) %>%
+  pivot_longer(cols = everything(),
+               names_to = "variable",
+               values_to = "value") %>% 
+  ggplot(data = .,
+         mapping = aes(y = variable,
+                       x = value)) +
+  stat_intervalh() + 
+  scale_color_brewer()
+```
+
+##### Comparison with data 
+
+```{r bda3-60}
+df.model = add_fitted_draws(newdata = expand_grid(sex = c("female", "male"),
+                                                  fare = 0:500) %>% 
+                              mutate(sex = factor(sex, levels = c("female", "male"))),
+                            model = fit.brm8,
+                            n = 10)
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived,
+                     color = sex)) +
+  geom_point(alpha = 0.1, size = 2) + 
+  geom_line(data = df.model %>% 
+              filter(sex == "male"),
+            aes(y = .value,
+                group = .draw,
+                color = sex)) + 
+  geom_line(data = df.model %>% 
+              filter(sex == "female"),
+            aes(y = .value,
+                group = .draw,
+                color = sex)) + 
+  scale_color_brewer(palette = "Set1")
+```
+
 ## Additional resources 
 
 - [Tutorial on visualizing brms posteriors with tidybayes](https://mjskay.github.io/tidybayes/articles/tidy-brms.html)
 - [Hypothetical outcome plots](https://mucollective.northwestern.edu/files/2018-HOPsTrends-InfoVis.pdf)
 - [Visual MCMC diagnostics](https://cran.r-project.org/web/packages/bayesplot/vignettes/visual-mcmc-diagnostics.html#general-mcmc-diagnostics)
-- [How to model slider data the Baysian way](https://vuorre.netlify.com/post/2019/02/18/analyze-analog-scale-
+- [How to model slider data the Bayesian way](https://vuorre.netlify.com/post/2019/02/18/analyze-analog-scale-
 ratings-with-zero-one-inflated-beta-models/#zoib-regression)
+- [Visualization of different MCMC algorithms](https://chi-feng.github.io/mcmc-demo/)
+- [Article describing the different inference algorithms](https://elevanth.org/blog/2017/11/28/build-a-better-markov-chain/)
 
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded.
 
-```{r session}
+```{r bda3-61}
 sessionInfo()
 ```

@@ -1,7 +1,7 @@
 ---
 title: "23 Bayesian data analysis 3"
 author: "Tobias Gerstenberg"
-date: "3/8/2019"
+date: "3/4/2020"
 output: 
   html_document:
     toc: true
@@ -15,26 +15,17 @@ library("knitr")
 library("DT")
 library("tidyverse")
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+theme_set(theme_classic() + 
+            theme(
+              text = element_text(size = 20),
+              panel.grid.major.y = element_line(color = "gray90")))
 ```
 
+> I found this lecture to be quite clear and helpful. The visualizations were especially helpful for solidifying the quite abstract concepts covered.
+
+> I think the session was too ambitious. Maybe the class in general. We try to cover too much material in little time. This class I couldn't follow anything.
+
 ## Student feedback 
-
-> Bayesian is cool! I'd suggest going deeper with fewer examples. Brms is easy to use, but without profound understanding of what exactly the model is doing, people won't have confidence to use it and talk about it.
-
-> I lost you in the beginning of the class but when you started to talk about the scalers I began to pay attention.
-
-> Trying to cover all of Bayes statistics in one week felt very rushed. It's great to have an overview, but I think it makes more sense to discuss moderations and mediations before jumping to Bayes
-
-> Definitely a drinking from the fire hose lecture but well-structured. Will go through r codes to get a better digestion
-
-> Today's examples were exciting! It might be nice next quarter to have more time for them so that we have to actually work through examples before the quarter ends. As it is, I'm excited about investigating Bayes but it's unlikely I'll be able to spend much time on it since it's the end of the quarter. Thank you, though for the materials you suggested. They are really great!
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("what-did-you-like-about-23.csv") %>% 
@@ -59,7 +50,6 @@ ggplot(data = df.pace,
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   scale_y_continuous(breaks = seq(0, 30, 2), labels = seq(0, 30, 2)) + 
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-# ggsave("pace.pdf", width = 8, height = 6)
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
@@ -79,33 +69,10 @@ ggplot(data = df.overall,
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   scale_y_continuous(breaks = seq(0, 30, 2), labels = seq(0, 30, 2)) + 
   theme(title = element_text(size = 18))
-# ggsave("overall.pdf", width = 8, height = 6)
 ```
 
-## Homework 6 
-
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.hw6_hours = read.csv("how-many-hours-hw6.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response,
-                           levels = c(1:14, "15+"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
-
-ggplot(data = df.hw6_hours,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on hw6?")
-# ggsave("hw6_hours.pdf", width = 8, height = 6)
-```
 
 ## What to do next time
 
-- have more time for Bayesian data analysis (ideally 2 weeks in total)
-- start class with a quick recap for how the posterior is generated 
-- maybe: pick one or two examples and really work out the difference (e.g. ordinal logistic regression)
-- put some of the motivating examples out there at the very beginning, so that students realize it's worth thinking about this (as they might be running into these problems in their research -- e.g. dealing with slider data)
-- include some more concrete walk through examples like we did for `lm()` and `lmer()`
-- cover moderation and mediation before Bayes next year
+- consider the breadth to depth trade-off for the Bayesian data analysis part 
 
