@@ -19,6 +19,14 @@ knitr::opts_chunk$set(comment = "#>",
 
 # Bayesian data analysis 4
 
+## Learning goals 
+
+- Evidence for null results. 
+- Dealing with unequal variance. 
+- Ordinal logistic regression. 
+- Zero-one inflated beta binomial model. 
+- Regression with strictly positive weights. 
+
 ## Load packages and set plotting theme  
 
 ```{r load-packages, message=FALSE}
@@ -33,35 +41,55 @@ library("ggrepel")    # for labels in ggplots
 library("gganimate")  # for animations
 library("GGally")     # for pairs plot
 library("bayesplot")  # for visualization of Bayesian model fits 
+library("ggeffects")  # for showing marginal/conditional effects
+library("scales")     # for percent y-axis
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
 ```{r set-theme}
-theme_set(
-  theme_classic() + #set the theme 
-    theme(text = element_text(size = 20)) #set the default text size
-)
+theme_set(theme_classic() + #set the theme 
+            theme(text = element_text(size = 20))) #set the default text size
+
+# set rstan options
+rstan::rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 ```
 
-## Load data set 
+## Evidence for the null hypothesis 
 
-Load the poker data set. 
+See [this tutorial](https://vuorre.netlify.com/post/2017/03/21/bayes-factors-with-brms/). 
 
-```{r bda3-1}
-df.poker = read_csv("data/poker.csv") %>% 
-  mutate(skill = factor(skill,
-                        levels = 1:2,
-                        labels = c("expert", "average")),
-         skill = fct_relevel(skill, "average", "expert"),
-         hand = factor(hand,
-                       levels = 1:3,
-                       labels = c("bad", "neutral", "good")),
-         limit = factor(limit,
-                        levels = 1:2,
-                        labels = c("fixed", "none")),
-         participant = 1:n()) %>% 
-  select(participant, everything())
+```{r}
+df.null = tibble(s = 6, k = 10)
+
+fit.brm0 = brm(s | trials(k) ~ 0 + Intercept, 
+               family = binomial(link = "identity"),
+               prior = set_prior("beta(1, 1)", class = "b", lb = 0, ub = 1),
+               data = df.null,
+               sample_prior = TRUE,
+               cores = 4,
+               file = "cache/brm0")
 ```
+
+Visualize prior and posterior samples: 
+
+```{r}
+fit.brm0 %>% 
+  posterior_samples(pars = "b") %>% 
+  pivot_longer(cols = everything()) %>% 
+  ggplot(mapping = aes(x = value,
+                       fill = name)) + 
+  geom_density(alpha = 0.5) + 
+  scale_fill_brewer(palette = "Set1")
+```
+
+Test the hypothesis that the person was only guessing. 
+
+```{r}
+fit.brm0 %>% 
+  hypothesis(hypothesis = "Intercept = 0.5")
+```
+
 
 ## Dealing with heteroscedasticity 
 
@@ -71,11 +99,16 @@ Let's generate some fake developmental data where the variance in the data is gr
 # make example reproducible 
 set.seed(0)
 
-df.variance = tibble(
-  group = rep(c("3yo", "5yo", "adults"), each = 20),
-  response = rnorm(60, mean = rep(c(0, 5, 8), each = 20), sd = rep(c(3, 1.5, 0.3), each = 20))
-)
+%>% = tibble(group = rep(c("3yo", "5yo", "adults"), each = 20),
+                     response = rnorm(n = 60,
+                                      mean = rep(c(0, 5, 8), each = 20),
+                                      sd = rep(c(3, 1.5, 0.3), each = 20)))
 
+```
+
+Let's visualize the data
+
+```{r}
 df.variance %>%
   ggplot(aes(x = group, y = response)) +
   geom_jitter(height = 0,
@@ -83,33 +116,79 @@ df.variance %>%
               alpha = 0.7)
 ```
 
-While frequentist models (such as a linear regression) assume equality of variance, Baysian models afford us with the flexibility of inferring both the parameter estimates of the groups (i.e. the means and differences between the means), as well as the variances. 
+### Frequentist analysis 
 
-We simply define a multivariate model which tries to fit both the `response` as well as the variance `sigma`: 
+```{r}
+fit.lm1 = lm(formula = response ~ 1 + group,
+             data = df.variance)
+
+fit.lm1 %>% 
+  summary()
+
+fit.lm1 %>% 
+  glance() %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+
+```{r}
+set.seed(1)
+fit.lm1 %>% 
+  simulate() %>% 
+  bind_cols(df.variance) %>% 
+  ggplot(aes(x = group, y = sim_1)) +
+  geom_jitter(height = 0,
+              width = 0.1,
+              alpha = 0.7)
+```
+
+
+### Bayesian analysis 
+
+While frequentist models (such as a linear regression) assume equality of variance, Bayesian models afford us with the flexibility of inferring both the parameter estimates of the groups (i.e. the means and differences between the means), as well as the variances. 
+
+We define a multivariate model which tries to fit both the `response` as well as the variance `sigma`: 
 
 ```{r bda3-31}
-fit.brm7 = brm(
-  formula = bf(response ~ group,
-               sigma ~ group),
-  data = df.variance,
-  file = "cache/brm7"
-)
+fit.brm1 = brm(formula = bf(response ~ group,
+                            sigma ~ group),
+               data = df.variance,
+               file = "cache/brm1",
+               seed = 1)
 ```
 
 Let's take a look at the model output: 
 
 ```{r bda3-32}
-summary(fit.brm7)
+summary(fit.brm1)
 ```
+
+Notice that sigma is on the log scale. To get the standard deviations, we have to exponentiate the predictors, like so:  
+
+```{r}
+fit.brm1 %>% 
+  tidy(parameters = "^b_") %>% 
+  filter(str_detect(term, "sigma")) %>% 
+  select(term, estimate) %>% 
+  mutate(term = str_remove(term, "b_sigma_")) %>% 
+  pivot_wider(names_from = term,
+              values_from = estimate) %>% 
+  clean_names() %>% 
+  mutate_at(.vars = vars(-intercept), .funs = ~ exp(. + intercept)) %>% 
+  mutate(intercept = exp(intercept))
+```
+
 
 And let's visualize the results:
 
 ```{r bda3-33}
 df.variance %>%
   expand(group) %>% 
-  add_fitted_draws(fit.brm7, dpar = TRUE) %>%
+  add_fitted_draws(fit.brm1, dpar = TRUE) %>%
   select(group, .row, .draw, posterior = .value, mu, sigma) %>% 
-  gather("index", "value", c(mu, sigma)) %>% 
+  pivot_longer(cols = c(mu, sigma),
+               names_to = "index",
+               values_to = "value") %>% 
   ggplot(aes(x = value, y = group)) +
   geom_halfeyeh() +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -118,7 +197,21 @@ df.variance %>%
 
 This plot shows what the posterior looks like for both mu (the inferred means), and for sigma (the inferred variances) for the different groups. 
 
+```{r}
+set.seed(1)
+df.variance %>% 
+  add_predicted_draws(model = fit.brm1,
+                      n = 1) %>% 
+  ggplot(aes(x = group, y = .prediction)) +
+  geom_jitter(height = 0,
+              width = 0.1,
+              alpha = 0.7)
+```
+
+
 ## Ordinal regression 
+
+### car dataset 
 
 For more information, see this [tutorial](https://mjskay.github.io/tidybayes/articles/tidy-
 brms.html#ordinal-models).
@@ -139,10 +232,10 @@ df.cars %>% str()
 ```
 
 ```{r bda3-36}
-fit.brm8 = brm(formula = cyl ~ mpg,
+fit.brm2 = brm(formula = cyl ~ mpg,
                data = df.cars,
                family = "cumulative",
-               file = "cache/brm8",
+               file = "cache/brm2",
                seed = 1)
 ```
 
@@ -156,7 +249,7 @@ data_plot = df.cars %>%
 
 fit_plot = df.cars %>%
   data_grid(mpg = seq_range(mpg, n = 101)) %>%
-  add_fitted_draws(fit.brm8, value = "P(cyl | mpg)", category = "cyl") %>%
+  add_fitted_draws(fit.brm2, value = "P(cyl | mpg)", category = "cyl") %>%
   ggplot(aes(x = mpg, y = `P(cyl | mpg)`, color = cyl)) +
   stat_lineribbon(aes(fill = cyl),
                   alpha = 1/5,
@@ -175,7 +268,7 @@ Posterior predictive check:
 ```{r bda3-38}
 df.cars %>%
   select(mpg) %>%
-  add_predicted_draws(fit.brm8, prediction = "cyl", seed = 1234) %>%
+  add_predicted_draws(fit.brm2, prediction = "cyl", seed = 1234) %>%
   ggplot(aes(x = mpg, y = cyl)) +
   geom_count(color = "gray75") +
   geom_point(aes(fill = cyl),
@@ -184,7 +277,11 @@ df.cars %>%
              size = 2) +
   scale_fill_brewer(palette = "Dark2") +
   geom_label_repel(
-    data = . %>% ungroup() %>% filter(cyl == "8") %>% filter(mpg == max(mpg)) %>% dplyr::slice(1),
+    data = . %>% 
+      ungroup() %>% 
+      filter(cyl == "8",
+             mpg == max(mpg)) %>% 
+      dplyr::slice(1),
     label = "posterior predictions",
     xlim = c(26, NA),
     ylim = c(NA, 2.8),
@@ -193,7 +290,10 @@ df.cars %>%
     color = "gray50",
     segment.color = "gray75") +
   geom_label_repel(
-    data = df.cars %>% filter(cyl == "6") %>% filter(mpg == max(mpg)) %>% dplyr::slice(1),
+    data = df.cars %>% 
+      filter(cyl == "6",
+             mpg == max(mpg)) %>%
+      dplyr::slice(1),
     label = "observed data",
     xlim = c(26, NA),
     ylim = c(2.2, NA),
@@ -201,6 +301,375 @@ df.cars %>%
     label.size = NA,
     segment.color = "gray35")
 ```
+
+
+### Opinion about funding stemcell research
+
+#### Data preparation
+
+```{r, warning=F, message=F}
+df.stemcell = read_csv("data/stemcell.csv")
+
+# We reversed the original scale to make the interpretation easier
+df.stemcell = df.stemcell %>% 
+  select(-gender) %>% 
+  mutate(belief = factor(belief, levels = c("moderate", "fundamentalist", "liberal")),
+         rating = abs(rating - 5))
+
+```
+
+#### Model fitting
+
+```{r fit_sc1}
+fit.brm3 = brm(formula = rating ~ 1 + belief, 
+               data = df.stemcell, 
+               family = cumulative("probit"),
+               file = "cache/brm3",
+               seed = 1)
+```
+
+```{r summary_fit_sc1}
+summary(fit.brm3)
+```
+
+```{r}
+conditional_effects(fit.brm3,
+                    effects = "belief",
+                    categorical = TRUE)
+```
+
+```{r}
+fit.brm3 %>% 
+  pp_check(nsamples = 20)
+```
+
+Let's fit a simple linear model instead: 
+
+```{r}
+fit.brm4 = brm(formula = rating ~ 1 + belief, 
+               data = df.stemcell, 
+               file = "cache/brm4",
+               seed = 1)
+```
+
+```{r}
+fit.brm4 %>% 
+  pp_check(nsamples = 20)
+```
+
+
+```{r}
+df.plot = df.stemcell %>% 
+  mutate(rating = as.factor(rating))
+
+ggplot(data = df.plot,
+       mapping = aes(x = belief,
+                     fill = rating,
+                     group = rating)) + 
+  geom_histogram(stat = "count",
+                 position = position_dodge(),
+                 color = "black")
+
+
+ggplot(data = df.stemcell,
+       mapping = aes(x = rating,
+                     fill = belief,
+                     group = belief)) + 
+  geom_histogram(mapping = aes(y = stat(count / sum(count))),
+                 position = position_dodge())
+```
+
+
+### Amazon movie ratings 
+
+```{r, warning=F, message=F}
+df.movies = read_csv(file = "data/MoviesData.csv")
+
+df.movies = df.movies %>% 
+  pivot_longer(cols = n1:n5,
+               names_to = "stars",
+               values_to = "rating") %>% 
+  mutate(stars = str_remove(stars,"n"),
+         stars = as.numeric(stars))
+
+df.movies %>% 
+  head(10) %>% 
+  kable() %>% 
+  kable_styling()
+
+df.movies = df.movies %>% 
+  uncount(weights = rating) %>% 
+  mutate(id = as.factor(ID)) %>% 
+  filter(ID <= 6)
+
+df.movies %>% 
+  head(10) %>% 
+  kable() %>% 
+  kable_styling()
+```
+
+
+#### Fit the model 
+
+```{r}
+fit.brm5 = brm(formula = stars ~ 1 + id,
+               family = cumulative(link = "probit"),
+               data = df.movies,
+               file = "cache/brm5",
+               seed = 1)
+```
+
+```{r}
+fit.brm5 %>% 
+  summary()
+```
+
+Illustrate the thresholds:  
+
+```{r}
+df.params = fit.brm5 %>% 
+  tidy(parameters = "^b_") %>% 
+  select(term, estimate) %>% 
+  mutate(term = str_remove(term, "b_"))
+
+ggplot(data = tibble(x = c(-3, 3)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dnorm(.),
+                size = 1,
+                color = "black") +
+  stat_function(fun = ~ dnorm(., mean = df.params %>% 
+                                filter(str_detect(term, "id2")) %>% 
+                                pull(estimate)),
+                size = 1,
+                color = "blue") +
+  geom_vline(xintercept = df.params %>% 
+               filter(str_detect(term, "Intercept")) %>% 
+               pull(estimate))
+```
+
+Check the model: 
+
+```{r fig.height=20, fig.width=8}
+fit.brm5 %>% 
+  plot(N = 9)
+```
+
+```{r}
+fit.brm5 %>% 
+  pp_check(nsamples = 100)
+```
+
+
+```{r}
+conditional_effects(fit.brm5,
+                    effects = "id",
+                    categorical = T)
+```
+
+```{r}
+fit.brm6 = brm(formula = stars ~ 1 + id,
+               data = df.movies,
+               file = "cache/brm6",
+               seed = 1)
+```
+
+```{r}
+summary(fit.brm6)
+```
+
+
+```{r}
+df.params = fit.brm6 %>% 
+  tidy(parameters = "^b_") %>% 
+  select(term, estimate) %>% 
+  mutate(term = str_remove(term, "b_")) %>% 
+  pivot_wider(names_from = term,
+              values_from = estimate) %>% 
+  clean_names() %>%
+  mutate_at(.vars = vars(id2:id6), .funs = ~ . + intercept) %>% 
+  set_names(str_c("mu_", 1:6)) %>%
+  pivot_longer(cols = everything(),
+               names_to = c("parameter", "movie"),
+               names_sep = "_",
+               values_to = "value") %>% 
+  pivot_wider(names_from = parameter, 
+              values_from = value)
+```
+
+```{r}
+df.model = df.params %>% 
+  mutate(data = map(.x = mu, .f = ~ tibble(x = 1:5,
+                                           y  = dnorm(x, mean = .x)))) %>% 
+  select(movie, data) %>% 
+  unnest(c(data)) %>% 
+  group_by(movie) %>% 
+  mutate(y = y/sum(y)) %>% 
+  ungroup() %>% 
+  rename(id = movie)
+
+df.plot = df.movies %>% 
+  count(id, stars) %>% 
+  group_by(id) %>% 
+  mutate(p = n / sum(n)) %>% 
+  mutate(stars = as.factor(stars))
+
+ggplot(data = df.plot,
+       mapping = aes(x = stars,
+                     y = p)) +
+  geom_col(color = "black",
+           fill = "lightblue") +
+  geom_point(data = df.model,
+            mapping = aes(x = x,
+                          y = y)) +
+  facet_wrap(~id, ncol = 6) 
+```
+
+
+```{r}
+fit.brm7 = brm(formula = bf(stars ~ 1 + id) + lf(disc ~ 0 + id, cmc = FALSE),
+               family = cumulative(link = "probit"),
+               data = df.movies,
+               file = "cache/brm7",
+               seed = 1)
+```
+
+```{r}
+conditional_effects(fit.brm7,
+                    effects = "id",
+                    categorical = T)
+```
+
+```{r}
+df.params = fit.brm7 %>% 
+  tidy(parameters = "^b_") %>% 
+  select(term, estimate) %>% 
+  mutate(term = str_remove(term, "b_"))
+
+ggplot(data = tibble(x = c(-3, 3)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dnorm(.),
+                size = 1,
+                color = "black") +
+  stat_function(fun = ~ dnorm(.,
+                              mean = 1,
+                              sd = 2),
+                size = 1,
+                color = "blue") +
+  geom_vline(xintercept = df.params %>% 
+               filter(str_detect(term, "Intercept")) %>% 
+               pull(estimate))
+```
+
+### Visualize model fits 
+
+```{r}
+df.model = add_fitted_draws(newdata = expand_grid(id = 1:6),
+                           # model = fit.brm5,
+                           model = fit.brm7,
+                           n = 10)
+
+df.plot = df.movies %>% 
+  count(id, stars) %>% 
+  group_by(id) %>% 
+  mutate(p = n / sum(n)) %>% 
+  mutate(stars = as.factor(stars))
+  
+ggplot(data = df.plot,
+       mapping = aes(x = stars,
+                     y = p)) +
+  geom_col(color = "black",
+           fill = "lightblue") +
+  geom_point(data = df.model,
+             mapping = aes(x = .category,
+                           y = .value),
+             alpha = 0.3,
+             position = position_jitter(width = 0.3)) +
+  facet_wrap(~id, ncol = 6) 
+```
+
+```{r}
+fit.brm8 = brm(formula = bf(stars ~ 1 + id,
+                            sigma ~ 1 + id),
+               data = df.movies,
+               file = "cache/brm8",
+               seed = 1)
+```
+
+```{r}
+df.params = fit.brm8 %>% 
+  tidy(parameters = "^b_") %>% 
+  select(term, estimate) %>% 
+  mutate(term = str_remove(term, "b_")) %>% 
+  pivot_wider(names_from = term,
+              values_from = estimate) %>% 
+  clean_names() %>%
+  mutate_at(.vars = vars(id2:id6), .funs = ~ . + intercept) %>% 
+  mutate_at(.vars = vars(contains("sigma")), .funs = ~ 1/exp(.)) %>% 
+  mutate_at(.vars = vars(sigma_id2:sigma_id5), .funs = ~ . + sigma_intercept) %>% 
+  set_names(c("mu_1", "sigma_1", str_c("mu_", 2:6), str_c("sigma_", 2:6))) %>% 
+  pivot_longer(cols = everything(),
+               names_to = c("parameter", "movie"),
+               names_sep = "_",
+               values_to = "value") %>% 
+  pivot_wider(names_from = parameter, 
+              values_from = value)
+```
+
+```{r}
+df.model = df.params %>% 
+  mutate(data = map2(.x = mu, .y = sigma, .f = ~ tibble(x = 1:5,
+                                                        y  = dnorm(x,
+                                                       mean = .x,
+                                                       sd = .y)))) %>% 
+  select(movie, data) %>% 
+  unnest(c(data)) %>% 
+  group_by(movie) %>% 
+  mutate(y = y/sum(y)) %>% 
+  ungroup() %>% 
+  rename(id = movie)
+
+df.plot = df.movies %>% 
+  count(id, stars) %>% 
+  group_by(id) %>% 
+  mutate(p = n / sum(n)) %>% 
+  mutate(stars = as.factor(stars))
+
+ggplot(data = df.plot,
+       mapping = aes(x = stars,
+                     y = p)) +
+  geom_col(color = "black",
+           fill = "lightblue") +
+  geom_point(data = df.model,
+            mapping = aes(x = x,
+                          y = y)) +
+  facet_wrap(~id, ncol = 6) 
+```
+
+```{r}
+fit.brm8 %>% 
+  pp_check(nsamples = 100)
+```
+
+## What could go wrong 
+
+```{r}
+ggplot(data = tibble(x = c(0, 6)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dnorm(.,
+                              mean = 3,
+                              sd = 1),
+                size = 1,
+                color = "black") +
+  stat_function(fun = ~ dnorm(.,
+                              mean = 3,
+                              sd = 4),
+                size = 1,
+                color = "red",
+                linetype = 2) +
+  geom_vline(xintercept = seq(1.5, 4.5, 1))
+```
+
+
 
 
 ## Additional resources 

@@ -17,12 +17,23 @@ knitr::opts_chunk$set(comment = "#>",
                       fig.show = "hold")
 ```
 
-# Bayesian data analysis 2
-
 ```{r bda2-01, eval=FALSE, echo=FALSE, include=FALSE}
 install.packages(c("tidybayes", "extraDistr"))
 devtools::install_github("greta-dev/greta")
 ```
+
+# Bayesian data analysis 2
+
+
+## Learning goals 
+
+- Simple Bayesian inference example. 
+- Bayes' rule in action. 
+  - Common likelihood functions. 
+  - Common prior functions.
+  - How to do inference.
+- Doing Bayesian data analysis with `greta`
+  - A simple linear regression.
 
 ## Load packages and set plotting theme  
 

@@ -26,6 +26,18 @@ knitr::opts_chunk$set(comment = "#>",
 install.packages(c("titanic", "effects", "nlme"))
 ```
 
+## Learning goals 
+
+- Logistic regression. 
+- Logit transform. 
+- Fitting a logistic regression in R.
+- Visualizing and interpreting model predictions. 
+- Simulating data from a logistic regression. 
+- Assessing model fit. 
+- Testing hypotheses. 
+- Reporting results.
+- Mixed effects logistic regression.
+
 ## Load packages and set plotting theme  
 
 ```{r glm-02, message=FALSE}

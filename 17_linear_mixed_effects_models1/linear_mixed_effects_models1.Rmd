@@ -25,6 +25,14 @@ knitr::opts_chunk$set(comment = "#>",
 install.packages(c("lme4", "lmerTest", "pbkrtest"))
 ```
 
+## Learning goals 
+
+- Understanding sources of dependence in data. 
+  - fixed effects vs. random effects. 
+- `lmer()` syntax in R. 
+- Understanding the `lmer()` summary. 
+- Simulating data from an `lmer()`.
+
 ## Load packages and set plotting theme  
 
 ```{r lmer1-02, message=FALSE}

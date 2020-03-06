@@ -25,6 +25,13 @@ knitr::opts_chunk$set(comment = "#>",
 # install.packages(c("lme4", "lmerTest", "pbkrtest", "broom.mixed"))
 ```
 
+## Learning goals 
+
+- Bootstrapping linear mixed effects models. 
+- Getting p-values. 
+- Pitfalls in fitting `lmers()`s (and what to do about it). 
+- Understanding `lmer()` syntax even better.
+
 ## Load packages and set plotting theme  
 
 ```{r lmer3-02, message=FALSE}

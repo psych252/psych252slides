@@ -23,6 +23,14 @@ knitr::opts_chunk$set(comment = "#>",
 install.packages(c("brms", "bayesplot", "rstanarm"))
 ```
 
+## Learning goals 
+
+- Building Bayesian models with `brms`.
+	- Model evaluation: 
+		- Visualizing and interpreting results. 
+		- Testing hypotheses. 
+	- Inference evaluation: Did things work out? 
+
 ## Load packages and set plotting theme  
 
 ```{r bda3-02, message=FALSE}

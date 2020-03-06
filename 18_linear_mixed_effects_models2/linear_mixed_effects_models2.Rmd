@@ -21,6 +21,12 @@ knitr::opts_chunk$set(comment = "#>",
 
 # Linear mixed effects models 2
 
+## Learning goals 
+
+- Understanding the Simpson's paradox. 
+- An `lmer()` worked example.
+  - complete pooling vs. no pooling vs. partial pooling. 
+
 ## Load packages and set plotting theme  
 
 ```{r lmer2-01, message=FALSE}

@@ -19,6 +19,15 @@ knitr::opts_chunk$set(comment = "#>",
 
 # Bayesian data analysis
 
+## Learning goals 
+
+- Comparison between frequentist and Bayesian data analysis. 
+- Objections to frequentist null hypothesis testing. 
+- Benefits of Bayesian data analysis. 
+- Bayesian models of cognition. 
+- A simple worked coin flip example. 
+- Posterior, prior, likelihood, sample size. 
+
 ## Load packages and set plotting theme  
 
 ```{r bda1-01, message=FALSE}
