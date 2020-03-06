@@ -31,6 +31,7 @@ knitr::opts_chunk$set(comment = "#>",
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
+library("kableExtra")  # for nice RMarkdown tables
 library("janitor")    # for cleaning column names
 library("modelr")     # for doing modeling stuff
 library("tidybayes")  # tidying up results from Bayesian models
@@ -38,8 +39,10 @@ library("brms")       # Bayesian regression models with Stan
 library("rstanarm")   # for Bayesian models
 library("patchwork")  # for making figure panels
 library("ggrepel")    # for labels in ggplots
+library("broom")      # for tidying things up
 library("gganimate")  # for animations
 library("GGally")     # for pairs plot
+library("patchwork")  # for figure panels
 library("bayesplot")  # for visualization of Bayesian model fits 
 library("ggeffects")  # for showing marginal/conditional effects
 library("scales")     # for percent y-axis
@@ -99,7 +102,7 @@ Let's generate some fake developmental data where the variance in the data is gr
 # make example reproducible 
 set.seed(0)
 
-%>% = tibble(group = rep(c("3yo", "5yo", "adults"), each = 20),
+df.variance = tibble(group = rep(c("3yo", "5yo", "adults"), each = 20),
                      response = rnorm(n = 60,
                                       mean = rep(c(0, 5, 8), each = 20),
                                       sd = rep(c(3, 1.5, 0.3), each = 20)))
@@ -257,10 +260,7 @@ fit_plot = df.cars %>%
   scale_color_brewer(palette = "Dark2") +
   scale_fill_brewer(palette = "Dark2")
 
-plot_grid(ncol = 1, align = "v",
-          data_plot,
-          fit_plot
-)
+wrap_plots(data_plot, fit_plot, ncol = 1)
 ```
 
 Posterior predictive check: 
@@ -649,6 +649,10 @@ ggplot(data = df.plot,
 fit.brm8 %>% 
   pp_check(nsamples = 100)
 ```
+
+## Model comparison 
+
+
 
 ## What could go wrong 
 
