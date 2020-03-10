@@ -8,7 +8,9 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=22"]
+    pandoc_args: ["--number-offset=23"]
+bibliography: references.bib
+biblio-style: apalike
 ---
 
 ```{r setup, include=FALSE}
@@ -23,15 +25,14 @@ knitr::opts_chunk$set(comment = "#>",
 
 - Evidence for null results. 
 - Dealing with unequal variance. 
-- Ordinal logistic regression. 
 - Zero-one inflated beta binomial model. 
-- Regression with strictly positive weights. 
+- Ordinal logistic regression. 
 
 ## Load packages and set plotting theme  
 
-```{r load-packages, message=FALSE}
+```{r bda4-01, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
-library("kableExtra")  # for nice RMarkdown tables
+library("kableExtra") # for nice RMarkdown tables
 library("janitor")    # for cleaning column names
 library("modelr")     # for doing modeling stuff
 library("tidybayes")  # tidying up results from Bayesian models
@@ -49,7 +50,7 @@ library("scales")     # for percent y-axis
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r set-theme}
+```{r bda4-02}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
 
@@ -60,9 +61,15 @@ options(mc.cores = parallel::detectCores())
 
 ## Evidence for the null hypothesis 
 
-See [this tutorial](https://vuorre.netlify.com/post/2017/03/21/bayes-factors-with-brms/). 
+See [this tutorial](https://vuorre.netlify.com/post/2017/03/21/bayes-factors-with-brms/) and this paper [@wagenmakers2010bayesiana] for more information. 
 
-```{r}
+### Fit the model 
+
+- Define a binomial model
+- Give a uniform prior `beta(1, 1)`
+- Get samples from the prior
+
+```{r bda4-03}
 df.null = tibble(s = 6, k = 10)
 
 fit.brm0 = brm(s | trials(k) ~ 0 + Intercept, 
@@ -74,9 +81,11 @@ fit.brm0 = brm(s | trials(k) ~ 0 + Intercept,
                file = "cache/brm0")
 ```
 
-Visualize prior and posterior samples: 
+### Visualize the results 
 
-```{r}
+Visualize the prior and posterior samples: 
+
+```{r bda4-04}
 fit.brm0 %>% 
   posterior_samples(pars = "b") %>% 
   pivot_longer(cols = everything()) %>% 
@@ -86,19 +95,24 @@ fit.brm0 %>%
   scale_fill_brewer(palette = "Set1")
 ```
 
-Test the hypothesis that the person was only guessing. 
+### Hypothesis test
 
-```{r}
+We test the H0: $\theta = 0.5$ versus the H1: $\theta \neq 0.5$ using the Savage-Dickey Method, according to which we can compute the Bayes factor like so:  
+
+$BF_{01} = \frac{p(D|H_0)}{p(D|H_1)} = \frac{p(\theta = 0.5|D, H_1)}{p(\theta = 0.5|H_1)}$
+
+```{r bda4-05}
 fit.brm0 %>% 
   hypothesis(hypothesis = "Intercept = 0.5")
 ```
 
+The result shows that the evidence ratio is in favor of the H0 with $BF_{01} = 2.22$. This means that H0 is 2.2 more likely than H1 given the data. 
 
 ## Dealing with heteroscedasticity 
 
 Let's generate some fake developmental data where the variance in the data is greatest for young children, smaller for older children, and even smaller for adults:  
 
-```{r bda3-30}
+```{r bda4-06}
 # make example reproducible 
 set.seed(0)
 
@@ -109,9 +123,9 @@ df.variance = tibble(group = rep(c("3yo", "5yo", "adults"), each = 20),
 
 ```
 
-Let's visualize the data
+### Visualize the data 
 
-```{r}
+```{r bda4-07}
 df.variance %>%
   ggplot(aes(x = group, y = response)) +
   geom_jitter(height = 0,
@@ -121,7 +135,9 @@ df.variance %>%
 
 ### Frequentist analysis 
 
-```{r}
+#### Fit the model
+
+```{r bda4-08}
 fit.lm1 = lm(formula = response ~ 1 + group,
              data = df.variance)
 
@@ -134,7 +150,9 @@ fit.lm1 %>%
   kable_styling()
 ```
 
-```{r}
+#### Visualize the model predictions 
+
+```{r bda4-09}
 set.seed(1)
 fit.lm1 %>% 
   simulate() %>% 
@@ -145,30 +163,29 @@ fit.lm1 %>%
               alpha = 0.7)
 ```
 
+Notice how the model predicts that the variance is equal for each group.
 
 ### Bayesian analysis 
 
 While frequentist models (such as a linear regression) assume equality of variance, Bayesian models afford us with the flexibility of inferring both the parameter estimates of the groups (i.e. the means and differences between the means), as well as the variances. 
 
+#### Fit the model 
+
 We define a multivariate model which tries to fit both the `response` as well as the variance `sigma`: 
 
-```{r bda3-31}
+```{r bda4-10}
 fit.brm1 = brm(formula = bf(response ~ group,
                             sigma ~ group),
                data = df.variance,
                file = "cache/brm1",
                seed = 1)
-```
 
-Let's take a look at the model output: 
-
-```{r bda3-32}
 summary(fit.brm1)
 ```
 
 Notice that sigma is on the log scale. To get the standard deviations, we have to exponentiate the predictors, like so:  
 
-```{r}
+```{r bda4-11}
 fit.brm1 %>% 
   tidy(parameters = "^b_") %>% 
   filter(str_detect(term, "sigma")) %>% 
@@ -181,10 +198,9 @@ fit.brm1 %>%
   mutate(intercept = exp(intercept))
 ```
 
+#### Visualize the model predictions 
 
-And let's visualize the results:
-
-```{r bda3-33}
+```{r bda4-12}
 df.variance %>%
   expand(group) %>% 
   add_fitted_draws(fit.brm1, dpar = TRUE) %>%
@@ -200,7 +216,7 @@ df.variance %>%
 
 This plot shows what the posterior looks like for both mu (the inferred means), and for sigma (the inferred variances) for the different groups. 
 
-```{r}
+```{r bda4-13}
 set.seed(1)
 df.variance %>% 
   add_predicted_draws(model = fit.brm1,
@@ -211,178 +227,20 @@ df.variance %>%
               alpha = 0.7)
 ```
 
+## Zero-one inflated beta binomial model 
+
+See this [blog post](https://vuorre.netlify.com/post/2019/02/18/analyze-analog-scale-ratings-with-zero-one-inflated-beta-models/#zoib-regression). 
 
 ## Ordinal regression 
 
-### car dataset 
+Check out the following two papers: 
 
-For more information, see this [tutorial](https://mjskay.github.io/tidybayes/articles/tidy-
-brms.html#ordinal-models).
+- @liddell2018analyzin
+- @burkner2019ordinal
 
-While running an ordinal regression is far from trivial in frequentist world, it's easy to do using "brms". 
+Let's read in some movie ratings: 
 
-Let's load the cars data and turn the number of cylinders into an ordered factor: 
-
-```{r bda3-34}
-df.cars = mtcars %>% 
-  mutate(cyl = ordered(cyl)) # creates an ordered factor
-```
-
-Let's check that the cylinders are indeed ordered now: 
-
-```{r bda3-35}
-df.cars %>% str()
-```
-
-```{r bda3-36}
-fit.brm2 = brm(formula = cyl ~ mpg,
-               data = df.cars,
-               family = "cumulative",
-               file = "cache/brm2",
-               seed = 1)
-```
-
-Visualize the results:
-
-```{r bda3-37}
-data_plot = df.cars %>%
-  ggplot(aes(x = mpg, y = cyl, color = cyl)) +
-  geom_point() +
-  scale_color_brewer(palette = "Dark2", name = "cyl")
-
-fit_plot = df.cars %>%
-  data_grid(mpg = seq_range(mpg, n = 101)) %>%
-  add_fitted_draws(fit.brm2, value = "P(cyl | mpg)", category = "cyl") %>%
-  ggplot(aes(x = mpg, y = `P(cyl | mpg)`, color = cyl)) +
-  stat_lineribbon(aes(fill = cyl),
-                  alpha = 1/5,
-                  .width = c(0.95)) +
-  scale_color_brewer(palette = "Dark2") +
-  scale_fill_brewer(palette = "Dark2")
-
-wrap_plots(data_plot, fit_plot, ncol = 1)
-```
-
-Posterior predictive check: 
-
-```{r bda3-38}
-df.cars %>%
-  select(mpg) %>%
-  add_predicted_draws(fit.brm2, prediction = "cyl", seed = 1234) %>%
-  ggplot(aes(x = mpg, y = cyl)) +
-  geom_count(color = "gray75") +
-  geom_point(aes(fill = cyl),
-             data = df.cars,
-             shape = 21,
-             size = 2) +
-  scale_fill_brewer(palette = "Dark2") +
-  geom_label_repel(
-    data = . %>% 
-      ungroup() %>% 
-      filter(cyl == "8",
-             mpg == max(mpg)) %>% 
-      dplyr::slice(1),
-    label = "posterior predictions",
-    xlim = c(26, NA),
-    ylim = c(NA, 2.8),
-    point.padding = 0.3,
-    label.size = NA,
-    color = "gray50",
-    segment.color = "gray75") +
-  geom_label_repel(
-    data = df.cars %>% 
-      filter(cyl == "6",
-             mpg == max(mpg)) %>%
-      dplyr::slice(1),
-    label = "observed data",
-    xlim = c(26, NA),
-    ylim = c(2.2, NA),
-    point.padding = 0.2,
-    label.size = NA,
-    segment.color = "gray35")
-```
-
-
-### Opinion about funding stemcell research
-
-#### Data preparation
-
-```{r, warning=F, message=F}
-df.stemcell = read_csv("data/stemcell.csv")
-
-# We reversed the original scale to make the interpretation easier
-df.stemcell = df.stemcell %>% 
-  select(-gender) %>% 
-  mutate(belief = factor(belief, levels = c("moderate", "fundamentalist", "liberal")),
-         rating = abs(rating - 5))
-
-```
-
-#### Model fitting
-
-```{r fit_sc1}
-fit.brm3 = brm(formula = rating ~ 1 + belief, 
-               data = df.stemcell, 
-               family = cumulative("probit"),
-               file = "cache/brm3",
-               seed = 1)
-```
-
-```{r summary_fit_sc1}
-summary(fit.brm3)
-```
-
-```{r}
-conditional_effects(fit.brm3,
-                    effects = "belief",
-                    categorical = TRUE)
-```
-
-```{r}
-fit.brm3 %>% 
-  pp_check(nsamples = 20)
-```
-
-Let's fit a simple linear model instead: 
-
-```{r}
-fit.brm4 = brm(formula = rating ~ 1 + belief, 
-               data = df.stemcell, 
-               file = "cache/brm4",
-               seed = 1)
-```
-
-```{r}
-fit.brm4 %>% 
-  pp_check(nsamples = 20)
-```
-
-
-```{r}
-df.plot = df.stemcell %>% 
-  mutate(rating = as.factor(rating))
-
-ggplot(data = df.plot,
-       mapping = aes(x = belief,
-                     fill = rating,
-                     group = rating)) + 
-  geom_histogram(stat = "count",
-                 position = position_dodge(),
-                 color = "black")
-
-
-ggplot(data = df.stemcell,
-       mapping = aes(x = rating,
-                     fill = belief,
-                     group = belief)) + 
-  geom_histogram(mapping = aes(y = stat(count / sum(count))),
-                 position = position_dodge())
-```
-
-
-### Amazon movie ratings 
-
-```{r, warning=F, message=F}
+```{r bda4-14, warning=F, message=F}
 df.movies = read_csv(file = "data/MoviesData.csv")
 
 df.movies = df.movies %>% 
@@ -408,25 +266,27 @@ df.movies %>%
   kable_styling()
 ```
 
+### Ordinal regression (assuming equal variance)
 
 #### Fit the model 
 
-```{r}
+```{r bda4-15}
 fit.brm5 = brm(formula = stars ~ 1 + id,
                family = cumulative(link = "probit"),
                data = df.movies,
                file = "cache/brm5",
                seed = 1)
+
+summary(fit.brm5)
 ```
 
-```{r}
-fit.brm5 %>% 
-  summary()
-```
+#### Visualizations 
 
-Illustrate the thresholds:  
+##### Model parameters 
 
-```{r}
+The model infers the thresholds and the means of the Gaussian distributions in latent space. 
+
+```{r bda4-16}
 df.params = fit.brm5 %>% 
   tidy(parameters = "^b_") %>% 
   select(term, estimate) %>% 
@@ -447,39 +307,71 @@ ggplot(data = tibble(x = c(-3, 3)),
                pull(estimate))
 ```
 
-Check the model: 
+##### MCMC inference 
 
-```{r fig.height=20, fig.width=8}
+```{r bda4-17, fig.height=20, fig.width=8}
 fit.brm5 %>% 
   plot(N = 9)
 ```
 
-```{r}
+```{r bda4-18}
 fit.brm5 %>% 
-  pp_check(nsamples = 100)
+  pp_check(nsamples = 20)
 ```
 
 
-```{r}
+##### Model predictions 
+
+```{r bda4-19}
 conditional_effects(fit.brm5,
                     effects = "id",
                     categorical = T)
 ```
 
-```{r}
+```{r bda4-20}
+df.model = add_fitted_draws(newdata = expand_grid(id = 1:6),
+                           model = fit.brm5,
+                           n = 10)
+
+df.plot = df.movies %>% 
+  count(id, stars) %>% 
+  group_by(id) %>% 
+  mutate(p = n / sum(n)) %>% 
+  mutate(stars = as.factor(stars))
+  
+ggplot(data = df.plot,
+       mapping = aes(x = stars,
+                     y = p)) +
+  geom_col(color = "black",
+           fill = "lightblue") +
+  geom_point(data = df.model,
+             mapping = aes(x = .category,
+                           y = .value),
+             alpha = 0.3,
+             position = position_jitter(width = 0.3)) +
+  facet_wrap(~id, ncol = 6) 
+```
+
+### Gaussian regression (assuming equal variance)
+
+#### Fit the model 
+
+```{r bda4-21}
 fit.brm6 = brm(formula = stars ~ 1 + id,
                data = df.movies,
                file = "cache/brm6",
                seed = 1)
-```
 
-```{r}
 summary(fit.brm6)
 ```
 
+#### Visualizations 
 
-```{r}
-df.params = fit.brm6 %>% 
+##### Model predictions 
+
+```{r bda4-22}
+# get the predictions for each value of the Likert scale 
+df.model = fit.brm6 %>% 
   tidy(parameters = "^b_") %>% 
   select(term, estimate) %>% 
   mutate(term = str_remove(term, "b_")) %>% 
@@ -493,11 +385,7 @@ df.params = fit.brm6 %>%
                names_sep = "_",
                values_to = "value") %>% 
   pivot_wider(names_from = parameter, 
-              values_from = value)
-```
-
-```{r}
-df.model = df.params %>% 
+              values_from = value) %>% 
   mutate(data = map(.x = mu, .f = ~ tibble(x = 1:5,
                                            y  = dnorm(x, mean = .x)))) %>% 
   select(movie, data) %>% 
@@ -507,6 +395,7 @@ df.model = df.params %>%
   ungroup() %>% 
   rename(id = movie)
 
+# visualize the predictions 
 df.plot = df.movies %>% 
   count(id, stars) %>% 
   group_by(id) %>% 
@@ -524,22 +413,25 @@ ggplot(data = df.plot,
   facet_wrap(~id, ncol = 6) 
 ```
 
+### Oridnal regression (unequal variance) 
 
-```{r}
+#### Fit the model 
+
+```{r bda4-23}
 fit.brm7 = brm(formula = bf(stars ~ 1 + id) + lf(disc ~ 0 + id, cmc = FALSE),
                family = cumulative(link = "probit"),
                data = df.movies,
                file = "cache/brm7",
                seed = 1)
+
+summary(fit.brm7)
 ```
 
-```{r}
-conditional_effects(fit.brm7,
-                    effects = "id",
-                    categorical = T)
-```
+#### Visualizations 
 
-```{r}
+##### Model parameters 
+
+```{r bda4-24}
 df.params = fit.brm7 %>% 
   tidy(parameters = "^b_") %>% 
   select(term, estimate) %>% 
@@ -560,11 +452,10 @@ ggplot(data = tibble(x = c(-3, 3)),
                pull(estimate))
 ```
 
-### Visualize model fits 
+##### Model predictions 
 
-```{r}
+```{r bda4-25}
 df.model = add_fitted_draws(newdata = expand_grid(id = 1:6),
-                           # model = fit.brm5,
                            model = fit.brm7,
                            n = 10)
 
@@ -587,16 +478,26 @@ ggplot(data = df.plot,
   facet_wrap(~id, ncol = 6) 
 ```
 
-```{r}
+### Gaussian regression (unequal variance)
+
+#### Fit the model 
+
+```{r bda4-26}
 fit.brm8 = brm(formula = bf(stars ~ 1 + id,
                             sigma ~ 1 + id),
                data = df.movies,
                file = "cache/brm8",
                seed = 1)
+
+summary(fit.brm8)
 ```
 
-```{r}
-df.params = fit.brm8 %>% 
+#### Visualizations 
+
+##### Model predictions 
+
+```{r bda4-27}
+df.model = fit.brm8 %>% 
   tidy(parameters = "^b_") %>% 
   select(term, estimate) %>% 
   mutate(term = str_remove(term, "b_")) %>% 
@@ -612,11 +513,7 @@ df.params = fit.brm8 %>%
                names_sep = "_",
                values_to = "value") %>% 
   pivot_wider(names_from = parameter, 
-              values_from = value)
-```
-
-```{r}
-df.model = df.params %>% 
+              values_from = value) %>% 
   mutate(data = map2(.x = mu, .y = sigma, .f = ~ tibble(x = 1:5,
                                                         y  = dnorm(x,
                                                        mean = .x,
@@ -645,49 +542,33 @@ ggplot(data = df.plot,
   facet_wrap(~id, ncol = 6) 
 ```
 
-```{r}
-fit.brm8 %>% 
-  pp_check(nsamples = 100)
+### Model comparison 
+
+```{r bda4-28}
+# ordinal regression with equal variance 
+fit.brm5 = add_criterion(fit.brm5,
+                         criterion = "loo")
+
+# Gaussian regression with equal variance
+fit.brm6 = add_criterion(fit.brm6,
+                         criterion = "loo")
+
+loo_compare(fit.brm5, fit.brm6)
 ```
-
-## Model comparison 
-
-
-
-## What could go wrong 
-
-```{r}
-ggplot(data = tibble(x = c(0, 6)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = ~ dnorm(.,
-                              mean = 3,
-                              sd = 1),
-                size = 1,
-                color = "black") +
-  stat_function(fun = ~ dnorm(.,
-                              mean = 3,
-                              sd = 4),
-                size = 1,
-                color = "red",
-                linetype = 2) +
-  geom_vline(xintercept = seq(1.5, 4.5, 1))
-```
-
-
-
 
 ## Additional resources 
 
 - [Tutorial on visualizing brms posteriors with tidybayes](https://mjskay.github.io/tidybayes/articles/tidy-brms.html)
 - [Hypothetical outcome plots](https://mucollective.northwestern.edu/files/2018-HOPsTrends-InfoVis.pdf)
 - [Visual MCMC diagnostics](https://cran.r-project.org/web/packages/bayesplot/vignettes/visual-mcmc-diagnostics.html#general-mcmc-diagnostics)
-- [How to model slider data the Baysian way](https://vuorre.netlify.com/post/2019/02/18/analyze-analog-scale-
-ratings-with-zero-one-inflated-beta-models/#zoib-regression)
+- [Visualiztion of different MCMC algorithms](https://chi-feng.github.io/mcmc-demo/)
 
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded.
 
-```{r session}
+```{r bda4-29}
 sessionInfo()
 ```
+
+## References {-}

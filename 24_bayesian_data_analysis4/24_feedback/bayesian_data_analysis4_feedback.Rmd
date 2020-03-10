@@ -1,0 +1,38 @@
+---
+title: "24 Bayesian data analysis 4"
+author: "Tobias Gerstenberg"
+date: "3/6/2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")) )
+```
+
+## Homework 6
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.hw6_hours = read.csv("how-many-hours-hw6.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response,
+                           levels = c(1:14, ">15"))) %>% 
+  count(response) %>% 
+  complete(response)
+
+ggplot(data = df.hw6_hours,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How many hours did you spend on hw3?")
+```

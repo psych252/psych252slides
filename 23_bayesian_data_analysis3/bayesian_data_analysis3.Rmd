@@ -250,8 +250,6 @@ p =  ggplot(data = df.predictive_samples2,
 animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 ```
 
-
-
 #### Test hypothesis
 
 One key advantage of Bayesian over frequentist analysis is that we can test hypothesis in a very flexible manner by directly probing our posterior samples in different ways. 
@@ -285,7 +283,8 @@ hypothesis(fit.brm1,
 ```{r bda3-15}
 # the probability that the posterior for handneutral is greater than 4
 hypothesis(fit.brm1,
-           hypothesis = "handneutral > 4")
+           hypothesis = "handneutral > 4") %>% 
+  plot()
 ```
 
 ```{r bda3-16}
@@ -867,7 +866,7 @@ fit.brm8 %>%
   kable_styling()
 ```
 
-```{r bda3-58}
+```{r bda3-58, warning=F}
 fit.brm8 %>% 
   ggpredict(terms = c("fare [0:500]", "sex")) %>% 
   plot()
