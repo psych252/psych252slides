@@ -136,7 +136,7 @@ This way you don't have to scroll horizontally. At the same time, avoid writing 
 
 ```{r visualization1-14, eval=FALSE}
 ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) +
+  stat_summary(fun = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) +
   labs(title = "Price as a function of quality of cut", subtitle = "Note: The price is in US dollars", tag = "A", x = "Quality of the cut", y = "Price")
 ```
@@ -147,7 +147,7 @@ You may want to write it this way instead:
 ggplot(data = diamonds, 
        mapping = aes(x = cut, y = price)) +
   # display the means
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue",
@@ -271,7 +271,7 @@ Here, we specified that we want to plot `color` on the x-axis, and `price` on th
 ```{r visualization1-23}
 ggplot(data = df.diamonds,
        mapping = aes(x = color, y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar")
+  stat_summary(fun = "mean", geom = "bar")
 ```
 
 Neat! Three lines of code produce an almost-publication-ready plot (to be published in the _Proceedings of Unnecessary Diamonds_)! Note how we used a `+` at the end of the first line of code to specify that there will be more. This is a very powerful idea underlying `ggplot2`. We can start simple and keep adding things to the plot step by step.
@@ -282,7 +282,7 @@ We used the `stat_summary()` function to define _what_ we want to plot (the "mea
 help(stat_summary)
 ```
 
-Not the the easiest help file ... We supplied two arguments to the function, `fun.y = ` and `geom = `.
+Not the the easiest help file ... We supplied two arguments to the function, `fun = ` and `geom = `.
 
 1. The `fun.y` argument specifies _what_ function we'd like to apply to the data for each value of `x`. Here, we said that we would like to take the `mean` and we specified that as a string.
 2. The `geom` (= geometric object) argument specifies _how_ we would like to plot the result, namely as a "bar" plot.
@@ -291,14 +291,14 @@ Instead of showing the "mean", we could also show the "median" instead.
 
 ```{r visualization1-25}
 ggplot(data = df.diamonds, mapping = aes(x = color, y = price)) +
-  stat_summary(fun.y = "median", geom = "bar")
+  stat_summary(fun = "median", geom = "bar")
 ```
 
 And instead of making a bar plot, we could plot some points.
 
 ```{r visualization1-26}
 ggplot(df.diamonds, aes(x = color, y = price)) +
-  stat_summary(fun.y = "mean", geom = "point")
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 >__Tip__: Take a look [here](https://ggplot2.tidyverse.org/reference/#section-layer-geoms) to see what other geoms ggplot2 supports.
@@ -309,14 +309,14 @@ Note that in the last plot, I removed the `data = ` and `mapping = ` specifiers.
 
 ```{r visualization1-27, eval=F}
 ggplot(aes(x = color, y = price), df.diamonds) +
-  stat_summary(fun.y = "mean", geom = "point")
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 While this works:
 
 ```{r visualization1-28}
 ggplot(mapping = aes(x = color, y = price), data = df.diamonds) +
-  stat_summary(fun.y = "mean", geom = "point")
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 In general, it's good practice to include the argument specifiers -- particularly for functions that are not used all the time. If the same function is used multiple times throughout the script, I would suggest to use the specifiers first, and then it's ok to drop them later.
@@ -381,14 +381,14 @@ What else do we know about the diamonds? We actually know the quality of how the
 
 ```{r visualization1-35}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean", geom = "line")
+  stat_summary(fun = "mean", geom = "line")
 ```
 
 Oops! All we did is that we replaced `x = color` with `x = cut`, and `geom = "bar"` with `geom = "line"`. However, the plot doesn't look like expected (i.e. there is no real plot). What happened here? The reason is that the line plot needs to know what points to connect. The error message tells us that each group consists of only one observation. Let's adjust the group asthetic to fix this.
 
 ```{r visualization1-36}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price, group = 1)) +
-  stat_summary(fun.y = "mean", geom = "line")
+  stat_summary(fun = "mean", geom = "line")
 ```
 
 By adding the parameter `group = 1` to `mapping = aes()`, we specify that we would like all the levels in `x = cut` to be treated as coming from the same group. The reason for this is that `cut` (our x-axis variable) is a factor (and not a numeric variable), so, by default, `ggplot2` tries to draw a separate line for each factor level. We'll learn more about grouping below (and about factors later).
@@ -404,7 +404,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = clarity, y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange") + # plot bootstrapped error bars first
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point") # add points with means
 ```
 
@@ -421,7 +421,7 @@ ggplot(data = df.diamonds, mapping = aes(x = clarity, y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                fun.args = list(conf.int = .999, B = 2000)) + # plot bootstrapped error bars first
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point") # add points with means
 ```
 
@@ -449,7 +449,7 @@ ggplot(df.diamonds,
            y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange") +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                color = "red")
 ```
@@ -461,7 +461,7 @@ Figure \@ref(fig:visualization1-40) looks good.
 ggplot(df.diamonds,
        aes(x = clarity,
            y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                color = "red") +
   stat_summary(fun.data = "mean_cl_boot",
@@ -499,7 +499,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
                      group = cut)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "line")
 ```
 
@@ -511,7 +511,7 @@ ggplot(data = df.diamonds,
                      y = price,
                      group = cut,
                      color = cut)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "line",
                size = 2)
 ```
@@ -526,7 +526,7 @@ ggplot(data = df.diamonds,
                      y = price,
                      group = cut,
                      color = cut)) +
-  stat_summary(fun.y = "mean", geom = "bar")
+  stat_summary(fun = "mean", geom = "bar")
 ```
 
 That's a fail! Several things went wrong here. All the bars are gray and only their outline is colored differently. Instead we want the bars to have a different color. For that we need to specify the `fill` argument rather than the `color` argument! But things are worse. The bars currently are shown on top of each other. Instead, we'd like to put them next to each other. Here is how we can do that:
@@ -537,7 +537,7 @@ ggplot(data = df.diamonds,
                      y = price,
                      group = cut,
                      fill = cut)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                position = position_dodge()) +
   scale_fill_manual(values = c("lightblue", "blue", "orangered", "red", "black"))
@@ -551,7 +551,7 @@ ggplot(data = df.diamonds,
                      y = price,
                      group = cut,
                      fill = cut)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                position = position_dodge(width = 0.9),
                color = "black") +
@@ -672,7 +672,7 @@ ggplot(data = df.diamonds,
        mapping = aes(y = price,
                      x = color,
                      fill = color)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black") +
   stat_summary(fun.data = "mean_cl_boot",

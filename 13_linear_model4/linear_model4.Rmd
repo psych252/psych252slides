@@ -306,7 +306,7 @@ df.contrast %>%
   ggplot(aes(x = group, y = performance)) + 
   geom_point(alpha = 0.3, position = position_jitter(width = 0.1, height = 0)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1) + 
-  stat_summary(fun.y = "mean", geom = "point", shape = 21, fill = "white", size = 3)
+  stat_summary(fun = "mean", geom = "point", shape = 21, fill = "white", size = 3)
 ```
 
 ### Constrasts 

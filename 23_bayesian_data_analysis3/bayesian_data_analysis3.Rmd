@@ -93,7 +93,7 @@ df.poker %>%
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) + 
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
                size = 4) +
@@ -209,7 +209,7 @@ p = df.predictive_samples %>%
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) + 
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
                size = 4) +
@@ -238,7 +238,7 @@ p =  ggplot(data = df.predictive_samples2,
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) + 
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
                size = 4) +
@@ -250,13 +250,42 @@ p =  ggplot(data = df.predictive_samples2,
 animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 ```
 
+And here I've used credible intervals instead of bootstrapped confidence intervals to illustrate the model's uncertainty about the fitted means for each group. 
+
+```{r bda3-13}
+df.fitted_samples = df.poker %>% 
+  add_fitted_draws(fit.brm1) %>% 
+  group_by(hand) %>% 
+  mean_hdci(.value)
+
+ggplot(data = df.poker,
+       mapping = aes(x = hand,
+                     y = balance,
+                     fill = hand)) + 
+  geom_point(alpha = 0.2,
+             position = position_jitter(height = 0, width = 0.1)) + 
+  geom_pointrange(data = df.fitted_samples, 
+                  mapping = aes(x = hand,
+                                y = .value,
+                                ymin = .lower,
+                                ymax = .upper),
+                  size = 1) + 
+  stat_summary(fun = "mean",
+               geom = "point",
+               shape = 21,
+               size = 4) +
+  labs(y = "final balance (in Euros)") + 
+  scale_fill_manual(values = c("red", "orange", "green")) +
+  theme(legend.position = "none")
+```
+
 #### Test hypothesis
 
 One key advantage of Bayesian over frequentist analysis is that we can test hypothesis in a very flexible manner by directly probing our posterior samples in different ways. 
 
 We may ask, for example, what the probability is that the parameter for the difference between a bad hand and a neutral hand (`b_handneutral`) is greater than 0. Let's plot the posterior distribution together with the criterion: 
 
-```{r bda3-13}
+```{r bda3-14}
 fit.brm1 %>% 
   posterior_samples() %>% 
   select(b_handneutral) %>% 
@@ -274,20 +303,20 @@ We see that the posterior is definitely greater than 0.
 
 We can ask many different kinds of questions about the data by doing basic arithmetic on our posterior samples. The `hypothesis()` function makes this even easier. Here are some examples: 
 
-```{r bda3-14}
+```{r bda3-15}
 # the probability that the posterior for handneutral is less than 0
 hypothesis(fit.brm1,
            hypothesis = "handneutral < 0")
 ```
 
-```{r bda3-15}
+```{r bda3-16}
 # the probability that the posterior for handneutral is greater than 4
 hypothesis(fit.brm1,
            hypothesis = "handneutral > 4") %>% 
   plot()
 ```
 
-```{r bda3-16}
+```{r bda3-17}
 # the probability that good hands make twice as much as bad hands
 hypothesis(fit.brm1,
            hypothesis = "Intercept + handgood > 2 * Intercept")
@@ -295,14 +324,14 @@ hypothesis(fit.brm1,
 
 We can also make a plot of what the posterior distribution of the hypothesis looks like: 
 
-```{r bda3-17}
+```{r bda3-18}
 hypothesis(fit.brm1,
            hypothesis = "Intercept + handgood > 2 * Intercept") %>% 
   plot()
 ```
 
 
-```{r bda3-18}
+```{r bda3-19}
 # the probability that neutral hands make less than the average of bad and good hands
 hypothesis(fit.brm1,
            hypothesis = "Intercept + handneutral < (Intercept + Intercept + handgood) / 2")
@@ -310,7 +339,7 @@ hypothesis(fit.brm1,
 
 Let's double check one example, and calculate the result directly based on the posterior samples: 
 
-```{r bda3-19}
+```{r bda3-20}
 df.hypothesis = fit.brm1 %>% 
   posterior_samples() %>% 
   clean_names() %>% 
@@ -329,7 +358,7 @@ df.hypothesis %>%
 
 Another way of testing hypothesis is via the Bayes factor. Let's fit the two models we are interested in comparing with each other: 
 
-```{r bda3-20, message=FALSE}
+```{r bda3-21, message=FALSE}
 fit.brm2 = brm(formula = balance ~ 1 + hand,
                data = df.poker,
                save_all_pars = T,
@@ -343,13 +372,13 @@ fit.brm3 = brm(formula = balance ~ 1 + hand + skill,
 
 And then compare the models useing the `bayes_factor()` function: 
 
-```{r bda3-21}
+```{r bda3-22}
 bayes_factor(fit.brm3, fit.brm2)
 ```
 
 ##### Approximate cross-validation 
 
-```{r bda3-22}
+```{r bda3-23}
 fit.brm2 = add_criterion(fit.brm2,
                          criterion = c("loo", "waic"),
                          reloo = T)
@@ -366,19 +395,18 @@ loo_compare(fit.brm2,
 #### Full specification
 
 So far, we have used the defaults that `brm()` comes with and not bothered about specifiying the priors, etc. 
-
 ##### Getting the priors
 
 Notice that we didn't specify any priors in the model. By default, "brms" assigns weakly informative priors to the parameters in the model. We can see what these are by running the following command: 
 
-```{r bda3-23}
+```{r bda3-24}
 fit.brm1 %>% 
   prior_summary()
 ```
 
 We can also get information about which priors need to be specified before fitting a model:
 
-```{r bda3-24}
+```{r bda3-25}
 get_prior(formula = balance ~ 1 + hand,
           family = "gaussian",
           data = df.poker)
@@ -386,7 +414,7 @@ get_prior(formula = balance ~ 1 + hand,
 
 Here is an example for what a more complete model specification could look like: 
 
-```{r bda3-25, message=FALSE}
+```{r bda3-26, message=FALSE}
 fit.brm4 = brm(formula = balance ~ 1 + hand,
                family = "gaussian",
                data = df.poker,
@@ -410,7 +438,7 @@ fit.brm4 %>%
 
 We can also take a look at the Stan code that the `brm()` function creates: 
 
-```{r bda3-26}
+```{r bda3-27}
 fit.brm4 %>%
   stancode()
 ```
@@ -419,7 +447,7 @@ One thing worth noticing: by default, "brms" centers the predictors which makes 
 
 ##### Prior predictive check 
 
-```{r bda3-27}
+```{r bda3-28}
 fit.brm4.prior = brm(formula = balance ~ 0 + intercept + hand,
                family = "gaussian",
                data = df.poker,
@@ -461,7 +489,7 @@ p = df.prior_samples %>%
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) + 
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
                size = 4) +
@@ -481,13 +509,13 @@ animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 
 So far, we've assumed that the inference has worked out. We can check this by running plot() on our brm object:  
 
-```{r bda3-28, fig.height=8, fig.width=10}
+```{r bda3-29, fig.height=8, fig.width=10}
 plot(fit.brm1)
 ```
 
 Let's make our own version of a trace plot for one parameter in the model:
 
-```{r bda3-29}
+```{r bda3-30}
 fit.brm1 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
@@ -498,7 +526,7 @@ fit.brm1 %>%
 
 We can also take a look at the auto-correlation plot. Ideally, we want to generate independent samples from the posterior. So we don't want subsequent samples to be strongly correlated with each other. Let's take a look: 
 
-```{r bda3-30}
+```{r bda3-31}
 variables = fit.brm1 %>%
   get_variables() %>%
   .[1:4]
@@ -515,7 +543,7 @@ Looking good! The autocorrelation should become very small as the lag increases 
 
 Let's try to fit a model to very little data (just two observations) with extremely uninformative priors: 
 
-```{r bda3-31}
+```{r bda3-32}
 df.data = tibble(y = c(-1, 1))
 
 fit.brm5 = brm(data = df.data,
@@ -533,7 +561,7 @@ fit.brm5 = brm(data = df.data,
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r bda3-32}
+```{r bda3-33}
 summary(fit.brm5)
 ```
 
@@ -541,11 +569,11 @@ Not looking good -- The estimates and credible intervals are off the charts. And
 
 Let's visualize the trace plots:
 
-```{r bda3-33, fig.height=6, fig.width=12}
+```{r bda3-34, fig.height=6, fig.width=12}
 plot(fit.brm5)
 ```
 
-```{r bda3-34}
+```{r bda3-35}
 fit.brm5 %>% 
   spread_draws(b_Intercept) %>% 
   clean_names() %>% 
@@ -559,7 +587,7 @@ fit.brm5 %>%
 
 Given that we have so little data in this case, we need to help the model a little bit by providing some slighlty more specific priors. 
 
-```{r bda3-35}
+```{r bda3-36}
 fit.brm6 = brm(data = df.data,
                family = gaussian,
                formula = y ~ 1,
@@ -574,7 +602,7 @@ fit.brm6 = brm(data = df.data,
 
 Let's take a look at the posterior distributions of the model parameters: 
 
-```{r bda3-36}
+```{r bda3-37}
 summary(fit.brm6)
 ```
 
@@ -582,11 +610,11 @@ This looks much better. There is still quite a bit of uncertainty in our paremet
 
 Let's visualize the trace plots:
 
-```{r bda3-37}
+```{r bda3-38}
 plot(fit.brm6)
 ```
 
-```{r bda3-38}
+```{r bda3-39}
 fit.brm6 %>% 
   spread_draws(b_Intercept, sigma) %>% 
   clean_names() %>% 
@@ -604,7 +632,7 @@ Looking mostly good!
 
 ## Sleep study 
 
-```{r bda3-39}
+```{r bda3-40}
 df.sleep = sleepstudy %>% 
   as_tibble() %>% 
   clean_names() %>% 
@@ -620,13 +648,13 @@ df.sleep = sleepstudy %>%
 
 ### Frequentist analysis 
 
-```{r bda3-40}
+```{r bda3-41}
 fit.lmer = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
                 data = df.sleep)
 ```
 
 
-```{r bda3-41}
+```{r bda3-42}
 fit.lmer %>% 
   summary()
 
@@ -638,7 +666,7 @@ fit.lmer %>%
 
 #### Fit the model
 
-```{r bda3-42}
+```{r bda3-43}
 fit.brm7 = brm(formula = reaction ~ 1 + days + (1 + days | subject),
                data = df.sleep,
                file = "cache/brm7")
@@ -646,7 +674,7 @@ fit.brm7 = brm(formula = reaction ~ 1 + days + (1 + days | subject),
 
 #### Check the model diagnostics
 
-```{r bda3-43, fig.height=16, fig.width=8}
+```{r bda3-44, fig.height=16, fig.width=8}
 fit.brm7 %>% 
   summary()
 
@@ -656,14 +684,14 @@ fit.brm7 %>%
 
 #### Validate the model 
 
-```{r bda3-44}
+```{r bda3-45}
 pp_check(fit.brm7,
          nsamples = 100)
 ```
 
 #### Interpret the parameters 
 
-```{r bda3-45}
+```{r bda3-46}
 fit.brm7 %>% 
   tidy() %>% 
   kable(digits = 2) %>% 
@@ -674,7 +702,7 @@ fit.brm7 %>%
 
 ##### Summary of posterior distributions 
 
-```{r bda3-46}
+```{r bda3-47}
 fit.brm7 %>% 
   posterior_samples() %>% 
   select(-c(lp__, contains("subject"))) %>%
@@ -691,7 +719,7 @@ fit.brm7 %>%
 
 ###### Model prediction with credible intervals 
 
-```{r bda3-47}
+```{r bda3-48}
 fit.brm7 %>% 
   fitted() %>% 
   as_tibble() %>% 
@@ -716,7 +744,7 @@ fit.brm7 %>%
 
 ###### Model prediction for random samples
 
-```{r bda3-48}
+```{r bda3-49}
 df.model = df.sleep %>% 
   complete(subject, days) %>% 
   add_fitted_draws(newdata = .,
@@ -744,7 +772,7 @@ df.sleep %>%
 
 ###### Animated model prediction for random samples
 
-```{r bda3-49}
+```{r bda3-50}
 df.model = df.sleep %>% 
   complete(subject, days) %>% 
   add_fitted_draws(newdata = .,
@@ -778,7 +806,7 @@ anim_save("sleep_posterior_predictive.gif")
 
 ## Titanic study 
 
-```{r bda3-50}
+```{r bda3-51}
 df.titanic = titanic_train %>% 
   clean_names() %>% 
   mutate(sex = as.factor(sex))
@@ -788,7 +816,7 @@ df.titanic = titanic_train %>%
 
 #### Fit the model 
 
-```{r bda3-51}
+```{r bda3-52}
 fit.glm = glm(formula = survived ~ 1 + fare + sex,
               family = "binomial",
               data = df.titanic)
@@ -799,7 +827,7 @@ fit.glm %>%
 
 #### Visualize the results
 
-```{r bda3-52}
+```{r bda3-53}
 df.titanic %>% 
   mutate(sex = as.factor(sex)) %>% 
   ggplot(data = .,
@@ -818,7 +846,7 @@ df.titanic %>%
 
 #### Fit the model 
 
-```{r bda3-53}
+```{r bda3-54}
 fit.brm8 = brm(formula = survived ~ 1 + fare + sex,
                family = "bernoulli",
                data = df.titanic,
@@ -828,7 +856,7 @@ fit.brm8 = brm(formula = survived ~ 1 + fare + sex,
 
 #### Check the model diagnostics
 
-```{r bda3-54, fig.height=8, fig.width=10}
+```{r bda3-55, fig.height=8, fig.width=10}
 fit.brm8 %>% 
   summary()
 
@@ -838,14 +866,14 @@ fit.brm8 %>%
 
 #### Validate the model 
 
-```{r bda3-55}
+```{r bda3-56}
 pp_check(fit.brm8,
          nsamples = 100)
 ```
 
 Let's visualize what the posterior predictive would have looked like for a linear model (instead of a logistic model). 
 
-```{r bda3-56}
+```{r bda3-57}
 fit.brm9 = brm(formula = survived ~ 1 + fare + sex,
                data = df.titanic,
                file = "cache/brm9",
@@ -858,7 +886,7 @@ pp_check(fit.brm9,
 
 #### Interpret the parameters 
 
-```{r bda3-57}
+```{r bda3-58}
 fit.brm8 %>% 
   tidy() %>% 
   select(estimate:conf.high) %>% 
@@ -866,7 +894,7 @@ fit.brm8 %>%
   kable_styling()
 ```
 
-```{r bda3-58, warning=F}
+```{r bda3-59, warning=F}
 fit.brm8 %>% 
   ggpredict(terms = c("fare [0:500]", "sex")) %>% 
   plot()
@@ -877,7 +905,7 @@ fit.brm8 %>%
 
 ##### Summary of posterior distributions 
 
-```{r bda3-59}
+```{r bda3-60}
 fit.brm8 %>% 
   posterior_samples() %>% 
   select(-lp__) %>%
@@ -893,7 +921,7 @@ fit.brm8 %>%
 
 ##### Comparison with data 
 
-```{r bda3-60}
+```{r bda3-61}
 df.model = add_fitted_draws(newdata = expand_grid(sex = c("female", "male"),
                                                   fare = 0:500) %>% 
                               mutate(sex = factor(sex, levels = c("female", "male"))),
@@ -931,6 +959,6 @@ ratings-with-zero-one-inflated-beta-models/#zoib-regression)
 
 Information about this R session including which version of R was used, and what packages were loaded.
 
-```{r bda3-61}
+```{r bda3-62}
 sessionInfo()
 ```

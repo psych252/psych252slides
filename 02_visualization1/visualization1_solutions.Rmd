@@ -54,7 +54,7 @@ Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a 
 ```{r}
 ggplot(data = diamonds,
        mapping = aes(x = clarity, y = price)) +
-  stat_summary(fun.y = "mean", geom = "bar") +
+  stat_summary(fun = "mean", geom = "bar") +
   stat_summary(fun.data = "mean_cl_boot", geom = "linerange")
 ```
 
@@ -76,7 +76,7 @@ ggplot(data = diamonds,
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "line",
                size = 2)
 ```
@@ -96,7 +96,7 @@ ggplot(data = diamonds,
        mapping = aes(x = color,
                      y = price,
                      fill = cut)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                position = position_dodge(width = 0.9),
                color = "black") +

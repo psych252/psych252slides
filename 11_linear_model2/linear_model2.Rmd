@@ -450,7 +450,7 @@ Let's make simple plot that shows the means of both groups with bootstrapped con
 ```{r linear-model2-24}
 ggplot(data = df.credit,
        mapping = aes(x = student, y = balance, fill = student)) + 
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                show.legend = F) +
@@ -496,7 +496,7 @@ ggplot(df.plot,
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
                size = 1) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                size = 4)
 ```

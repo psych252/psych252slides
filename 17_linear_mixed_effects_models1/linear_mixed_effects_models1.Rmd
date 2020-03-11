@@ -81,7 +81,7 @@ p1 = ggplot(data = df.plot %>%
             mapping = aes(x = condition, y = value)) +
   geom_line(aes(group = participant), alpha = 0.3) +
   geom_point() +
-  stat_summary(fun.y = "mean", 
+  stat_summary(fun = "mean", 
                geom = "point",
                shape = 21, 
                fill = "red",
@@ -94,7 +94,7 @@ p2 = ggplot(data = df.plot %>%
             mapping = aes(x = condition, y = value)) +
   geom_line(aes(group = participant), alpha = 0.3) +
   geom_point() +
-  stat_summary(fun.y = "mean", 
+  stat_summary(fun = "mean", 
                geom = "point",
                shape = 21, 
                fill = "red",

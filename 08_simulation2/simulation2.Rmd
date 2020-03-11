@@ -451,7 +451,7 @@ ggplot(data = df.permutation,
   stat_summary(fun.data = mean_cl_boot, 
                geom = "linerange", 
                size = 1) +
-  stat_summary(fun.y = "mean", 
+  stat_summary(fun = "mean", 
                geom = "point", 
                shape = 21, 
                color = "black", 
@@ -498,7 +498,7 @@ After randomly shuffling the condition labels, this is how the results would loo
 ggplot(data = df.permutation, aes(x = permutation, y = performance))+
   geom_point(aes(color = condition), position = position_jitter(height = 0, width = 0.1)) +
   stat_summary(fun.data = mean_cl_boot, geom = 'linerange', size = 1) +
-  stat_summary(fun.y = "mean", geom = 'point', shape = 21, color = "black", fill = "white", size = 4) + 
+  stat_summary(fun = "mean", geom = 'point', shape = 21, color = "black", fill = "white", size = 4) + 
   scale_y_continuous(breaks = 0:10,
                      labels = 0:10,
                      limits = c(0, 10))

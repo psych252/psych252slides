@@ -46,7 +46,7 @@ ggplot(data = diamonds[1:10000, ],
   geom_violin() +
   geom_point(alpha = 0.1,
              position = position_jitter(width = 0.1)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                shape = 21,
                geom = "point",
                fill = "blue",

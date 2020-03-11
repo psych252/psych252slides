@@ -206,7 +206,7 @@ ggplot(data = df.diamonds %>% sample_n(1000),
                  outlier.color = NA, 
                  errorbar.draw = FALSE) +
   # let's also add the means to the plot
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
                color = "black",
@@ -271,7 +271,7 @@ ggplot(data = diamonds[1:10000, ],
   geom_violin() +
   geom_point(alpha = 0.1,
              position = position_jitter(width = 0.1)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                shape = 21,
                geom = "point",
                fill = "blue",
@@ -343,8 +343,8 @@ ggplot(data = df.plot,
                geom = "ribbon",
                alpha = 0.2,
                linetype = 0) +
-  stat_summary(fun.y = "mean", geom = "line") +
-  stat_summary(fun.y = "mean", geom = "point") 
+  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun = "mean", geom = "point") 
 ```
 
 Ignore the top part where I'm defining `df.plot` for now (we'll look into this in the next class). The other part is fairly straightforward. I've used `stat_summary()` three times: First, to define the confidence interval as a `geom = "ribbon"`. Second, to show the lines connecting the means, and third to put the means as data points points on top of the lines. 
@@ -379,9 +379,9 @@ ggplot(data = df.plot,
                alpha = 0.2,
                linetype = 0) +
   # draw lines connecting the means
-  stat_summary(fun.y = "mean", geom = "line") +
+  stat_summary(fun = "mean", geom = "line") +
   # draw means as points
-  stat_summary(fun.y = "mean", geom = "point") +
+  stat_summary(fun = "mean", geom = "point") +
   # add the city names
   geom_text(data = df.text,
             mapping = aes(label = city),
@@ -424,7 +424,7 @@ Let's start simple.
 ```{r visualization2-25}
 ggplot(data = df.diamonds,
        mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black") +
   stat_summary(fun.data = "mean_cl_boot",
@@ -436,7 +436,7 @@ This plot shows the average price for diamonds with a different quality of the c
 ```{r visualization2-26}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   # change color of the fill, make a little more space between bars by setting their width
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue",
@@ -488,7 +488,7 @@ ggplot(data = data,
                      y = effect)) +
   # add geometric objects (geoms)
   geom_point() + 
-  stat_summary(fun.y = "mean", geom = "point") + 
+  stat_summary(fun = "mean", geom = "point") + 
   ... + 
   # add text objects 
   geom_text() + 
@@ -519,7 +519,7 @@ Sometimes we don't have a natural ordering of our independent variable. In that 
 ggplot(data = df.diamonds,
        mapping = aes(x = reorder(cut, price), y = price)) +
        # mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue",
@@ -547,7 +547,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
                      color = clarity)) +
-  stat_summary(fun.y = "mean", geom = "point")
+  stat_summary(fun = "mean", geom = "point")
 ```
 
 Let's move the legend to the bottom of the plot: 
@@ -557,7 +557,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
                      color = clarity)) +
-  stat_summary(fun.y = "mean", geom = "point") +
+  stat_summary(fun = "mean", geom = "point") +
   theme(legend.position = "bottom")
 ```
 
@@ -569,7 +569,7 @@ Let's change a few more things in the legend using the `guides()` function:
 
 ```{r visualization2-30}
 ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity)) +
-  stat_summary(fun.y = "mean", geom = "point", size = 2) +
+  stat_summary(fun = "mean", geom = "point", size = 2) +
   theme(legend.position = "bottom") +
   guides(color = guide_legend(nrow = 3, # 3 rows 
                               reverse = TRUE, # reversed order 
@@ -602,7 +602,7 @@ Here is an example for how to save one of the plots that we've created above.
 ```{r visualization2-32, results = "hold"}
 p1 = ggplot(data = df.diamonds,
             mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue") +
@@ -613,7 +613,7 @@ print(p1)
 
 p2 = ggplot(data = df.diamonds,
             mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue") +
@@ -662,7 +662,7 @@ p2 = ggplot(data = df.diamonds,
 # third plot
 p3 = ggplot(data = df.diamonds,
             mapping = aes(x = cut, y = price)) +
-  stat_summary(fun.y = "mean",
+  stat_summary(fun = "mean",
                geom = "bar",
                color = "black",
                fill = "lightblue",
@@ -789,7 +789,7 @@ Here are some snippets I use:
 ```{r visualization2-37, eval=FALSE}
 snippet snbar
 	ggplot(data = ${1:data}, mapping = aes(x = ${2:x}, y = ${3:y})) +
-		stat_summary(fun.y = "mean", geom = "bar", color = "black") +
+		stat_summary(fun = "mean", geom = "bar", color = "black") +
 		stat_summary(fun.data = "mean_cl_boot", geom = "linerange")
 		
 snippet sngg
