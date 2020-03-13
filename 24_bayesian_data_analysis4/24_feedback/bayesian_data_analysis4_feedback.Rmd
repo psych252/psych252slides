@@ -34,5 +34,5 @@ df.hw6_hours = read.csv("how-many-hours-hw6.csv", header = F) %>%
 ggplot(data = df.hw6_hours,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on hw3?")
+  labs(y = "number of students", x = "", title = "How many hours did you spend on hw6?")
 ```
