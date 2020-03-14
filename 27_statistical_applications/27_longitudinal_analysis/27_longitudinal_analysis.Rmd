@@ -1,0 +1,662 @@
+---
+title: 'Longitudinal Data Analysis'
+author: "Andrew"
+date: "3/11/2020"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=2"]
+---
+
+```{r setup, include=FALSE}
+# these options here change the formatting of how comments are rendered
+knitr::opts_chunk$set(collapse = TRUE,
+                      comment = "#>",
+                      results = "hold",
+                      fig.show = "hold")
+
+# Clear any existing variables
+rm(list = ls())
+
+# Always only show 3 digits
+options(digits = 3)
+```
+
+```{r libraries, message=FALSE}
+library(tidyverse)
+library(lmerTest)
+library(broom)
+library(optimx)
+library(lme4)
+library(modelr)
+```
+
+```{r}
+# Set ggplot theme
+theme_set(theme_light() +
+            theme(plot.title = element_text(hjust = 0.5)))
+```
+
+
+```{r}
+data = read_csv("data/data.csv") %>% 
+  mutate(worker_id = as.factor(worker_id),
+         trial = trial + 1,
+         ltrial = log2(trial),
+         lduration = log2(duration))
+```
+
+# Practice Effect
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = duration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               # shape = 21,
+               size = 1.5) +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "Seconds") +
+  ggsave(filename = "duration_points.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = duration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm") +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "Seconds") +
+  scale_color_manual(values = c("#FC4E07")) + 
+  ggsave(filename = "duration_lin_lin.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = duration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm") +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "Seconds") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07")) + 
+  ggsave(filename = "duration_lin_log.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+lm(duration ~ trial, data = data) %>% 
+  summary()
+```
+
+```{r}
+lm(duration ~ ltrial, data = data) %>% 
+  summary()
+```
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = lduration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm") +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "log2(Seconds)") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07"),
+                     labels=c("log(y) ~ log(x)", "log(y) ~ x")) + 
+  ggsave(filename = "duration_log_log.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+lm(lduration ~ trial, data = data) %>% 
+  summary()
+```
+
+```{r}
+lm(lduration ~ ltrial, data = data) %>% 
+  summary()
+```
+
+
+# Cross-Validation Part II
+
+## Data leak
+
+### Sample code
+
+```{r}
+data %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_mc(100, .2) %>% 
+  mutate(train = map(train, ~ as.data.frame(.) %>%
+                       unnest(c("data"))),
+         test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))))  %>% 
+  mutate(model_lin_lin = map(train, ~lm(duration ~ trial, data = .)),
+         model_lin_log = map(train, ~lm(duration ~ ltrial, data = .)),
+         model_log_lin = map(train, ~lm(lduration ~ trial, data = .)),
+         model_log_log = map(train, ~lm(lduration ~ ltrial, data = .))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ rsquare(.x, .y)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ rmse(.x, .y)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ rsquare(.x, .y)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ rmse(.x, .y))) %>%
+  select(model_name, tr_r2, tr_rmse, v_r2, v_rmse) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse)) %>% 
+  arrange(v_r2)
+```
+
+## Random effects
+
+### Fixed effects only
+
+```{r}
+mixed_effects_loss = function(model, data, loss.f, y_var, fixed_only) {
+  target_col <- deparse(substitute(y_var))
+  
+  if (fixed_only) {
+    y_hat = predict(model,
+                    newdata = data,
+                    allow.new.levels = T,
+                    re.form = NA)
+  } else {
+    y_hat = predict(model, newdata = data)
+  }
+  
+  loss = data %>% 
+    mutate(y_hat = y_hat,
+           loss = loss.f(.[[target_col]], y_hat)) %>% 
+    summarize(loss = mean(loss)) %>% 
+    pull(loss)
+  return (loss)
+}
+
+vector_rmse = function(y, y_hat) {
+  mse = mean((y - y_hat)^2)
+  return (sqrt(mse))
+}
+
+vector_rsquare = function(y, y_hat) {
+  rss = sum((y - y_hat)^2)
+  tss = sum((y - mean(y))^2)
+  return (1 - rss/tss)
+}
+
+data %>% 
+  filter(correct == T) %>% 
+  mutate(trial = trial/64) %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_kfold(5) %>% 
+  mutate(train = map(train, ~ as.data.frame(.) %>%
+                       unnest(c("data"))),
+         test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))))  %>% 
+  mutate(model_log_lin = map(train, ~lmer(lduration ~ trial + (trial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb')))),
+         model_log_log = map(train, ~lmer(lduration ~ ltrial + (ltrial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb'))))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, F)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, F)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, T)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, T))) %>%
+  select(model_name, tr_r2, tr_rmse, v_r2, v_rmse) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse))
+```
+
+### First 4 trials
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  mutate(trial = trial/64) %>% 
+  arrange(worker_id, trial) %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_kfold(5) %>% 
+  mutate(test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))),
+         heads = map(test, ~ group_by(., worker_id) %>% 
+                       top_n(n = 4, wt = -trial) %>% 
+                       ungroup()),
+         test = map(test, ~ group_by(., worker_id) %>% 
+                      top_n(n = nrow(.) - 4, wt = trial) %>% 
+                      ungroup()),
+         train = map2(.x = train,
+                      .y = heads,
+                      ~ as.data.frame(.x) %>%
+                        unnest(c("data")) %>% 
+                        bind_rows(.y)))  %>% 
+  mutate(model_log_lin = map(train, ~lmer(lduration ~ trial + (trial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb')))),
+         model_log_log = map(train, ~lmer(lduration ~ ltrial + (ltrial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb'))))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, F)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, F)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, F)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, F))) %>%
+  select(model_name, tr_r2, tr_rmse, v_r2, v_rmse) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse))
+```
+
+### First 16 trials
+
+```{r}
+data %>% 
+  filter(correct == T) %>% 
+  mutate(trial = trial/64) %>% 
+  arrange(worker_id, trial) %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_kfold(5) %>% 
+  mutate(test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))),
+         heads = map(test, ~ group_by(., worker_id) %>% 
+                       top_n(n = 16, wt = -trial) %>% 
+                       ungroup()),
+         test = map(test, ~ group_by(., worker_id) %>% 
+                      top_n(n = nrow(.) - 16, wt = trial) %>% 
+                      ungroup()),
+         train = map2(.x = train,
+                      .y = heads,
+                      ~ as.data.frame(.x) %>%
+                        unnest(c("data")) %>% 
+                        bind_rows(.y)))  %>% 
+  mutate(model_log_lin = map(train, ~lmer(lduration ~ trial + (trial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb')))),
+         model_log_log = map(train, ~lmer(lduration ~ ltrial + (ltrial | worker_id),
+                                          data = .,
+                                          control = lmerControl(optimizer ='optimx',
+                                                                optCtrl=list(method='nlminb'))))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, F)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, F)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ mixed_effects_loss(.x, .y, vector_rsquare, lduration, F)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ mixed_effects_loss(.x, .y, vector_rmse, lduration, F))) %>%
+  select(model_name, tr_r2, tr_rmse, v_r2, v_rmse) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse))
+```
+
+## CV With Logistic Regression
+
+```{r}
+data %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_mc(100, .2) %>% 
+  mutate(train = map(train, ~ as.data.frame(.) %>%
+                       unnest(c("data"))),
+         test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))))  %>% 
+  mutate(model_lin_lin = map(train, ~glm(correct ~ trial, data = ., family = "binomial")),
+         model_lin_log = map(train, ~glm(correct ~ ltrial, data = ., family = "binomial")),
+         model_log_lin = map(train, ~glm(correct ~ trial, data = ., family = "binomial")),
+         model_log_log = map(train, ~glm(correct ~ ltrial, data = ., family = "binomial"))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ rsquare(.x, .y)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ rmse(.x, .y)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ rsquare(.x, .y)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ rmse(.x, .y))) %>%
+  select(model_name, tr_r2, tr_rmse, v_r2, v_rmse) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse)) %>% 
+  arrange(v_r2)
+```
+
+```{r}
+sigmoid = function(x) {
+  return (1 / (1 + exp(-x)))
+}
+
+cross_entropy = function(y, logit) {
+  y_hat = sigmoid(logit)
+  ce = -(y * log(y_hat) + (1-y) * log(1 - y_hat))
+  return (mean(ce))
+}
+
+data %>% 
+  group_by(worker_id) %>% 
+  nest() %>% 
+  ungroup() %>% 
+  crossv_mc(100, .2) %>% 
+  mutate(train = map(train, ~ as.data.frame(.) %>%
+                       unnest(c("data"))),
+         test = map(test, ~ as.data.frame(.) %>%
+                      unnest(c("data"))))  %>% 
+  mutate(model_lin_lin = map(train, ~glm(correct ~ trial, data = ., family = "binomial")),
+         model_lin_log = map(train, ~glm(correct ~ ltrial, data = ., family = "binomial")),
+         model_log_lin = map(train, ~glm(correct ~ trial, data = ., family = "binomial")),
+         model_log_log = map(train, ~glm(correct ~ ltrial, data = ., family = "binomial"))
+  ) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model_name",
+               values_to = "fit") %>% 
+  mutate(tr_r2 = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ rsquare(.x, .y)),
+         tr_rmse = map2_dbl(.x = fit,
+                            .y = train,
+                            .f = ~ rmse(.x, .y)),
+         v_r2 = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ rsquare(.x, .y)),
+         v_rmse = map2_dbl(.x = fit,
+                           .y = test,
+                           .f = ~ rmse(.x, .y)),
+         tr_ce = map2_dbl(.x = fit,
+                          .y = train,
+                          .f = ~ cross_entropy(.y$correct,
+                                               as.vector(predict(.x, .y)))),
+         v_ce = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ cross_entropy(.y$correct,
+                                              as.vector(predict(.x, .y))))) %>%
+  select(model_name, tr_r2, tr_rmse, tr_ce, v_r2, v_rmse, v_ce) %>% 
+  group_by(model_name) %>% 
+  summarize(tr_r2 = mean(tr_r2),
+            tr_rmse = mean(tr_rmse),
+            tr_ce = mean(tr_ce),
+            v_r2 = mean(v_r2),
+            v_rmse = mean(v_rmse),
+            v_ce = mean(v_ce))
+
+```
+
+# Segmented Regression
+
+## Create artificial intervention: one is significant, one is not
+
+```{r}
+set.seed(252)
+df.sr.insig = data %>%
+  mutate(duration = map2_dbl(.x = duration,
+                             .y = correct == T & trial > 16,
+                             ~ ifelse(.y,
+                                      .x - rnorm(1, 2, 1), .x)),
+         lduration = log2(duration),
+         post_treat = trial > 16)
+df.sr.sig = data %>%
+  mutate(duration = map2_dbl(.x = duration,
+                             .y = correct == T & trial > 16,
+                             ~ ifelse(.y,
+                                      .x - rnorm(1, .x/3, 1.2), .x)),
+         lduration = log2(duration),
+         post_treat = trial > 16)
+```
+
+## Significant results
+
+```{r}
+df.sr.sig %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = lduration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm") +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "log2(Seconds)") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07"),
+                     labels=c("log(y) ~ log(x)", "log(y) ~ x")) + 
+  ggsave(filename = "sr_duration_sig.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+df.sr.sig %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = lduration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x),
+              data = df.sr.sig %>% 
+                filter(trial <= 16)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm",
+              data = df.sr.sig %>% 
+                filter(trial <= 16)) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x),
+              data = df.sr.sig %>% 
+                filter(trial > 16)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm",
+              data = df.sr.sig %>% 
+                filter(trial > 16)) +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "log2(Seconds)") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07"),
+                     labels=c("log(y) ~ log(x)", "log(y) ~ x")) + 
+  ggsave(filename = "sr_duration_piece_sig.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+model = lmer(lduration ~ ltrial*post_treat + (ltrial*post_treat | worker_id),
+             data = df.sr.sig %>% 
+               filter(correct == T),
+             control = lmerControl(optimizer ='optimx', optCtrl=list(method='bobyqa')))
+
+model %>% 
+  summary()
+```
+
+## Insignificant results
+
+```{r}
+df.sr.insig %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = lduration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm") +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "log2(Seconds)") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07"),
+                     labels=c("log(y) ~ log(x)", "log(y) ~ x")) + 
+  ggsave(filename = "sr_duration_insig.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+df.sr.insig %>% 
+  filter(correct == T) %>% 
+  ggplot(aes(x = trial, y = lduration)) +
+  stat_summary(fun.y = "mean",
+               geom = "point",
+               alpha = 1,
+               size = 1.5) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x),
+              data = df.sr.insig %>% 
+                filter(trial <= 16)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm",
+              data = df.sr.insig %>% 
+                filter(trial <= 16)) +
+  geom_smooth(aes(color = 'y ~ log(x)'),
+              method = "lm",
+              formula = y ~ log2(x),
+              data = df.sr.insig %>% 
+                filter(trial > 16)) +
+  geom_smooth(aes(color = 'y ~ x'),
+              method = "lm",
+              data = df.sr.insig %>% 
+                filter(trial > 16)) +
+  labs(title = "Response Time",
+       x = "Trial",
+       y = "log2(Seconds)") +
+  scale_color_manual(values = c("#00AFBB", "#FC4E07"),
+                     labels=c("log(y) ~ log(x)", "log(y) ~ x")) + 
+  ggsave(filename = "sr_duration_piece_insig.png",
+         path = "figures/output",
+         width = 6,
+         height = 4)
+```
+
+```{r}
+model = lmer(lduration ~ ltrial*post_treat + (ltrial*post_treat | worker_id),
+             data = df.sr.sig %>% 
+               filter(correct == T),
+             control = lmerControl(optimizer ='optimx', optCtrl=list(method='bobyqa')))
+
+model %>% 
+  summary()
+```
