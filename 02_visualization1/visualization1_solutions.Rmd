@@ -1,7 +1,7 @@
 ---
-title: "Class 2"
+title: "Visualization I Solutions"
 author: "Tobias Gerstenberg"
-date: "January 8th, 2020"
+date: "January 13th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -10,11 +10,6 @@ output:
     highlight: tango
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>")
-```
-
 # Visualization 1: Exercise solutions 
 
 ## Load packages and set theme 
@@ -22,7 +17,7 @@ knitr::opts_chunk$set(comment = "#>")
 Let's first load the packages that we need for this chapter. 
 
 ```{r load_packages, message=FALSE}
-library("knitr") # for rendering the RMarkdown file
+library("knitr")     # for rendering the RMarkdown file
 library("tidyverse") # for data wrangling 
 ```
 
@@ -35,31 +30,67 @@ theme_set(theme_classic() + #set the theme
 
 ## Practice plot 1
 
-Make a scatter plot that shows the relationship between the variables `depth` (on the x-axis), and `table` (on the y-axis). Take a look at the description for the `diamonds` dataset so you know what these different variables mean. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1).
+Recreate the plot shown in Figure \@ref(fig:practice-plot1).
 
-```{r}
+```{r fig.align="center", fig.cap="Practice plot 1.", fig.height=6, fig.width=8, out.width="95%"}
 ggplot(data = diamonds,
-       mapping = aes(x = depth, y = table)) +
+       mapping = aes(x = depth,
+                     y = table)) +
   geom_point()
 ```
 
 ```{r practice-plot1, out.width="90%", fig.align="center", fig.cap="Practice plot 1."}
 include_graphics("figures/practice_plot1.png")
 ```
+Recreate the plot shown in Figure \@ref(fig:practice-plot1a).
+
+```{r fig.align="center", fig.cap="Practice plot 1 (advanced).", fig.height=6, fig.width=8, out.width="95%"}
+ggplot(data = diamonds,
+       mapping = aes(x = depth,
+                     y = table)) +
+  geom_point(alpha = 0.1) + 
+  labs(x = "Depth (in mm)",
+       y = "Table\n(width of top of diamond relative to widest point)")
+```
+```{r practice-plot1a, out.width="90%", fig.align="center", fig.cap="Practice plot 1 (advanced)."}
+include_graphics("figures/practice_plot1a.png")
+```
 
 ## Practice plot 2
 
-Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:practice-plot2).
+Recreate the plot shown in Figure \@ref(fig:practice-plot2).
 
 ```{r}
 ggplot(data = diamonds,
-       mapping = aes(x = clarity, y = price)) +
-  stat_summary(fun = "mean", geom = "bar") +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange")
+       mapping = aes(x = clarity,
+                     y = price)) +
+  stat_summary(fun = "mean",
+               geom = "bar") +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange")
 ```
 
 ```{r practice-plot2, out.width="90%", fig.align="center", fig.cap="Practice plot 2."}
 include_graphics("figures/practice_plot2.png")
+```
+Recreate the plot shown in Figure \@ref(fig:practice-plot2a).
+
+```{r}
+ggplot(data = diamonds,
+       mapping = aes(x = clarity,
+                     y = price)) +
+  stat_summary(fun = "mean",
+               geom = "bar",
+               color = "black",
+               fill = "lightblue") +
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "linerange",
+               size = 1) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
+```
+
+```{r practice-plot2a, out.width="90%", fig.align="center", fig.cap="Practice plot 2 (advanced).", echo=F}
+include_graphics("figures/practice_plot2a.png")
 ```
 
 ## Practice plot 3
@@ -67,31 +98,56 @@ include_graphics("figures/practice_plot2.png")
 Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
 ```{r}
-# make practice plot 3 here
 ggplot(data = diamonds, 
        mapping = aes(x = color,
                      y = price,
                      group = clarity,
                      color = clarity)) +
   stat_summary(fun.data = "mean_cl_boot",
-               geom = "linerange",
-               size = 1) +
+               geom = "pointrange",
+               size = 1) + 
   stat_summary(fun = "mean",
                geom = "line",
                size = 2)
 ```
 
-
-```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3."}
+```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3.", echo=F}
 include_graphics("figures/practice_plot3.png")
 ```
+Recreate the plot shown in Figure \@ref(fig:practice-plot3a).
 
-#### Practice plot 4
+```{r fig.height=6, fig.width=14}
+ggplot(data = diamonds, 
+       mapping = aes(x = color,
+                     y = price,
+                     group = clarity,
+                     color = clarity)) +
+  stat_summary(fun = "mean",
+               geom = "line",
+               size = 2,
+               position = position_dodge(width = 0.9)) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               geom = "pointrange",
+               shape = 21, 
+               fill = "white",
+               size = 1,
+               position = position_dodge(width = 0.9)) + 
+  geom_vline(xintercept = seq(from = 1.5,
+                              by = 1,
+                              length.out = 6),
+             linetype = 2,
+             color = "gray20")
+```
+
+```{r practice-plot3a, out.width="90%", fig.align="center", fig.cap="Practice plot 3 (advanced).", echo=F}
+include_graphics("figures/practice_plot3a.png")
+```
+
+## Practice plot 4
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
-```{r}
-# make practice plot 4 here
+```{r, warning=F}
 ggplot(data = diamonds,
        mapping = aes(x = color,
                      y = price,
@@ -105,10 +161,11 @@ ggplot(data = diamonds,
                position = position_dodge(width = 0.9),
                color = "black") +
   facet_grid(rows = vars(clarity)) +
-  theme(axis.text.y = element_text(size = 10))
+  theme(axis.text.y = element_text(size = 8),
+        strip.text = element_text(size = 10))
 ```
 
-```{r practice-plot4, out.width="90%", fig.align="center", fig.cap="Practice plot 4."}
+```{r practice-plot4, out.width="90%", fig.align="center", fig.cap="Practice plot 4.", echo=F}
 include_graphics("figures/practice_plot4.png")
 ```
 
