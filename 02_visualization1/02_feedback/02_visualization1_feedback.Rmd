@@ -1,7 +1,7 @@
 ---
-title: "02_Visualization"
+title: "02_Visualization1"
 author: "Tobias Gerstenberg"
-date: "1/8/2020"
+date: "1/13/2021"
 output: 
   html_document:
     toc: true
@@ -13,10 +13,12 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
 theme_set(
-  theme_classic() +
+  theme_classic() + 
     theme(
       text = element_text(size = 20),
       panel.grid.major.y = element_line(color = "gray90")
@@ -24,44 +26,32 @@ theme_set(
 )
 ```
 
+Note: I forgot to reset the polls from the first class, so these results here are a mix from class 1 and 2. Apologies!
+
 ## Student feedback 
 
-> I enjoyed the detailed explanations for the reasons for errors in R. I also thought the practice sets were a good way to consolidate the newly learned concepts. Please I would like the notes to always be available a day before the class.
+> Appreciated that the TAs popped in our breakout room and checked if we needed help.
 
-> The class was way too fast for me as I don't know much about R. However, the instructor was clear. I just have to catch up to speed. Now I know that it is fast-paced, so I'll be better prepared for future classes.
+> Really liked working through the problem in the breakout group!
 
-> it is hard to follow for beginners. Not enough time to make sense of what is going on.
+> Some interface things with R Studio could be explained better. 
 
-> Pace is good. Perhaps more time for practice.
-
-> I really liked the parts where we did "hands-on" exercises and wrote code ourselves. I wish we could have spent a little more time (as a group) going over the "correct" code, because I felt that the answer part went a little too quickly for those of us who made mistakes.
-
-> It may be nice to actually have more individual/group exercises. I usually find that this kind of material is hard to learn until I have the opportunity to apply it.
-
-> I really liked the extensive examples given. I'm very familiar with ggplot but I learned some things today (e.g., stat _summary! I'd been the unfortunate person creating means and calculating error bars as separate variables and then plotting them). Maybe next year there could be a "challenge" section for people who are already familiar with R/ggplot?
-
-> I was surprised by how much overlap there was between the course material and the course readings posted on the website (i.e. word-for-word). Should I assume moving forward that we don't need to complete the readings *before* class, but rather that they are most helpful for reviewing anything we missed / need clarity on after a class?
-
-> Just a heads up that I noticed today before class, two of the data camp courses listed on the course website under the first day (RStudio IDE 1, RStudio IDE 2) are archived on data camp and are no longer available.
-
-> I still didn't figure out how to do an R Project properly. Am I supposed to save the file from Canvas into the R project I created? What if I create a new file? Still not quite sure how to use R Project properly.
+Thanks! It would be helpful to hear more specifically what could be improved. 
 
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-2.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
 ### PollEverywhere results 
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read_csv("how-was-the-pace-of-2.csv", skip = 12) %>%
-  set_names(c("response", "date")) %>% 
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv", skip = 11) %>% 
+  clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
@@ -70,27 +60,25 @@ ggplot(data = df.pace,
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-2.csv") %>% 
-  set_names(c("response", "date")) %>% 
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
          response = factor(response, levels = 1:5,
                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
 ```
 
 ## What to do next time
 
-- make clear that the "reading" sections on the homepage does not assume that this reading was done in preparation 
-- add a challenge section for students who already have some experience with ggplot 
-- spend a little bit more time going through the correct answer of a practice exercise 
-- make clear from the outset that the pace is going to be challenging for complete beginners; and send out an announcement next time to encourage beginners in particular to go through the code in advance 
+- make clear that students need to have RStudio and R installed before class, and that they should try to knit the file and report on Piazza if they have any problems
 

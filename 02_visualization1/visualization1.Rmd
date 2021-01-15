@@ -13,7 +13,7 @@ biblio-style: apalike
 ---
 
 ```{r packages, eval=F, include=F}
-install.packages(c("bookdown","knitr","tidyverse", "devtools", "tinytex", "Hmisc"))
+install.packages(c("bookdown","knitr","tidyverse", "devtools", "Hmisc"))
 ```
 
 # Visualization 1
@@ -266,7 +266,11 @@ ggplot(data = df.diamonds,
                      y = price))
 ```
 
-Here, we specified that we want to plot `color` on the x-axis, and `price` on the y-axis. As you can see, `ggplot2` has already figured out how to label the axes. However, we still need to specify _how_ to plot it. Let's make a __bar graph__:
+Here, we specified that we want to plot `color` on the x-axis, and `price` on the y-axis. As you can see, `ggplot2` has already figured out how to label the axes. However, we still need to specify _how_ to plot it. 
+
+### Bar plot 
+
+Let's make a __bar graph__:
 
 ```{r}
 ggplot(data = df.diamonds,
@@ -415,7 +419,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
-               geom = "pointrange")
+               geom = "pointrange") 
 ```
 
 Here we have it. The average price of our diamonds for different levels of `clarity` together with bootstrapped 95% confidence intervals. How do we know that we have 95% confidence intervals? That's what `mean_cl_boot()` computes as a default. Let's take a look at that function:

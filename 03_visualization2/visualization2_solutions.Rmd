@@ -10,12 +10,6 @@ output:
     highlight: tango
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(collapse = TRUE,
-                      comment = "#>")
-```
-
 # Visualization 2: Exercise solutions 
 
 ## Load packages and set plotting theme
@@ -31,7 +25,12 @@ Let's set the plotting theme.
 
 ```{r plotting_theme}
 theme_set(theme_classic()+ #set the theme 
-    theme(text = element_text(size = 20))) #set the default text size
+            theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(collapse = TRUE,
+               comment = "#>")
+
+options(dplyr.summarise.inform = F)
 ```
 
 ## Practice plot 1 

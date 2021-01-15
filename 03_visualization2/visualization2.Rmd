@@ -1,7 +1,7 @@
 ---
 title: "Class 3"
 author: "Tobias Gerstenberg"
-date: "January 10th, 2020"
+date: "January 14th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -10,12 +10,6 @@ output:
     highlight: tango
     pandoc_args: ["--number-offset=2"]
 ---
-
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
 
 # Visualization 2
 
@@ -35,13 +29,13 @@ In this lecture, we will lift our `ggplot2` skills to the next level!
 
 Let's first install the new packages that you might not have yet. 
 
-```{r visualization2-01, eval=FALSE}
+```{r, eval=FALSE}
 install.packages(c("ggpol", "gganimate", "gapminder", "ggridges", "devtools", "png", "gifski", "patchwork"))
 ```
 
 Now, let's load the packages that we need for this chapter. 
 
-```{r visualization2-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")     # for rendering the RMarkdown file
 library("patchwork") # for making figure panels
 library("ggpol")     # for making fancy boxplots
@@ -51,17 +45,25 @@ library("gapminder") # data available from Gapminder.org
 library("tidyverse") # for plotting (and many more cool things we'll discover later)
 ```
 
-And let's load the diamonds data again. 
+And set some settings: 
 
-```{r visualization2-03}
-df.diamonds = diamonds
-```
+```{r}
+# these options here change the formatting of how comments are rendered
+opts_chunk$set(comment = "#>",
+                      fig.show = "hold")
 
-Let's also set the default theme for the plots again. 
+# this just suppresses an unnecessary message about grouping 
+options(dplyr.summarise.inform = F)
 
-```{r visualization2-04}
+# set the default plotting theme 
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+```
+
+And let's load the diamonds data again. 
+
+```{r}
+df.diamonds = diamonds
 ```
 
 ## Overview of different plot types for different things 
@@ -72,7 +74,7 @@ Different plots work best for different kinds of data. Let's take a look at some
 
 #### Stacked bar charts 
 
-```{r visualization2-05}
+```{r}
 ggplot(data = df.diamonds, 
        mapping = aes(x = cut,
                      fill = color)) +
@@ -83,7 +85,7 @@ This bar chart shows for the different cuts (x-axis), the number of diamonds of 
 
 #### Pie charts 
 
-```{r visualization2-06, echo=FALSE, fig.align="center", out.width="90%", fig.cap="Finally a pie chart that makes sense."}
+```{r, echo=FALSE, fig.align="center", out.width="90%", fig.cap="Finally a pie chart that makes sense."}
 include_graphics("figures/pie_chart.jpg")
 ```
 
@@ -92,7 +94,7 @@ Pie charts have a bad reputation. And there are indeed a number of problems with
 - proportions are difficult to compare 
 - don't look good when there are many categories 
 
-```{r visualization2-07}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = 1,
                      fill = cut)) +
@@ -109,7 +111,7 @@ If we are interested in comparing proportions and we don't have too many data po
 
 Often we want to compare the data from many different conditions. And sometimes, it's also useful to get a sense for what the individual participant data look like. Here is a plot that achieves both. 
 
-```{r visualization2-08, fig.cap='Price of differently colored diamonds. Large yellow circles are means, small black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
+```{r diamonds-price, fig.cap='Price of differently colored diamonds. Large yellow circles are means, small black circles are individual data poins, and the error bars are 95% bootstrapped confidence intervals.'}
 ggplot(data = df.diamonds[1:150, ],
        mapping = aes(x = color, y = price)) +
   # individual data points (jittered horizontally)
@@ -131,9 +133,9 @@ Note that I'm only plotting the first 150 entries of the data here by setting `d
 This plot shows means, bootstrapped confidence intervals, and individual data points. I've used two tricks to make the individual data points easier to see. 
 1. I've set the `alpha` attribute to make the points somewhat transparent.
 2. I've used the `position_jitter()` function to jitter the points horizontally.
-3. I've used `shape = 21` for displaying the mean. For this circle shape, we can set a `color` and `fill` (see Figure \@ref(fig:visualization2-09))
+3. I've used `shape = 21` for displaying the mean. For this circle shape, we can set a `color` and `fill` (see Figure \@ref(fig:plotting-shapes))
 
-```{r visualization2-09, echo=FALSE, fig.cap="Different shapes that can be used for plotting."}
+```{r plotting-shapes, echo=FALSE, fig.cap="Different shapes that can be used for plotting."}
 # plot showing the different shapes 
 df.plot = tibble(x = rep(1:5, 5),
                  y = rep(seq(5, 1, -1), each = 5),
@@ -158,7 +160,7 @@ ggplot(data = df.plot,
 
 Here is an example of an actual plot that I've made for a paper that I'm working on (using the same techniques). 
 
-```{r visualization2-10, echo=FALSE, fig.align="center", out.width="90%", fig.cap="Participants’ preference for the conjunctive (top) versus dis-junctive (bottom) structure as a function of the explanation (abnormal cause vs. normalcause) and the type of norm (statistical vs. prescriptive). Note: Large circles are groupmeans. Error bars are bootstrapped 95% confidence intervals. Small circles are individualparticipants’ judgments (jittered along the x-axis for visibility)"}
+```{r, echo=FALSE, fig.align="center", out.width="90%", fig.cap="Participants’ preference for the conjunctive (top) versus dis-junctive (bottom) structure as a function of the explanation (abnormal cause vs. normalcause) and the type of norm (statistical vs. prescriptive). Note: Large circles are groupmeans. Error bars are bootstrapped 95% confidence intervals. Small circles are individualparticipants’ judgments (jittered along the x-axis for visibility)"}
 include_graphics("figures/normality_judgments.png")
 ```
 
@@ -167,7 +169,7 @@ include_graphics("figures/normality_judgments.png")
 
 Another way to get a sense for the distribution of the data is to use box plots.
 
-```{r visualization2-11}
+```{r}
 ggplot(data = df.diamonds[1:500,],
        mapping = aes(x = color, y = price)) +
   geom_boxplot()
@@ -179,30 +181,29 @@ What do boxplots show? Here adapted from `help(geom_boxplot())`:
 
 Personally, I'm not a big fan of boxplots. Many data sets are consistent with the same boxplot. 
 
-```{r visualization2-12, echo=FALSE, fig.cap="Box plot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
+```{r box-plot-distributions1, echo=FALSE, fig.cap="Box plot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
 include_graphics("figures/boxplots.gif")
 ```
 
-Figure \@ref(fig:visualization2-12) shows three different distributions that each correspond to the same boxplot. 
+Figure \@ref(fig:box-plot-distributions1) shows three different distributions that each correspond to the same boxplot. 
 
 If there is not too much data, I recommend to plot jittered individual data points instead. If you do have a lot of data points, then violin plots can be helpful. 
 
-```{r visualization2-13, echo=FALSE, fig.cap="Boxplot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
+```{r box-plot-distributions2, echo=FALSE, fig.cap="Boxplot distributions. Source: https://www.autodeskresearch.com/publications/samestats"}
 include_graphics("figures/box_violin.gif")
 ```
 
-Figure \@ref(fig:visualization2-13) shows the same raw data represented as jittered dots, boxplots, and violin plots.  
+Figure \@ref(fig:box-plot-distributions2) shows the same raw data represented as jittered dots, boxplots, and violin plots.  
 
 The `ggpol` packages has a `geom_boxjitter()` function which displays a boxplot and the jittered data right next to each other. 
-```{r visualization2-14}
+```{r}
 set.seed(1) # used to make the example reproducible
 ggplot(data = df.diamonds %>% sample_n(1000),
        mapping = aes(x = color, y = price)) +
   ggpol::geom_boxjitter(jitter.shape = 1,
                  jitter.color = "black", 
                  jitter.alpha = 0.2,
-                 jitter.height = 0, 
-                 jitter.width = 0.04,
+                 jitter.params = list(width = 0.04, height = 0),
                  outlier.color = NA, 
                  errorbar.draw = FALSE) +
   # let's also add the means to the plot
@@ -218,7 +219,7 @@ ggplot(data = df.diamonds %>% sample_n(1000),
 
 We make violin plots like so: 
 
-```{r visualization2-15}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = color, y = price)) +
   geom_violin()
@@ -231,7 +232,7 @@ Violin plots are good for detecting bimodal distributions. They work well when:
 
 Violin plots don't work well for Likert-scale data (e.g. ratings on a discrete scale from 1 to 7). Here is a simple example: 
 
-```{r visualization2-16}
+```{r}
 set.seed(1)
 data = tibble(rating = sample(x = 1:7,
                               prob = c(0.1, 0.4, 0.1, 0.1, 0.2, 0, 0.1),
@@ -252,7 +253,7 @@ This represents a vase much better than it represents the data.
 
 We can also show the distributions along the x-axis using the `geom_density_ridges()` function from the `ggridges` package. 
 
-```{r visualization2-17}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = price, y = color)) +
   ggridges::geom_density_ridges(scale = 1.5)
@@ -260,12 +261,12 @@ ggplot(data = df.diamonds,
 
 #### Practice plot 1 
 
-Try to make the plot shown in Figure \@ref(fig:visualization2-19). Here are some tips: 
+Try to make the plot shown in Figure \@ref(fig:visualization2-practice1). Here are some tips: 
 
 - For the data argument in `ggplot()` use: `df.diamonds[1:10000, ]` (this selects the first 10000 rows).
 - Figure \@ref(fig:visualization2-08) will help you with figuring out the other components
 
-```{r visualization2-18}
+```{r}
 ggplot(data = diamonds[1:10000, ], 
        mapping = aes(x = cut, y = price)) +
   geom_violin() +
@@ -278,7 +279,7 @@ ggplot(data = diamonds[1:10000, ],
                size = 5)
 ```
 
-```{r visualization2-19, echo=FALSE, fig.cap='Practice plot 1.'}
+```{r, echo=FALSE, fig.cap='Practice plot 1.'}
 include_graphics("figures/practice_plot1.png")
 ```
 
@@ -288,7 +289,7 @@ include_graphics("figures/practice_plot1.png")
 
 Scatter plots are great for looking at the relationship between two continuous variables. 
 
-```{r visualization2-20}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = carat,
                      y = price,
@@ -300,7 +301,7 @@ ggplot(data = df.diamonds,
 
 These are useful for looking how a variable of interest varies as a function of two other variables. For example, when we are trying to fit a model with two parameters, we might be interested to see how well the model does for different combinations of these two parameters. Here, we'll plot what `carat` values diamonds of different `color` and `clarity` have. 
 
-```{r visualization2-21}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = clarity,
@@ -310,7 +311,7 @@ ggplot(data = df.diamonds,
 
 Not too bad. Let's add a few tweaks to make it look nicer. 
 
-```{r visualization2-22}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = clarity,
@@ -328,7 +329,7 @@ I've added some outlines to the tiles by specifying `color = "black"` in `geom_t
 
 Line plots are a good choice for temporal data. Here, I'll use the `txhousing` data that comes with the `ggplot2` package. The dataset contains information about housing sales in Texas. 
 
-```{r visualization2-23}
+```{r}
 # ignore this part for now (we'll learn about data wrangling soon)
 df.plot = txhousing %>% 
   filter(city %in% c("Dallas", "Fort Worth", "San Antonio", "Houston")) %>% 
@@ -351,7 +352,7 @@ Ignore the top part where I'm defining `df.plot` for now (we'll look into this i
 
 Let's tweak the figure some more to make it look real good. 
 
-```{r visualization2-24}
+```{r}
 df.plot = txhousing %>% 
   filter(city %in% c("Dallas", "Fort Worth", "San Antonio", "Houston")) %>% 
   mutate(city = factor(city, levels = c("Dallas", "Houston", "San Antonio", "Fort Worth")))
@@ -421,7 +422,7 @@ So far, we've seen a number of different ways of plotting data. Now, let's look 
 
 Let's start simple. 
 
-```{r visualization2-25}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = cut, y = price)) +
   stat_summary(fun = "mean",
@@ -433,7 +434,7 @@ ggplot(data = df.diamonds,
 
 This plot shows the average price for diamonds with a different quality of the cut, as well as the bootstrapped confidence intervals. Here are some things we can do to make it look nicer. 
 
-```{r visualization2-26}
+```{r}
 ggplot(data = df.diamonds, mapping = aes(x = cut, y = price)) +
   # change color of the fill, make a little more space between bars by setting their width
   stat_summary(fun = "mean",
@@ -481,7 +482,7 @@ I've tweaked quite a few things here (and I've added comments to explain what's 
 
 I suggest to use this general skeleton for creating a `ggplot`: 
 
-```{r visualization2-26b, eval = F}
+```{r, eval = F}
 # ggplot call with global aesthetics 
 ggplot(data = data,
        mapping = aes(x = cause,
@@ -510,12 +511,11 @@ ggplot(data = data,
          height = 6)
 ```
 
-
 ### Changing the order of things
 
 Sometimes we don't have a natural ordering of our independent variable. In that case, it's nice to show the data in order. 
 
-```{r visualization2-27}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = reorder(cut, price), y = price)) +
        # mapping = aes(x = cut, y = price)) +
@@ -542,7 +542,7 @@ Here, we'll look into a few aspects that come up quite often. There are two main
 
 Let's make a plot with a legend. 
 
-```{r visualization2-28}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
@@ -552,7 +552,7 @@ ggplot(data = df.diamonds,
 
 Let's move the legend to the bottom of the plot: 
 
-```{r visualization2-29}
+```{r}
 ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
@@ -567,7 +567,7 @@ Let's change a few more things in the legend using the `guides()` function:
 - reverse the legend order 
 - make the points in the legend larger 
 
-```{r visualization2-30}
+```{r}
 ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity)) +
   stat_summary(fun = "mean", geom = "point", size = 2) +
   theme(legend.position = "bottom") +
@@ -584,7 +584,7 @@ ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity))
 
 For a given project, I often want all of my plots to share certain visual features such as the font type, font size, how the axes are displayed, etc. Instead of defining these for each individual plot, I can set a theme at the beginning of my project so that it applies to all the plots in this file. To do so, I use the `theme_set()` command: 
 
-```{r visualization2-31, eval=FALSE}
+```{r, eval=FALSE}
 theme_set(theme_classic() + #classic theme
             theme(text = element_text(size = 20))) #text size 
 ```
@@ -599,7 +599,7 @@ I strongly recommend to use a relative path to specify where the figure should b
 
 Here is an example for how to save one of the plots that we've created above. 
 
-```{r visualization2-32, results = "hold"}
+```{r, results = "hold"}
 p1 = ggplot(data = df.diamonds,
             mapping = aes(x = cut, y = price)) +
   stat_summary(fun = "mean",
@@ -635,7 +635,7 @@ Sometimes, we want to create a figure with several subfigures, each of which is 
 
 Let's combine a few plots that we've made above into one. 
 
-```{r visualization2-33}
+```{r}
 # first plot
 p1 = ggplot(data = df.diamonds,
             mapping = aes(x = y, fill = color)) +
@@ -704,7 +704,7 @@ If possible, it's __much__ better to do everything in R though so that your plot
 
 Sometimes it can be helpful for debugging to take a look behind the scenes. Silently, `ggplot()` computes a data frame based on the information you pass to it. We can take a look at the data frame that's underlying the plot. 
 
-```{r visualization2-34}
+```{r}
 p = ggplot(data = df.diamonds,
            mapping = aes(x = color,
                          y = clarity,
@@ -724,7 +724,7 @@ I've called the `ggplot_build()` function on the ggplot2 object that we saved as
 
 If a plot looks weird, it's worth taking a look behind the scenes. For example, something we thing we could have tried is the following (in fact, this is what I tried first): 
 
-```{r visualization2-35}
+```{r}
 p = ggplot(data = df.diamonds,
            mapping = aes(x = color,
                          y = clarity,
@@ -746,7 +746,7 @@ Animated plots can be a great way to illustrate your data in presentations. The 
 
 Here is an example showing how to use it. 
 
-```{r visualization2-36, interval=1/60, results='hold', cache=TRUE}
+```{r, interval=1/60, results='hold', cache=TRUE}
 ggplot(data = gapminder,
        mapping = aes(x = gdpPercap,
                      y = lifeExp,
@@ -786,7 +786,7 @@ Often, we want to create similar plots over and over again. One way to achieve t
 
 Here are some snippets I use: 
 
-```{r visualization2-37, eval=FALSE}
+```{r, eval=FALSE}
 snippet snbar
 	ggplot(data = ${1:data}, mapping = aes(x = ${2:x}, y = ${3:y})) +
 		stat_summary(fun = "mean", geom = "bar", color = "black") +
@@ -803,16 +803,16 @@ snippet sndf
 
 To make a bar plot, I now only need to type `snbar` and then hit TAB to activate the snippet. I can then cycle through the bits in the code that are marked with `${Number:word}` by hitting TAB again. 
 
-In RStudio, you can change and add snippets by going to Tools --> Global Options... --> Code --> Edit Snippets. Make sure to set the tick mark in front of Enable Code Snippets (see Figure \@ref(fig:visualization2-38)). 
+In RStudio, you can change and add snippets by going to Tools --> Global Options... --> Code --> Edit Snippets. Make sure to set the tick mark in front of Enable Code Snippets (see Figure \@ref(fig:code-snippets)). 
 ). 
 
-```{r visualization2-38, echo=FALSE, fig.cap="Enable code snippets."}
+```{r code-snippets, echo=FALSE, fig.cap="Enable code snippets."}
 include_graphics("figures/snippets.png")
 ```
 
 To edit code snippets faster, run this command from the `usethis` package. Make sure to install the package first if you don't have it yet. 
 
-```{r visualization2-39, eval=FALSE}
+```{r, eval=FALSE}
 # install.packages("usethis")
 usethis::edit_rstudio_snippets()
 ```
@@ -827,9 +827,7 @@ This command opens up a separate tab in RStudio called `r.snippets` so that you 
 
 ### Data camp courses 
 
-- [ggplot2 course 3](https://www.datacamp.com/courses/data-visualization-with-ggplot2-3)
-- [shiny 1](https://www.datacamp.com/courses/building-web-applications-in-r-with-shiny)
-- [shiny 2](https://www.datacamp.com/courses/building-web-applications-in-r-with-shiny-case-studies)
+- [shiny](https://www.datacamp.com/courses/building-web-applications-in-r-with-shiny-case-studies)
 
 ### Books and chapters
 
@@ -851,6 +849,6 @@ This command opens up a separate tab in RStudio called `r.snippets` so that you 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r visualization2-40}
+```{r}
 sessionInfo()
 ```
