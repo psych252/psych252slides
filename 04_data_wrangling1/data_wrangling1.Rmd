@@ -696,13 +696,15 @@ df.starwars %>%
 
 ### Practice 2
 
-
+Create a data frame that: 
+- only has the species `Human` and `Droid` 
+- with the following data columns (in this order): name, species, birth_year, homeworld
+- is arranged according to birth year (with the lowest entry at the top of the data frame)
+- and has the `name` column renamed to `person`
 
 ```{r}
-
+# write your code here 
 ```
-
-
 
 ### `select()` 
 
