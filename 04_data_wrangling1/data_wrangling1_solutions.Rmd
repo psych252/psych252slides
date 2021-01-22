@@ -79,7 +79,7 @@ df.starwars %>%
 
 ## Practice 3 
 
-Compute the body mass index for `male` characters who are `human`.
+Compute the body mass index for `masculine` characters who are `human`.
 
 - select only the columns you need 
 - filter out only the rows you need 
@@ -89,7 +89,7 @@ Compute the body mass index for `male` characters who are `human`.
 ```{r practice3}
 df.starwars %>% 
   select(species, gender, height, mass) %>% 
-  filter(gender == "male", species == "Human") %>% 
+  filter(gender == "masculine", species == "Human") %>% 
   mutate(bmi = mass / (height/100)^2) %>% 
   arrange(desc(bmi))
 ```

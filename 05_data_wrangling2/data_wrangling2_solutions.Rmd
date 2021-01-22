@@ -1,7 +1,7 @@
 ---
 title: "Class 5"
 author: "Tobias Gerstenberg"
-date: "January 15th, 2020"
+date: "January 22nd, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -10,12 +10,6 @@ output:
     highlight: tango
     pandoc_args: ["--number-offset=4"]
 ---
-
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "")
-```
 
 # Data wrangling 2: Exercise solutions 
 
@@ -27,6 +21,15 @@ Let's first load the packages that we need for this chapter.
 library("knitr") # for rendering the RMarkdown file
 library("tidyverse") # for data wrangling 
 ```
+
+## Settings 
+
+```{r}
+opts_chunk$set(comment = "")
+
+options(dplyr.summarise.inform = F)
+```
+
 
 And let's load the data set into the environment
 
@@ -56,9 +59,9 @@ Who is the tallest member of each species? What eye color do they have? The `top
 ```{r summarize_practice2}
 df.starwars %>% 
   arrange(species, desc(height)) %>% 
-  group_by(species) %>% 
+  group_by(species) %>%
   # top_n(1, wt = height) %>% # you can either use this, or filter() in the next row
-  filter(row_number() == 1) %>% 
+  filter(row_number() == 1) %>%
   ungroup() %>% 
   select(species, name, eye_color)
 ```
@@ -95,7 +98,7 @@ df.practice2 %>%
 
 ## Practice 3
 
-Load these three data frames first: 
+Load these two data frames first: 
 
 ```{r joining-practice1}
 set.seed(1)
@@ -107,9 +110,9 @@ df.judgments = tibble(participant = rep(1:3, each = 5),
                                         replace = T))
 
 df.information = tibble(number = seq(from = 0,
-               to = 100,
-               length.out = 5),
-               color = c("red", "green", "blue", "black", "white"))
+                                     to = 100,
+                                     length.out = 5),
+                        color = c("red", "green", "blue", "black", "white"))
 ```
 
 Create a new data frame called `df.join` that combines the information from both `df.judgments` and `df.information`. Note that column with the colors is called `stimulus` in `df.judgments` and `color` in `df.information`. At the end, you want a data frame that contains the following columns: `participant`, `stimulus`, `number`, and `judgment`. 
