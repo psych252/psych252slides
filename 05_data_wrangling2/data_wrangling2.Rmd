@@ -154,7 +154,6 @@ Find out what the average `height` and `mass` (as well as the standard deviation
 
 ```{r}
 # write your code here 
-
 ```
 
 Who is the tallest member of each species? What eye color do they have? The `top_n()` function or the `row_number()` function (in combination with `filter()`) will be useful here. 
@@ -635,8 +634,8 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 
 ### Cheatsheets
 
--   [wrangling data](figures/data-wrangling.pdf) --\> wrangling data using `dplyr` and `tidyr`
--   [importing & saving data](figures/data-import.pdf) --\> importing and saving data with `readr`
+-   [wrangling data](figures/data-wrangling.pdf) --> wrangling data using `dplyr` and `tidyr`
+-   [importing & saving data](figures/data-import.pdf) --> importing and saving data with `readr`
 
 ### Data camp courses
 
@@ -660,7 +659,7 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
     -   [Two-table verbs](https://dplyr.tidyverse.org/articles/two-table.html)
     -   [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
 
--   [tidyexplain](https://github.com/gadenbuie/tidyexplain): Animations that illustrate how `gather()`, `spread()`, `left_join()`, etc. work
+-   [tidyexplain](https://github.com/gadenbuie/tidyexplain): Animations that illustrate how `pivot_longer()`, `pivot_wider()`, `left_join()`, etc. work
 
 ## Session info
 

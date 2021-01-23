@@ -751,7 +751,7 @@ df.starwars %>%
 
 ```{r}
 df.starwars %>% 
-  select(where(is.numeric)) # just select numeric columns
+  select(where(fn = is.numeric)) # just select numeric columns
 ```
 
 The following selects all columns that are not numeric: 

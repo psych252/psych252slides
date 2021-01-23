@@ -45,8 +45,10 @@ read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>%
 
 ### PollEverywhere results 
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv", skip = 11) %>% 
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
   clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 

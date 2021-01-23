@@ -121,8 +121,8 @@ Create a new data frame called `df.join` that combines the information from both
 df.join = df.judgments %>% 
   left_join(df.information,
             by = c("stimulus" = "color")) %>% 
-  select(-judgment, everything(), judgment)
-df.join
+  relocate(judgment, .after = number) %>% 
+  print()
 ```
 
 
