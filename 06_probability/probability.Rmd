@@ -1,7 +1,7 @@
 ---
 title: "Class 6"
 author: "Tobias Gerstenberg"
-date: "January 17th, 2020"
+date: "January 25th, 2020"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,25 +11,19 @@ output:
     pandoc_args: ["--number-offset=5"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Probability and causality
 
 ## Install and load packages, load data, set theme
 
 Let's first install the new packages that you might not have yet. 
 
-```{r probability-01, eval=FALSE}
+```{r, eval=FALSE}
 install.packages(c("arrangements", "kableExtra", "DiagrammeR"))
 ```
 
 Let's load the packages that we need for this chapter. 
 
-```{r probability-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")        # for rendering the RMarkdown file
 library("kableExtra")   # for nicely formatted tables
 library("arrangements") # fast generators and iterators for creating combinations
@@ -39,9 +33,12 @@ library("tidyverse")    # for data wrangling
 
 Set the plotting theme.
 
-```{r probability-03}
+```{r}
 theme_set(theme_classic() + 
             theme(text = element_text(size = 20)))
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
 
@@ -49,7 +46,7 @@ theme_set(theme_classic() +
 
 Imagine that there are three balls in an urn. The balls are labeled 1, 2, and 3. Let's consider a few possible situations. 
 
-```{r probability-04}
+```{r}
 balls = 1:3 # number of balls in urn 
 ndraws = 2 # number of draws
 
@@ -68,7 +65,7 @@ combinations(balls, ndraws)
 
 I've generated the figures below using the `DiagrammeR` package. It's a powerful package for drawing diagrams in R. See information on how to use the DiagrammeR package [here](http://rich-iannone.github.io/DiagrammeR/graphviz_and_mermaid.html). 
 
-```{r probability-05, echo=FALSE, fig.cap="Drawing two marbles out of an urn __with__ replacement."}
+```{r, echo=FALSE, fig.cap="Drawing two marbles out of an urn __with__ replacement."}
 grViz("
 digraph dot{
   
@@ -112,7 +109,7 @@ digraph dot{
 
 ```
 
-```{r probability-06, echo=FALSE, fig.cap="Drawing two marbles out of an urn __without__ replacement."}
+```{r, echo=FALSE, fig.cap="Drawing two marbles out of an urn __without__ replacement."}
 grViz("
 digraph dot{
   
@@ -152,9 +149,37 @@ digraph dot{
 ")
 ```
 
+## The random secretary
+
+A secretary types four letters to four people and addresses the four envelopes. If he inserts the letters at random, each in a different envelope, what is the probability that exactly three letters will go into the right envelope?
+
+```{r}
+df.letters = permutations(x = 1:4, k = 4) %>% 
+  as_tibble(.name_repair = ~ str_c("person_", 1:4)) %>%
+  mutate(n_correct = (person_1 == 1) + 
+           (person_2 == 2) + 
+           (person_3 == 3) +
+           (person_4 == 4))
+
+df.letters %>% 
+  summarize(prob_3_correct = sum(n_correct == 3) / n())
+```
+
+```{r}
+ggplot(data = df.letters,
+       mapping = aes(x = n_correct)) + 
+  geom_bar(aes(y = stat(count)/sum(count)),
+           color = "black",
+           fill = "lightblue") +
+  scale_y_continuous(labels = scales::percent,
+                     expand = c(0, 0)) + 
+  labs(x = "number correct",
+       y = "probability")
+```
+
 ## Flipping a coin many times 
 
-```{r probability-07, fig.cap='A demonstration of the law of large numbers.'}
+```{r, fig.cap='A demonstration of the law of large numbers.'}
 
 # Example taken from here: http://statsthinking21.org/probability.html#empirical-frequency
 
@@ -179,37 +204,9 @@ ggplot(data = df.samples,
   theme(text = element_text(size = 20))
 ```
 
-## The random secretary
-
-A secretary types four letters to four people and addresses the four envelopes. If he inserts the letters at random, each in a different envelope, what is the probability that exactly three letters will go into the right envelope?
-
-```{r probability-08}
-df.letters = permutations(x = 1:4, n = 4) %>% 
-  as_tibble(.name_repair = ~ str_c("person_", 1:4)) %>%
-  mutate(n_correct = (person_1 == 1) + 
-           (person_2 == 2) + 
-           (person_3 == 3) +
-           (person_4 == 4))
-
-df.letters %>% 
-  summarize(prob_3_correct = sum(n_correct == 3) / n())
-```
-
-```{r probability-09}
-ggplot(data = df.letters,
-       mapping = aes(x = n_correct)) + 
-  geom_bar(aes(y = stat(count)/sum(count)),
-           color = "black",
-           fill = "lightblue") +
-  scale_y_continuous(labels = scales::percent,
-                     expand = c(0, 0)) + 
-  labs(x = "number correct",
-       y = "probability")
-```
-
 ## Clue guide to probability 
 
-```{r probability-10}
+```{r}
 who = c("ms_scarlet", "col_mustard", "mrs_white",
         "mr_green", "mrs_peacock", "prof_plum")
 what = c("candlestick", "knife", "lead_pipe",
@@ -229,7 +226,7 @@ df.suspects = df.clue %>%
                          no = "male"))
 ```
 
-```{r probability-11}
+```{r}
 df.suspects %>% 
   arrange(desc(gender)) %>% 
   kable() %>% 
@@ -238,14 +235,14 @@ df.suspects %>%
 
 ### Conditional probability 
 
-```{r probability-12}
+```{r}
 # conditional probability (via rules of probability)
 df.suspects %>% 
   summarize(p_prof_plum_given_male = 
               sum(gender == "male" & who == "prof_plum") /
               sum(gender == "male"))
 ```
-```{r probability-13}
+```{r}
 # conditional probability (via rejection)
 df.suspects %>% 
   filter(gender == "male") %>% 
@@ -256,7 +253,7 @@ df.suspects %>%
 
 ### Law of total probability
 
-```{r probability-14, echo=FALSE}
+```{r, echo=FALSE}
 grViz("
 digraph dot{
   
@@ -297,13 +294,13 @@ digraph dot{
 
 ## Probability operations 
 
-```{r probability-15}
+```{r}
 # Make a deck of cards 
 df.cards = tibble(suit = rep(c("Clubs", "Spades", "Hearts", "Diamonds"), each = 8),
                   value = rep(c("7", "8", "9", "10", "Jack", "Queen", "King", "Ace"), 4)) 
 ```
 
-```{r probability-16}
+```{r}
 # conditional probability: p(Hearts | Queen) (via rules of probability)
 df.cards %>% 
   summarize(p_hearts_given_queen = 
@@ -311,7 +308,7 @@ df.cards %>%
               sum(value == "Queen"))
 ```
 
-```{r probability-17}
+```{r}
 # conditional probability: p(Hearts | Queen) (via rejection)
 df.cards %>% 
   filter(value == "Queen") %>%
@@ -320,7 +317,7 @@ df.cards %>%
 
 ## Bayesian reasoning example
 
-```{r probability-18, echo=FALSE}
+```{r, echo=FALSE}
 grViz("
 digraph dot{
   
@@ -367,7 +364,7 @@ digraph dot{
 
 ### Sprinkler example
 
-```{r probability-19, echo=FALSE}
+```{r, echo=FALSE}
 grViz("
 digraph dot{
   
@@ -402,7 +399,7 @@ digraph dot{
 )
 ```
 
-```{r probability-20}
+```{r}
 # cloudy 
 df.cloudy = tibble(`p(C)` = 0.5)
 
@@ -459,6 +456,7 @@ df.rain_given_sprinkler_and_rain %>%
 
 ### Misc 
 
+- [Bayes' theorem in three panels](https://www.tjmahr.com/bayes-theorem-in-three-panels/)
 - [Statistics 110: Probability; course at Harvard](https://projects.iq.harvard.edu/stat110)  
 - [Bayes theorem and making probability intuitive](https://www.youtube.com/watch?v=HZGCoVF3YvM&feature=youtu.be)
 - [Causal inference with Bayes rule](https://gradientinstitute.org/blog/6/)
@@ -467,6 +465,6 @@ df.rain_given_sprinkler_and_rain %>%
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r probability-21, echo=F}
+```{r, echo=F}
 sessionInfo()
 ```
