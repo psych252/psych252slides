@@ -280,7 +280,7 @@ ggplot(data = diamonds[1:10000, ],
 ```
 
 ```{r, echo=FALSE, fig.cap='Practice plot 1.'}
-include_graphics("figures/practice_plot1.png")
+include_graphics("figures/vis2_practice_plot1.png")
 ```
 
 ### Relationships 

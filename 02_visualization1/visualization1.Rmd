@@ -371,7 +371,7 @@ Make a scatter plot that shows the relationship between the variables `depth` (o
 ```
 
 ```{r practice-plot1, fig.align="center", fig.cap="Practice plot 1.", fig.height=6, fig.width=8, out.width="95%"}
-include_graphics("figures/practice_plot1.png")
+include_graphics("figures/vis1_practice_plot1.png")
 ```
 
 __Advanced__: A neat trick to get a better sense for the data here is to add transparency. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1a).
@@ -381,7 +381,7 @@ __Advanced__: A neat trick to get a better sense for the data here is to add tra
 ```
 
 ```{r practice-plot1a, fig.align="center", fig.cap="Practice plot 1.", fig.height=6, fig.width=8, out.width="95%"}
-include_graphics("figures/practice_plot1a.png")
+include_graphics("figures/vis1_practice_plot1a.png")
 ```
 
 ### Line plot
@@ -477,7 +477,7 @@ Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a 
 ```
 
 ```{r practice-plot2, out.width="90%", fig.align="center", fig.cap="Practice plot 2.", out.width="95%"}
-include_graphics("figures/practice_plot2.png")
+include_graphics("figures/vis1_practice_plot2.png")
 ```
 
 __Advanced__: Try to make the plot shown in Figure \@ref(fig:practice-plot2a).
@@ -487,7 +487,7 @@ __Advanced__: Try to make the plot shown in Figure \@ref(fig:practice-plot2a).
 ```
 
 ```{r practice-plot2a, out.width="90%", fig.align="center", fig.cap="Practice plot 2.", out.width="95%"}
-include_graphics("figures/practice_plot2a.png")
+include_graphics("figures/vis1_practice_plot2a.png")
 ```
 
 ### Grouping data
@@ -575,7 +575,7 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 ```
 
 ```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3.", out.width="95%"}
-include_graphics("figures/practice_plot3.png")
+include_graphics("figures/vis1_practice_plot3.png")
 ```
 
 __Advanced__: Try to recreate the plot show in in Figure \@ref(fig:practice-plot3a).
@@ -585,7 +585,7 @@ __Advanced__: Try to recreate the plot show in in Figure \@ref(fig:practice-plot
 ```
 
 ```{r practice-plot3a, out.width="90%", fig.align="center", fig.cap="Practice plot 3.", out.width="95%"}
-include_graphics("figures/practice_plot3a.png")
+include_graphics("figures/vis1_practice_plot3a.png")
 ```
 
 ### Making facets
@@ -710,7 +710,7 @@ Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 ```
 
 ```{r practice-plot4, fig.align="center", fig.cap="Practice plot 4.", out.width="95%"}
-include_graphics("figures/practice_plot4.png")
+include_graphics("figures/vis1_practice_plot4.png")
 ```
 
 ### Global, local, and setting `aes()`
