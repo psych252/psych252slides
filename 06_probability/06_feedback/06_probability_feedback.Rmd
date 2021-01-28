@@ -1,7 +1,7 @@
 ---
 title: "06_Probability"
 author: "Tobias Gerstenberg"
-date: "1/17/2020"
+date: "1/25/2021"
 output: 
   html_document:
     toc: true
@@ -12,7 +12,10 @@ output:
 
 ```{r setup, include=FALSE}
 library("knitr")
+library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
 theme_set(
   theme_classic() + 
@@ -25,34 +28,57 @@ theme_set(
 
 ## Student feedback 
 
-No feedback collected this time 
+> Could we see the results of how long people reported the HW took? Same with the grade distribution for HWs (when that is available). Would be a useful metric
 
-## Homework 1
+> I downloaded the class files for today thinking it would be the lecture slides but it was the R code. Would it be possible to get the slides themselves used for the lecture to notetake on?
 
-```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE, results='hide'}
-df.hw1_hours = read.csv("how-many-hours-did-it-1.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response,
-                           levels = c(1:14, "15\nor more"))) %>% 
-  count(response) %>% 
-  complete(response)
+> I really liked the fact that you walked us through the bayesian formula using the ipad drawing/writing feature
 
-ggplot(data = df.hw1_hours,
+```{r echo=FALSE, message=FALSE}
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity",
-           fill = "lightblue",
-           color = "black") +
-  scale_y_continuous(breaks = seq(0, 50, 2),
-                     expand = c(0, 0)) +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on homework 1?")
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
 ```
 
 ## What to do next time
 
-- class went well this time 
-- added exercise on the secretary problem helped to foster the intuition behind the naive definition of probability (and for using programming / simulation as a way of answering the problem)
-- highlighted the importance of getting the intuition behind the patterns of inference that happen in Bayes nets 
-- made the point that regression assumes no structure between the predictors (but they are often causally related in the real world)
-- maybe: make the point clearer how RCTs are a form of intervention in a CBN 
-- maybe: use this shinyapp for illustration in class: https://research-methods-dojo.shinyapps.io/causality_and_regression/
+- still going a little too fast
+- student feedback was positive, but happiness distribution doesn't look too good (see where this discrepancy is coming from)
+- maybe drop the explanation of Bayes' theorem using the rectangles next time (or explain it better)
+

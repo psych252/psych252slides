@@ -1,7 +1,7 @@
 ---
 title: "Class 7"
 author: "Tobias Gerstenberg"
-date: "January 22nd, 2020"
+date: "January 27th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,22 +11,16 @@ output:
     pandoc_args: ["--number-offset=6"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Simulation 1 
 
 ## Load packages and set plotting theme  
 
-```{r simulation1-01, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("kableExtra", "MASS"))
 ```
 
-```{r simulation1-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")
 library("kableExtra")
 library("MASS")
@@ -34,16 +28,97 @@ library("patchwork")
 library("tidyverse")
 ```
 
-```{r simulation1-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
+
+## Sampling 
+
+### Drawing numbers from a vector 
+
+```{r}
+numbers = 1:3
+
+numbers %>% 
+  sample(size = 10,
+         replace = T)
+```
+
+Use the `prob = ` argument to change the probability with which each number should be drawn. 
+
+```{r}
+numbers = 1:3
+
+numbers %>% 
+  sample(size = 10,
+         replace = T,
+         prob = c(0.8, 0.1, 0.1))
+```
+
+Make sure to set the seed in order to make your code reproducible. The code chunk below may give a different outcome each time is run. 
+
+
+```{r no-seed}
+numbers = 1:5
+
+numbers %>% 
+  sample(5)
+```
+
+The chunk below will produce the same outcome every time it's run. 
+
+```{r with-seed}
+set.seed(1)
+
+numbers = 1:5
+
+numbers %>% 
+  sample(5)
+```
+
+### Drawing rows from a data frame 
+
+Generate a data frame. 
+
+```{r}
+set.seed(1)
+n = 10
+df.data = tibble(trial = 1:n,
+                 stimulus = sample(c("flower", "pet"), size = n, replace = T),
+                 rating = sample(1:10, size = n, replace = T))
+```
+
+Sample a given number of rows. 
+
+```{r}
+set.seed(1)
+df.data %>% 
+  slice_sample(n = 6, 
+               replace = T)
+```
+
+```{r}
+set.seed(1)
+df.data %>% 
+  slice_sample(prop = 0.5)
+```
+
+Note that there is a whole family of `slice()` functions in dplyr. Take a look at the help file here: 
+
+```{r, eval=FALSE}
+help(slice)
+```
+
 
 ## Working with distributions 
 
 Every distribution that R handles has four functions. There is a root name, for example, the root name for the normal distribution is `norm`. This root is prefixed by one of the letters here:
 
-```{r simulation1-04, echo=F}
+```{r, echo=F}
 tibble(letter = c("`d`","`p`","`q`","`r`"),
   description = c('for "__density__", the density function (probability function (for _discrete_ variables) or probability density function (for _continuous_ variables))',
                   'for "__probability__", the cumulative distribution function',
@@ -61,18 +136,19 @@ You can get more info about the distributions that come with R via running `help
 
 ### Plotting distributions 
 
-Here's an easy way to plot distributions in `ggplot2` using the `stat_function()` function. 
-```{r simulation1-05, results = "hold"}
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) +
-  stat_function(fun = "dnorm")
+Here's an easy way to plot distributions in `ggplot2` using the `stat_function()` function. We take a look at a normal distribution of height (in cm) with `mean = 180` and `sd = 10` (as this is the example we run with in class).
+
+```{r, results = "hold"}
+ggplot(data = tibble(height = c(150, 210)),
+       mapping = aes(x = height)) +
+  stat_function(fun = ~ dnorm(., mean = 180, sd = 10))
 ```
 
-Note that the data frame I created with `tibble()` only needs to have the minimum and the maximum value of the x-range that we are interested in. Here, I chose `-5` and `5` as the minimum and maximum, respectively. 
+Note that the data frame I created with `tibble()` only needs to have the minimum and the maximum value of the x-range that we are interested in. Here, I chose `150` and `210` as the minimum and maximum, respectively (which is the mean +/- 3 standard deviations). 
 
 The `stat_function()` is very flexible. We can define our own functions and plot these like here: 
 
-```{r simulation1-06, results='hold'}
+```{r, results='hold'}
 # define the breakpoint function 
 fun.breakpoint = function(x, breakpoint){
   x[x < breakpoint] = breakpoint
@@ -87,25 +163,6 @@ ggplot(data = tibble(x = c(-5, 5)),
 
 Here, I defined a breakpoint function. If the value of `x` is below the breakpoint, `y` equals the value of the breakpoint. If the value of `x` is greater than the breakpoint, then `y` equals `x`. 
 
-Note how I used the `args = ` argument in the `stat_function()` to supply the breakpoint parameter that my `fun.breakpoint()` wants. Make sure to put these parameters into a `list()` as shown above. 
-
-Let's play around with the parameters of the normal distribution. The normal distribution takes two parameters, the mean and standard deviation. Again, I'm going to use the `args = ` argument to supply these parameters.  
-
-```{r simulation1-07}
-tmp.mean = 0
-tmp.sd = 1
-
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) +
-  stat_function(fun = ~ dnorm(x = .,
-                              mean = tmp.mean,
-                              sd = tmp.sd))
-
-# remove all variables with tmp in their name 
-rm(list = ls() %>% str_subset(pattern = "tmp."))
-```
-
-To keep my environment clean, I've named the parameters `tmp.mean` and `tmp.sd` and then, at the end of the code chunk, I removed all variables from the environment that have "tmp." in their name using the `ls()` function (which prints out all variables in the environment as a vector), and the `str_subset()` function which filters out only those variables that contain the specified pattern.
 
 ### Sampling from distributions 
 
@@ -113,7 +170,7 @@ For each distribution, R provides a way of sampling random number from this dist
 
 So let's take some random samples and plot a histogram. 
 
-```{r simulation1-08}
+```{r}
 # make this example reproducible 
 set.seed(1)
 
@@ -121,16 +178,16 @@ set.seed(1)
 tmp.nsamples = 100
 
 # make a data frame with the samples
-df.plot = tibble(x = rnorm(n = tmp.nsamples, mean = 0, sd = 1)) 
+df.plot = tibble(height = rnorm(n = tmp.nsamples, mean = 180, sd = 10))
 
 # plot the samples using a histogram 
 ggplot(data = df.plot,
-       mapping = aes(x = x)) +
-  geom_histogram(binwidth = 0.2,
+       mapping = aes(x = height)) +
+  geom_histogram(binwidth = 1,
                  color = "black",
                  fill = "lightblue") +
-  scale_x_continuous(breaks = -4:4, labels = -4:4) +
-  coord_cartesian(xlim = c(-4, 4), expand = F)
+  scale_x_continuous(breaks = c(160, 180, 200)) +
+  coord_cartesian(xlim = c(150, 210), expand = F)
 
 # remove all variables with tmp in their name 
 rm(list = ls() %>% str_subset(pattern = "tmp."))
@@ -138,19 +195,19 @@ rm(list = ls() %>% str_subset(pattern = "tmp."))
 
 Let's see how many samples it takes to closely approximate the shape of the normal distribution with our histogram of samples. 
 
-```{r simulation1-09}
+```{r}
 # make this example reproducible 
 set.seed(1)
 
 # play around with this value
-tmp.nsamples = 100
-# tmp.nsamples = 10000
-tmp.binwidth = 0.2
+# tmp.nsamples = 100
+tmp.nsamples = 10000
+tmp.binwidth = 1
 
 # make a data frame with the samples
-df.plot = tibble(
-  x = rnorm(n = tmp.nsamples, mean = 0, sd = 1)
-) 
+df.plot = tibble(height = rnorm(n = tmp.nsamples,
+                                mean = 180,
+                                sd = 10)) 
 
 # adjust the density of the normal distribution based on the samples and binwidth 
 fun.dnorm = function(x, mean, sd, n, binwidth){
@@ -159,391 +216,40 @@ fun.dnorm = function(x, mean, sd, n, binwidth){
 
 # plot the samples using a histogram 
 ggplot(data = df.plot,
-       mapping = aes(x = x)) +
+       mapping = aes(x = height)) +
   geom_histogram(binwidth = tmp.binwidth,
                  color = "black",
                  fill = "lightblue") +
   stat_function(fun = ~ fun.dnorm(x = .,
-                                  mean = 0,
-                                  sd = 1,
+                                  mean = 180,
+                                  sd = 10,
                                   n = tmp.nsamples,
                                   binwidth = tmp.binwidth),
-                xlim = c(min(df.plot$x), max(df.plot$x)),
+                xlim = c(min(df.plot$height), max(df.plot$height)),
                 size = 2) +
   annotate(geom = "text",
            label = str_c("n = ", tmp.nsamples),
-           x = -3.9,
+           x = -Inf,
            y = Inf,
-           hjust = 0,
+           hjust = -0.1,
            vjust = 1.1,
            size = 10,
            family = "Courier New") +
-  scale_x_continuous(breaks = -4:4, labels = -4:4) +
-  coord_cartesian(xlim = c(-4, 4), expand = F)
+  scale_x_continuous(breaks = c(160, 180, 200)) +
+  coord_cartesian(xlim = c(150, 210), expand = F)
 
 # remove all variables with tmp in their name 
 rm(list = ls() %>% str_subset(pattern = "tmp."))
 ```
-
 With 10,000 samples, our histogram of samples already closely resembles the theoretical shape of the normal distribution. 
 
-### Cumulative probability distribution
-
-```{r simulation1-10}
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) +
-  stat_function(fun = ~ pnorm(q = ., 
-                              mean = 0, 
-                              sd = 1))
-```
-
-Let's find the cumulative probability of a particular value. 
-
-```{r simulation1-11}
-tmp.x = 1
-tmp.y = pnorm(tmp.x, mean = 0, sd = 1)
-
-print(tmp.y %>% round(3))
-
-# draw the cumulative probability distribution and show the value
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) +
-  stat_function(fun = ~ pnorm(q = .,
-                              mean = 0, 
-                              sd= 1 )) +
-  annotate(geom = "point",
-           x = tmp.x, 
-           y = tmp.y,
-           size = 4,
-           color = "blue") +
-  geom_segment(mapping = aes(x = tmp.x,
-                             xend = tmp.x,
-                             y = 0,
-                             yend = tmp.y),
-               size = 1,
-               color = "blue") +
-  geom_segment(mapping = aes(x = -5,
-                             xend = tmp.x,
-                             y = tmp.y,
-                             yend = tmp.y),
-               size = 1,
-               color = "blue") +
-  scale_x_continuous(breaks = -5:5) + 
-  coord_cartesian(xlim = c(-5, 5),
-                  ylim = c(0, 1.05),
-                  expand = F)
-
-# remove all variables with tmp in their name 
-rm(list = str_subset(string = ls(), pattern = "tmp."))
-```
-
-Let's illustrate what this would look like using a normal density plot. 
-
-```{r simulation1-12}
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area",
-                fill = "lightblue",
-                xlim = c(-5, 1),
-                color = "black",
-                linetype = 2) +
-  stat_function(fun = "dnorm",
-                size = 1.5) +
-  coord_cartesian(xlim = c(-5, 5)) +
-  scale_x_continuous(breaks = -5:5) +
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) 
-```
-
-### Inverse cumulative distribution 
-
-```{r simulation1-13}
-ggplot(data = tibble(x = c(0, 1)),
-       mapping = aes(x = x)) +
-  stat_function(fun = ~ qnorm(p = ., 
-                              mean = 0,
-                              sd = 1))
-```
-
-And let's compute the inverse cumulative probability for a particular value. 
-
-```{r simulation1-14}
-# tmp.x = 0.841
-tmp.x = 0.975
-tmp.y = qnorm(tmp.x, mean = 0, sd = 1)
-
-print(tmp.y %>% round(3))
-
-# draw the cumulative probability distribution and show the value
-ggplot(data = tibble(x = c(0, 1)),
-       mapping = aes(x = x)) +
-  stat_function(fun = "qnorm",
-                args = list(mean = 0,
-                            sd = 1)) +
-  annotate(geom = "point",
-           x = tmp.x, 
-           y = tmp.y,
-           size = 4,
-           color = "blue") +
-  geom_segment(mapping = aes(x = tmp.x,
-                             xend = tmp.x,
-                             y = -3,
-                             yend = tmp.y),
-               size = 1,
-               color = "blue") +
-  geom_segment(mapping = aes(x = 0,
-                             xend = tmp.x,
-                             y = tmp.y,
-                             yend = tmp.y),
-               size = 1,
-               color = "blue") +
-  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
-  coord_cartesian(xlim = c(0, 1.05),
-                  ylim = c(-3, 3),
-                  expand = F)
-
-# remove all variables with tmp in their name 
-rm(list = str_subset(string = ls(), pattern = "tmp."))
-```
-
-### Computing probabilities 
-
-#### Via probability distributions
-
-Let's compute the probability of observing a particular value $x$ in a given range. 
-
-```{r simulation1-15}
-# tmp.lower = -1
-# tmp.upper = 1
-
-# tmp.lower = -2
-# tmp.upper = 2
-
-# tmp.lower = qnorm(0.001)
-# tmp.upper = qnorm(0.95)
-
-# tmp.lower = qnorm(0.05)
-# tmp.upper = qnorm(0.999)
-
-tmp.lower = qnorm(0.025)
-tmp.upper = qnorm(0.975)
-
-tmp.prob = pnorm(tmp.upper) - pnorm(tmp.lower)
-
-ggplot(data = tibble(x = c(-5, 5)),
-       mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area",
-                fill = "lightblue",
-                xlim = c(tmp.lower, tmp.upper),
-                color = "black",
-                linetype = 2) +
-  stat_function(fun = "dnorm",
-                size = 1.5) +
-  annotate(geom = "text",
-           label = str_c(tmp.prob %>% round(2) * 100, "%"),
-           x = 0,
-           y = 0.2,
-           hjust = 0.5,
-           size = 10
-           ) +
-  coord_cartesian(xlim = c(-5, 5)) +
-  scale_x_continuous(breaks = -5:5) +
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.1))) 
-
-# remove all variables with tmp in their name 
-rm(list = str_subset(string = ls(), pattern = "tmp."))
-```
-
-We find that 95% of the density in the normal distribution is between -1.96 and 1.96. 
-
-#### Via sampling 
-
-We can also compute the probability of observing certain events using sampling. We first generate samples from the desired probability distribution, and then use these samples to compute our statistic of interest. 
-
-```{r simulation1-16}
-# let's compute the probability of observing a value within a certain range 
-tmp.lower = -1.96
-tmp.upper = 1.96
-
-# make example reproducible
-set.seed(1)
-
-# generate some samples and store them in a data frame 
-tmp.nsamples = 10000
-
-df.samples = tibble(sample = 1:tmp.nsamples,
-                    value = rnorm(n = tmp.nsamples, mean = 0, sd = 1))
-
-# compute the probability that s sample lies within the range of interest
-tmp.prob = df.samples %>% 
-  filter(value >= tmp.lower,
-         value <= tmp.upper) %>% 
-  summarize(prob = n()/tmp.nsamples)
-
-# illustrate the result using a histogram 
-ggplot(data = df.samples,
-       mapping = aes(x = value)) + 
-  geom_histogram(binwidth = 0.1,
-                 color = "black",
-                 fill = "lightblue") +
-  scale_x_continuous(breaks = -4:4, labels = -4:4) +
-  coord_cartesian(xlim = c(-4, 4), expand = F) +
-  geom_vline(xintercept = tmp.lower,
-             size = 1, 
-             color = "red",
-             linetype = 2) +
-  geom_vline(xintercept = tmp.upper,
-             size = 1, 
-             color = "red",
-             linetype = 2) +
-  annotate(geom = "label",
-           label = str_c(tmp.prob %>% round(3) * 100, "%"),
-           x = 0,
-           y = 200,
-           hjust = 0.5,
-           size = 10)
-
-# remove all variables with tmp in their name 
-rm(list = str_subset(string = ls(), pattern = "tmp."))
-```
-
-## Bayesian inference with the normal distribution
-
-Let's consider the following scenario. You are helping out at a summer camp. This summer, two different groups of kids go to the same summer camp. The chess kids, and the basketball kids. The chess summer camp is not quite as popular as the basketball summer camp (shocking, I know!). In fact, twice as many children have signed up for the basketball camp. 
-
-When signing up for the camp, the children were asked for some demographic information including their height in cm. Unsurprisingly, the basketball players tend to be taller on average than the chess players. In fact, the basketball players' height is approximately normally distributed with a mean of 180cm and a standard deviation of 10cm. For the chess players, the mean height is 170cm with a standard deviation of 8cm. 
-
-At the camp site, a child walks over to you and asks you where their gym is. You gage that the child is around 175cm tall. Where should you direct the child to? To the basketball gym, or to the chess gym? 
-
-### Analytic solution
-
-```{r simulation1-17}
-height = 175
-
-# priors 
-prior_basketball = 2/3 
-prior_chess = 1/3 
-
-# likelihood  
-mean_basketball = 180
-sd_basketball = 10
-
-mean_chess = 170
-sd_chess = 8
-
-likelihood_basketball = dnorm(height, mean = mean_basketball, sd = sd_basketball)
-likelihood_chess = dnorm(height, mean = mean_chess, sd = sd_chess)
-
-# posterior
-posterior_basketball = (likelihood_basketball * prior_basketball) / 
-  ((likelihood_basketball * prior_basketball) + (likelihood_chess * prior_chess))
-
-posterior_basketball %>% print()
-```
-
-### Solution via sampling
-
-Let's do the same thing via sampling. 
-
-```{r simulation1-18}
-# number of kids 
-tmp.nkids = 10000
-
-# make reproducible 
-set.seed(1)
-
-# priors 
-prior_basketball = 2/3 
-prior_chess = 1/3 
-
-# likelihood functions 
-mean_basketball = 180
-sd_basketball = 10
-
-mean_chess = 170
-sd_chess = 8
-
-# data frame with the kids
-df.camp = tibble(kid = 1:tmp.nkids,
-                 sport = sample(c("chess", "basketball"),
-                                size = tmp.nkids,
-                                replace = T,
-                                prob = c(prior_chess, prior_basketball))) %>% 
-  rowwise() %>% 
-  mutate(height = ifelse(test = sport == "chess",
-                         yes = rnorm(., mean = mean_chess, sd = sd_chess),
-                         no = rnorm(., mean = mean_basketball, sd = sd_basketball))) %>% 
-  ungroup
-
-df.camp %>% print()
-```
-
-Now we have a data frame with kids whose height was randomly sampled depending on which sport they do. I've used the `sample()` function to assign a sport to each kid first using the `prob = ` argument to make sure that a kid is more likely to be assigned the sport "basketball" than "chess". 
-
-Note that the solution above is not particularly efficient since it uses the `rowwise()` function to make sure that a different random value for height is drawn for each row. Running this code will get slow for large samples. A more efficient solution would be the following: 
-
-```{r simulation1-19}
-# number of kids 
-tmp.nkids = 100000
-
-# make reproducible 
-set.seed(3)
-
-df.camp2 = tibble(
-  kid = 1:tmp.nkids,
-  sport = sample(c("chess", "basketball"),
-                 size = tmp.nkids,
-                 replace = T,
-                 prob = c(prior_chess, prior_basketball))) %>% 
-  arrange(sport) %>% 
-  mutate(height = c(rnorm(sum(sport == "basketball"),
-                          mean = mean_basketball,
-                          sd = sd_basketball),
-                    rnorm(sum(sport == "chess"),
-                          mean = mean_chess,
-                          sd = sd_chess)))
-```
-
-In this solution, I take advantage of the fact that `rnorm()` is vectorized. That is, it can produce many random draws in one call. To make this work, I first arrange the data frame, and then draw the correct number of samples from each of the two distributions. This works fast, even if I'm drawing a large number of samples. 
-
-How can we now use these samples to answer our question of interest? Let's see what doesn't work first: 
-
-```{r simulation1-20, eval=F}
-tmp.height = 175
-
-df.camp %>% 
-  filter(height == tmp.height) %>% 
-  count(sport) %>% 
-  pivot_wider(names_from = sport, values_from = n) %>% 
-  summarize(prob_basketball = basketball/(basketball + chess))
-```
-
-The reason this doesn't work is because none of our kids is exactly 175cm tall. Instead, we need to filter kids that are within a certain height range. 
-
-```{r simulation1-21}
-tmp.height = 175
-tmp.margin = 1
-
-df.camp %>% 
-  filter(between(height,
-          left = tmp.height - tmp.margin,
-          right = tmp.height + tmp.margin)) %>% 
-  count(sport) %>% 
-  pivot_wider(names_from = sport,
-              values_from = n) %>% 
-  summarize(prob_basketball = basketball/(basketball + chess))
-```
-
-Here, I've used the `between()` function which is a shortcut for otherwise writing `x >= left & x <= right`. You can play around with the margin to see how the result changes. 
-
-## Working with samples
+To keep my environment clean, I've named the parameters `tmp.nsamples` and `tmp.binwidth` and then, at the end of the code chunk, I removed all variables from the environment that have "tmp." in their name using the `ls()` function (which prints out all variables in the environment as a vector), and the `str_subset()` function which filters out only those variables that contain the specified pattern.
 
 ### Understanding `density()`
 
 First, let's calculate the density for a set of observations and store them in a data frame.
 
-```{r simulation1-22, fig.cap='Density estimation.'}
+```{r, fig.cap='Density estimation.'}
 
 # calculate density
 observations = c(1, 1.2, 1.5, 2, 3)
@@ -566,7 +272,7 @@ df.density %>%
 
 Now, let's plot the density. 
 
-```{r simulation1-23}
+```{r}
 ggplot(data = df.density, 
        mapping = aes(x = x, y = y)) +
   geom_line(size = 2) +
@@ -577,7 +283,7 @@ ggplot(data = df.density,
 
 This density shows the sum of the densities of normal distributions that are centered at the observations with the specified bandwidth. 
 
-```{r simulation1-24}
+```{r}
 # add densities for the individual normal distributions
 for (i in 1:length(observations)){
   df.density[[str_c("observation_",i)]] = dnorm(df.density$x,
@@ -599,7 +305,7 @@ df.density %>%
 
 Now, let's plot the individual densities as well as the overall density.
 
-```{r simulation1-25}
+```{r}
 # colors of individual Gaussian distributions 
 colors = c("blue", "green", "red", "purple", "orange")
 
@@ -633,7 +339,7 @@ p # print the figure
 
 Here are the same results when specifying a different bandwidth: 
 
-```{r simulation1-26}
+```{r}
 # colors of individual Gaussian distributions 
 colors = c("blue", "green", "red", "purple", "orange")
 
@@ -691,512 +397,430 @@ p = p +
 p
 ```
 
-### The `quantile()` function
 
-The `quantile()` function allows us to compute different quantiles of a sample. Boxplots are based on the quantiles of a distribution. To better understand this function, let's compute our own boxplot. 
+### Cumulative probability distribution
 
-```{r simulation1-27}
-tmp.samples = 1000
-
-# make example reproducible 
-set.seed(1)
-
-# a sample from the normal distribution
-df.quantile = tibble(
-  sample = 1:tmp.samples,
-  value = rnorm(n = tmp.samples))
-
-df.quantile %>% 
-  head(10) %>% 
-kable(digits = 2) %>% 
-kable_styling(bootstrap_options = "striped",
-              full_width = F)
-
+```{r}
+ggplot(data = tibble(height = c(150, 210)),
+       mapping = aes(x = height)) +
+  stat_function(fun = ~ pnorm(q = ., 
+                              mean = 180, 
+                              sd = 10)) + 
+  labs(x = "height", y = "cumulative probability") + 
+  scale_x_continuous(breaks = c(160, 180, 200)) + 
+  coord_cartesian(xlim = c(150, 210),
+                  ylim = c(0, 1.05),
+                  expand = F)
 ```
 
-Let's draw a boxplot using ggplot. 
+Let's find the cumulative probability of a particular value. 
 
-```{r simulation1-28}
-ggplot(data = df.quantile,
-       mapping = aes(x = "", y = value)) +
-  geom_boxplot()
+```{r}
+tmp.x = 190
+tmp.y = pnorm(tmp.x, mean = 180, sd = 10)
+
+print(tmp.y %>% round(3))
+
+# draw the cumulative probability distribution and show the value
+ggplot(data = tibble(height = c(150, 210)),
+       mapping = aes(x = height)) +
+  stat_function(fun = ~ pnorm(q = .,
+                              mean = 180, 
+                              sd = 10 )) +
+  annotate(geom = "point",
+           x = tmp.x, 
+           y = tmp.y,
+           size = 4,
+           color = "blue") +
+  geom_segment(mapping = aes(x = tmp.x,
+                             xend = tmp.x,
+                             y = 0,
+                             yend = tmp.y),
+               size = 1,
+               color = "blue") +
+  geom_segment(mapping = aes(x = -5,
+                             xend = tmp.x,
+                             y = tmp.y,
+                             yend = tmp.y),
+               size = 1,
+               color = "blue") +
+  labs(x = "height", y = "cumulative probability") + 
+  scale_x_continuous(breaks = c(160, 180, 200)) + 
+  coord_cartesian(xlim = c(150, 210),
+                  ylim = c(0, 1.05),
+                  expand = F)
+
+# remove all variables with tmp in their name 
+rm(list = str_subset(string = ls(), pattern = "tmp."))
 ```
 
-Here is a reminder of what boxplots show from the help file of `geom_boxplot()`:
+Let's illustrate what this would look like using a normal density plot. 
 
-> The lower and upper hinges correspond to the first and third quartiles (the 25th and 75th percentiles). This differs slightly from the method used by the boxplot() function, and may be apparent with small samples. See boxplot.stats() for for more information on how hinge positions are calculated for boxplot().
-
-> The upper whisker extends from the hinge to the largest value no further than 1.5 \* IQR from the hinge (where IQR is the inter-quartile range, or distance between the first and third quartiles). The lower whisker extends from the hinge to the smallest value at most 1.5 \* IQR of the hinge. Data beyond the end of the whiskers are called "outlying" points and are plotted individually.
-
-So, let's compute the relevant values using the `quantile()` function.
-
-```{r simulation1-29}
-df.quantile_values = tibble(median = quantile(df.quantile$value, 0.5),
-                            quartile_first = quantile(df.quantile$value, 0.25),
-                            quartile_third = quantile(df.quantile$value, 0.75),
-                            iqr = quartile_third - quartile_first,
-                            whisker_upper = quartile_third + 1.5 * iqr,
-                            whisker_lower = quartile_first - 1.5 * iqr)
-
+```{r}
+ggplot(data = tibble(height = c(150, 210)),
+       mapping = aes(x = height)) + 
+  stat_function(fun = ~ dnorm(., mean = 180, sd = 10),
+                geom = "area",
+                fill = "lightblue",
+                xlim = c(150, 190)) +
+  stat_function(fun = ~ dnorm(., mean = 180, sd = 10),
+                size = 1.5) +
+  labs(x = "height", y = "density") + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  scale_x_continuous(breaks = c(160, 180, 200)) + 
+  coord_cartesian(xlim = c(150, 210))
 ```
 
-Now, let's check whether our values are correct by plotting them on top of the boxplot. 
+### Inverse cumulative distribution 
 
-```{r simulation1-30}
-# original boxplot 
-ggplot(data = df.quantile,
-       mapping = aes(x = 0, y = value)) +
-  geom_boxplot() +
-  geom_segment(x = -0.75,
-               xend = -0.45,
-               y = df.quantile_values$median,
-               yend = df.quantile_values$median,
-               arrow = arrow(type = "closed",
-                             length = unit(0.5, "cm"))
-               ) +
-  annotate(geom = "text",
-           label = "median",
-           x = -0.8,
-           y = df.quantile_values$median,
-           hjust = 1,
-           vjust = 0.5,
-           size = 6) +
-  geom_segment(x = -0.75,
-               xend = -0.45,
-               y = df.quantile_values$quartile_third,
-               yend = df.quantile_values$quartile_third,
-               arrow = arrow(type = "closed",
-                             length = unit(0.5, "cm"))
-               ) +
-  annotate(geom = "text",
-           label = "3rd quartile",
-           x = -0.8,
-           y = df.quantile_values$quartile_third,
-           hjust = 1,
-           vjust = 0.5,
-           size = 6) +
-  geom_segment(x = -0.75,
-               xend = -0.05,
-               y = df.quantile_values$whisker_upper,
-               yend = df.quantile_values$whisker_upper,
-               arrow = arrow(type = "closed",
-                             length = unit(0.5, "cm"))
-               ) +
-  annotate(geom = "text",
-           label = "upper whisker",
-           x = -0.8,
-           y = df.quantile_values$whisker_upper,
-           hjust = 1,
-           vjust = 0.5,
-           size = 6) +
-  coord_cartesian(xlim = c(-1.2, 0.5))
+```{r}
+ggplot(data = tibble(probability = c(0, 1)),
+       mapping = aes(x = probability)) +
+  stat_function(fun = ~ qnorm(p = ., 
+                              mean = 180,
+                              sd = 10)) + 
+  labs(y = "height", 
+       x = "cumulative probability") + 
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
+  scale_y_continuous(limits = c(160, 200)) + 
+  coord_cartesian(xlim = c(0, 1.05),
+                  expand = F)
 ```
 
-Neat! Now we know how boxplots are made. 
+And let's compute the inverse cumulative probability for a particular value. 
 
-We can also use the quantile function to create an inverse cumulative probability plot (i.e. the equivalent of what we get from `qnorm()` for the normal distribution). 
+```{r}
+tmp.x = 0.3
+tmp.y = qnorm(tmp.x, mean = 180, sd = 10)
 
-```{r simulation1-31}
-df.plot = df.quantile$value %>% 
-  quantile(probs = seq(0, 1, 0.01)) %>% 
-  as_tibble() %>% 
-  mutate(x = seq(0, n(), length.out = n()))
+print(tmp.y %>% round(3))
 
-ggplot(data = df.plot,
-       mapping = aes(x = x, y = value)) +
-  geom_line()
+# draw the cumulative probability distribution and show the value
+ggplot(data = tibble(probability = c(0, 1)),
+       mapping = aes(x = probability)) +
+  stat_function(fun = ~ qnorm(., mean = 180, sd = 10)) +
+  annotate(geom = "point",
+           x = tmp.x, 
+           y = tmp.y,
+           size = 4,
+           color = "blue") +
+  geom_segment(mapping = aes(x = tmp.x,
+                             xend = tmp.x,
+                             y = 160,
+                             yend = tmp.y),
+               size = 1,
+               color = "blue") +
+  geom_segment(mapping = aes(x = 0,
+                             xend = tmp.x,
+                             y = tmp.y,
+                             yend = tmp.y),
+               size = 1,
+               color = "blue") +
+  labs(x = "cumulative probability",
+       y = "height") + 
+  scale_x_continuous(breaks = seq(from = 0, to = 1, by = 0.1)) + 
+  scale_y_continuous(limits = c(160, 200)) + 
+  coord_cartesian(xlim = c(0, 1.05),
+                  expand = F)
 
+# remove all variables with tmp in their name 
+rm(list = str_subset(string = ls(), pattern = "tmp."))
 ```
 
-And we can calculate quantiles by hand in the following way: 
+### Computing probabilities 
 
-```{r simulation1-32}
+#### Via probability distributions
 
-tmp.samples = 1000
+Let's compute the probability of observing a particular value $x$ in a given range. 
 
-# make example reproducible 
-set.seed(1)
+```{r}
+tmp.lower = 170
+tmp.upper = 180
 
-# a sample from the normal distribution
-df.quantile = tibble(
-  sample = 1:tmp.samples,
-  value = rnorm(n = tmp.samples))
+tmp.prob = pnorm(tmp.upper, mean = 180, sd = 10) - 
+  pnorm(tmp.lower, mean = 180, sd = 10)
 
-# compute quantiles by hand 
-df.quantile = df.quantile %>% 
-  arrange(value) %>% 
-  mutate(rank = row_number(),
-         quantile = rank/tmp.samples)
-```
+tmp.prob
 
-To compute the quantiles by hand, I've sorted the data frame, ranked the values, and then computed the quantiles by normalizing the ranks (i.e. dividing by the sample size). 
-
-Let's check whether we get roughly the same result with our hand-calculated quantiles as we do from the `quantile()` function. 
-
-```{r simulation1-33}
-
-# by hand 
-df.quantile %>% 
-  filter(rank %in% seq(from = 200, to = 800, by = 200)) %>% 
-  pull(value)
-
-# using quantile
-quantile(df.quantile$value, probs = seq(0.2, 0.8, 0.2))
-```
-
-As we can see, the results are very similar. Not identical since the `quantile()` function uses an efficient algorithm for its calculations (see `help(quantile)`).
-
-## Comparing probability distributions 
-
-QQ plots, or quantile-quantile plots, are a good way of visually comparing two distributions. One common usage in statistics is to assess whether a variable is normally distributed. For example, let's say that we fit a regression model and want to now assess whether the residuals (i.e. the model errors) are normally distributed. (We will learn how to run regressions soon). Let's first just plot the residuals from the model we fit above. 
-
-```{r simulation1-34, fig.cap="Empirical distribution of residuals, and theoretical distribution."}
-
-df.residuals = tibble(residual = rnorm(n = 10000,
-                                       mean = 0,
-                                       sd = 10))
-
-params = as.list(MASS::fitdistr(df.residuals$residual, "normal")$estimate) #fit a normal distribution to the residuals 
-
-ggplot(data = df.residuals,
-       mapping = aes(x = residual))+
-  stat_density(geom = "line",
-               mapping = aes(color = "green"),
-               size = 1.5)+
-  stat_function(fun = "dnorm",
-                args = params,
-                mapping = aes(color = "black"),
-                size = 1.5)+
-  scale_color_manual(values = c("black", "green"),
-                     labels = c("theoretical", "empirical")) +
-  theme(legend.title = element_blank(),
-        legend.position = c(0.9, 0.9))
-```
-
-Here, the empirical distribution of the errors and the theoretical normal distribution with a mean of 0 and a SD of 2 correspond very closely. Let's take a look at the corresponding QQ plot. 
-
-```{r simulation1-35, fig.cap="Quantile-Quantile plot."}
-ggplot(data = df.residuals, mapping = aes(sample = residual)) +
-  geom_abline(intercept = 0,
-              slope = 1,
-              linetype = 2) +
-  geom_qq(distribution = "qnorm", dparams = params) +
-  coord_cartesian(xlim = c(-40, 40), ylim = c(-40, 40))
-```
-
-Note that the QQ plot is sensitive to the general shape of the distribution. 
-
-I've used the `geom_qq()` and `geom_qq_line()` functions that are part of `ggplot`. By default, these functions assume a normal distribution as the theoretical distribution. This plot is just another way of showing the information in Figure \@ref(fig:simulation1-35). Intuitively, a QQ plot is built in the following way: imagine going with your finger from left to right along the x-axis on Figure \@ref(fig:simulation1-35), and then add a point on the QQ plot which captures the cumulative density for each distribution. 
-
-Here are some more examples for what these plots would look like when comparing different theoretical distributions to the same empirical distribution. 
-
-```{r simulation1-36, message=FALSE, warning=FALSE}
-# data frame with parameters saved in a list column 
-df.parameters = tibble(parameters = list(params,
-                                         list(mean = -10, sd = 10),
-                                         list(mean = 10, sd = 10),
-                                         list(mean = 0, sd = 3)))
-
-# list container for plots
-l.plots = list()
-
-for (i in 1:nrow(df.parameters)){
-  p1 = ggplot(data = df.residuals,
-              mapping = aes(x = residual)) +
-    stat_density(geom = "line",
-                 color = "green",
-                 size = 1.5) +
-    stat_function(fun = "dnorm",
-                  args = df.parameters$parameters[[i]],
-                  color = "black",
-                  size = 1.5) +
-    scale_y_continuous(limits = c(0, 0.15))
-  
-  p2 = ggplot(data = df.residuals,
-              mapping = aes(sample = residual)) +
-    geom_abline(intercept = 0,
-                slope = 1,
-                linetype = 2) +
-    geom_qq(dparams = df.parameters$parameters[[i]]) +
-    geom_qq_line(dparams = df.parameters$parameters[[i]]) +
-    scale_x_continuous(limits = c(-40, 40))
-  
-  l.plots[[length(l.plots) + 1]] = p1
-  l.plots[[length(l.plots) + 1]] = p2
-}
-
-# use patchwork for plotting 
-wrap_plots(l.plots,
-           nrow = 2,
-           byrow = F)
-
-# ggsave("figures/qqplots_normal.pdf", width = 10, height = 6)
-```
-
-The line changes, but it's still a line. So the QQ plot helps us detect what kind of distribution the data follows. 
-
-Now, let's see what happens if distributions don't have the same shape. 
-
-```{r simulation1-37, warning=FALSE}
-
-#let's generate some "empirical" data from a beta distribution 
-set.seed(0)
-
-df.plot = tibble(residual = rbeta(1000,
-                                  shape1 = 5,
-                                  shape2 = 5))
-
-# data frame with parameters saved in a list column 
-df.parameters = tibble(parameters = list(list(shape1 = 1, shape2 = 5),
-                                         list(shape1 = 2, shape2 = 5),
-                                         list(shape1 = 5, shape2 = 2),
-                                         list(shape1 = 5, shape2 = 1)))
-
-# list container for plots
-l.plots = list()
-
-for (i in 1:nrow(df.parameters)){
-  p1 = ggplot(data = df.plot,
-              mapping = aes(x = residual))+
-    stat_density(geom = "line",
-                 color = "green",
-                 size = 1.5)+
-    stat_function(fun = "dbeta",
-                  args = df.parameters$parameters[[i]],
-                  color = "black",
-                  size = 1.5) + 
-    scale_y_continuous(limits = c(0, 3.5))
-  
-  p2 = ggplot(data = df.plot,
-              mapping = aes(sample = residual))+
-    geom_abline(intercept = 0,
-                slope = 1,
-                linetype = 2)+
-    geom_qq(distribution = "qbeta", dparams = df.parameters$parameters[[i]]) +
-    scale_x_continuous(limits = c(0, 1), breaks = seq(.25, .75, .25))
-  
-  l.plots[[length(l.plots) + 1]] = p1
-  l.plots[[length(l.plots) + 1]] = p2
-}
-
-# use patchwork for plotting 
-wrap_plots(l.plots,
-           nrow = 2,
-           byrow = F)
-
-# ggsave("figures/qqplots_beta.pdf", width = 10, height = 6)
-```
-
-```{r simulation1-38, echo=FALSE, out.width='90%', fig.cap="QQ plots indicating different deviations from normality."}
-include_graphics("figures/qqplots.png")
-```
-
-## Relationship between probability and likelihood 
-
-```{r simulation1-39, fig.cap="Probability is the area under the curve of the density"}
-
-margin = 1
-point = 0
-
-ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area", 
-                xlim = c(point - margin, point + margin),
-                fill = "red", 
-                alpha = 0.5) + 
-  stat_function(fun = "dnorm",
-                size = 1) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-```
-
-```{r simulation1-40, fig.cap="Likelihood is a particular value."}
-point = 0
-param_mean = 1
-param_sd = 1
-
-ggplot(data = tibble(x = c(-3, 3)),
+ggplot(data = tibble(x = c(150, 210)),
        mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                size = 1,
-                args = list(mean = param_mean,
-                            sd = param_sd)) +
-  geom_segment(aes(
-    x = point,
-    y = 0,
-    xend = point,
-    yend = dnorm(point, mean = param_mean, sd = param_sd)),
-    color = "red",
-    size = 1
-  ) +
-  geom_segment(aes(
-    x = -3, 
-    y = dnorm(point, mean = param_mean, sd = param_sd),
-    xend = point,
-    yend = dnorm(point, mean = param_mean, sd = param_sd)),
-    color = "red",
-    size = 1) +
-  geom_point(x = point,
-             y = dnorm(point, mean = param_mean, sd = param_sd),
-             shape = 21,
-             fill = "red",
-             size = 4) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+  stat_function(fun = ~ dnorm(., mean = 180, sd = 10),
+                geom = "area",
+                fill = "lightblue",
+                xlim = c(tmp.lower, tmp.upper),
+                color = "black",
+                linetype = 2) +
+  stat_function(fun = ~ dnorm(., mean = 180, sd = 10),
+                size = 1.5) +
+  labs(x = "height",
+       y = "density") + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  scale_x_continuous(breaks = c(160, 180, 200)) + 
+  coord_cartesian(xlim = c(150, 210))
+
+# remove all variables with tmp in their name 
+rm(list = str_subset(string = ls(), pattern = "tmp."))
 ```
 
-```{r simulation1-41, fig.cap="Relationship between density and cumulative probability distribution."}
+We find that ~34% of the heights are between 170 and 180 cm. 
 
-point = 1
+#### Via sampling 
 
-p1 = ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area", 
-                xlim = c(-3, point),
-                fill = "red", 
-                alpha = 0.5) +
-  stat_function(fun = "dnorm",
-                size = 1) +
-  geom_point(x = point,
-             y = dnorm(point),
-             shape = 21,
-             fill = "red",
-             size = 3) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+We can also compute the probability of observing certain events using sampling. We first generate samples from the desired probability distribution, and then use these samples to compute our statistic of interest. 
 
-p2 = ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "pnorm",
-                size = 1) + 
-  geom_segment(mapping = aes(x = -3, 
-                             y = pnorm(point),
-                             xend = point,
-                             yend = pnorm(point)),
-               color = "red",
-               size = 1) + 
-  geom_point(x = point,
-             y = pnorm(point),
-             shape = 21,
-             fill = "red",
-             size = 3) +
-  labs(y = "cum prob") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(breaks = c(0, 0.5, 1),
-                     expand = expand_scale(add = c(0.01, 0.1)))
 
-p1 + p2 +
-  plot_layout(ncol = 1)
+```{r}
+# let's compute the probability of observing a value within a certain range 
+tmp.lower = 170
+tmp.upper = 180
+
+# make example reproducible
+set.seed(1)
+
+# generate some samples and store them in a data frame 
+tmp.nsamples = 10000
+
+df.samples = tibble(height = rnorm(n = tmp.nsamples, mean = 180, sd = 10))
+
+# compute the probability that sample lies within the range of interest
+tmp.prob = df.samples %>% 
+  filter(height >= tmp.lower,
+         height <= tmp.upper) %>% 
+  summarize(prob = n()/tmp.nsamples)
+
+# illustrate the result using a histogram 
+ggplot(data = df.samples,
+       mapping = aes(x = height)) + 
+  geom_histogram(binwidth = 1,
+                 color = "black",
+                 fill = "lightblue") +
+  geom_vline(xintercept = tmp.lower,
+             size = 1, 
+             color = "red",
+             linetype = 2) +
+  geom_vline(xintercept = tmp.upper,
+             size = 1, 
+             color = "red",
+             linetype = 2) +
+  annotate(geom = "label",
+           label = str_c(tmp.prob %>% round(3) * 100, "%"),
+           x = 175,
+           y = 200,
+           hjust = 0.5,
+           size = 10) + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(x = "height")
+
+# remove all variables with tmp in their name 
+rm(list = str_subset(string = ls(), pattern = "tmp."))
+```
+## Breakout room exercise 
+
+### Make the plot 
+
+```{r}
+ggplot(data = tibble(height = c(30, 70)),
+       mapping = aes(x = height)) +
+  stat_function(fun = ~ dgamma(., shape = 50, rate = 1))
 ```
 
-```{r simulation1-42, fig.cap="The density is the first derivative of the cumulative probability distribution. The likelihood is the value of the slope in the cumulative probability distribution."}
+### Analytic solutions 
 
-point = 0
+#### Question: A 60cm tall Penguin claims that no more than 10% are taller than her. Is she correct?
 
-p1 = ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  geom_segment(mapping = aes(x = -3, 
-                             y = dnorm(point),
-                             xend = point,
-                             yend = dnorm(point)),
-               color = "red",
-               size = 1) + 
-  stat_function(fun = "dnorm",
-                size = 1) +
-  geom_point(x = point,
-             y = dnorm(point),
-             shape = 21,
-             fill = "red",
-             size = 3) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-
-p2 = ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "pnorm",
-                size = 1) + 
-  geom_abline(slope = dnorm(point),
-              intercept = pnorm(point) - dnorm(point) * point,
-              color = "red",
-              size = 1) +
-  geom_point(x = point,
-             y = pnorm(point),
-             shape = 21,
-             fill = "red",
-             size = 3) +
-  labs(y = "cum prob") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(breaks = c(0, 0.5, 1),
-                     expand = expand_scale(add = c(0.01, 0.1)))
-
-p1 + p2 +
-  plot_layout(ncol = 1)
+```{r}
+1 - pgamma(60, shape = 50, rate = 1)
 ```
 
-```{r simulation1-43, fig.cap="The relative likelihood of two observations is the same as the relative probability of two areas under the curve as the margin of these areas goes to 0."}
-margin = 0.1
-point_blue = -1
-point_red = 0
+Answer: Yes, she is correct. Only ~ 8.4% of Penguins are taller than her. 
 
-ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                geom = "area", 
-                xlim = c(point_red - margin, point_red + margin),
-                fill = "red", 
-                alpha = 0.5) + 
-  stat_function(fun = "dnorm",
-                geom = "area", 
-                xlim = c(point_blue - margin, point_blue + margin),
-                fill = "blue", 
-                alpha = 0.5) + 
-  stat_function(fun = "dnorm",
-                size = 1) +
-  geom_segment(mapping = aes(x = -3, 
-                             y = dnorm(point_red),
-                             xend = point_red,
-                             yend = dnorm(point_red)),
-               color = "red",
-               size = 1) +
-  geom_segment(mapping = aes(x = -3, 
-                             y = dnorm(point_blue),
-                             xend = point_blue,
-                             yend = dnorm(point_blue)),
-               color = "blue",
-               size = 1) + 
-  geom_point(x = point_red,
-             y = dnorm(point_red),
-             shape = 21,
-             fill = "red",
-             size = 4) +
-  geom_point(x = point_blue,
-             y = dnorm(point_blue),
-             shape = 21,
-             fill = "blue",
-             size = 4) +
-  labs(y = "density") +
-  scale_x_continuous(breaks = -2:2,
-                     expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
+#### Question:  Are there more penguins between 50 and 55cm or between 55 and 65cm?
 
-(pnorm(point_red + margin) - pnorm(point_red - margin)) / 
-  (pnorm(point_blue + margin) - pnorm(point_blue - margin)) 
+```{r}
+first_range = pgamma(55, shape = 50, rate = 1) - pgamma(50, shape = 50, rate = 1)
+second_range = pgamma(65, shape = 50, rate = 1) - pgamma(55, shape = 50, rate = 1)
 
-dnorm(point_red) / dnorm(point_blue)
+first_range - second_range
 ```
 
+Answer: There are 4% more Penguins between 50 and 55cm than between 55 and 65 cm. 
+
+#### Question: What size is a Penguin who is taller than 75% of the rest?
+
+```{r}
+qgamma(0.75, shape = 50, rate = 1)
+```
+
+Answer: A Penguin who is ~54.6cm tall is taller than 75% of the rest. 
+
+### Sampling solution 
+
+Let's just simulate a bunch of Penguins, yay! 
+
+```{r}
+set.seed(1)
+df.penguins = tibble(height = rgamma(n = 100000, shape = 50, rate = 1))
+```
+  
+#### Question: A 60cm tall Penguin claims that no more than 10% are taller than her. Is she correct?
+
+```{r}
+df.penguins %>% 
+  # mutate(taller_than_60 = height > 60)
+  summarize(probability = sum(height > 60) / n())
+```
+
+Answer: Yes, she is correct. Only ~ 8.3% of Penguins are taller than her. 
+
+#### Question: Are there more penguins between 50 and 55cm or between 55 and 65cm?
+
+```{r}
+df.penguins %>% 
+  summarize(probability = (sum(between(height, 50, 55)) - sum(between(height, 55, 65)))/n())
+```
+
+Answer: There are 3.9% more Penguins between 50 and 55cm than between 55 and 65 cm. 
+
+#### Question: What size is a Penguin who is taller than 75% of the rest?
+
+```{r}
+df.penguins %>% 
+  arrange(height) %>%
+  slice_head(prop = 0.75) %>% 
+  summarize(height = max(height))
+```
+
+Answer: A Penguin who is ~54.6cm tall is taller than 75% of the rest.
+
+
+## Bayesian inference with the normal distribution
+
+Let's consider the following scenario. You are helping out at a summer camp. This summer, two different groups of kids go to the same summer camp. The chess kids, and the basketball kids. The chess summer camp is not quite as popular as the basketball summer camp (shocking, I know!). In fact, twice as many children have signed up for the basketball camp. 
+
+When signing up for the camp, the children were asked for some demographic information including their height in cm. Unsurprisingly, the basketball players tend to be taller on average than the chess players. In fact, the basketball players' height is approximately normally distributed with a mean of 180cm and a standard deviation of 10cm. For the chess players, the mean height is 170cm with a standard deviation of 8cm. 
+
+At the camp site, a child walks over to you and asks you where their gym is. You gage that the child is around 175cm tall. Where should you direct the child to? To the basketball gym, or to the chess gym? 
+
+### Analytic solution
+
+```{r}
+height = 175
+
+# priors 
+prior_basketball = 2/3 
+prior_chess = 1/3 
+
+# likelihood  
+mean_basketball = 180
+sd_basketball = 10
+
+mean_chess = 170
+sd_chess = 8
+
+likelihood_basketball = dnorm(height, mean = mean_basketball, sd = sd_basketball)
+likelihood_chess = dnorm(height, mean = mean_chess, sd = sd_chess)
+
+# posterior
+posterior_basketball = (likelihood_basketball * prior_basketball) / 
+  ((likelihood_basketball * prior_basketball) + (likelihood_chess * prior_chess))
+
+posterior_basketball %>% print()
+```
+
+### Solution via sampling
+
+Let's do the same thing via sampling. 
+
+```{r}
+# number of kids 
+tmp.nkids = 10000
+
+# make reproducible 
+set.seed(1)
+
+# priors 
+prior_basketball = 2/3 
+prior_chess = 1/3 
+
+# likelihood functions 
+mean_basketball = 180
+sd_basketball = 10
+
+mean_chess = 170
+sd_chess = 8
+
+# data frame with the kids
+df.camp = tibble(kid = 1:tmp.nkids,
+                 sport = sample(c("chess", "basketball"),
+                                size = tmp.nkids,
+                                replace = T,
+                                prob = c(prior_chess, prior_basketball))) %>% 
+  rowwise() %>% 
+  mutate(height = ifelse(test = sport == "chess",
+                         yes = rnorm(., mean = mean_chess, sd = sd_chess),
+                         no = rnorm(., mean = mean_basketball, sd = sd_basketball))) %>% 
+  ungroup
+
+df.camp %>% print()
+```
+
+Now we have a data frame with kids whose height was randomly sampled depending on which sport they do. I've used the `sample()` function to assign a sport to each kid first using the `prob = ` argument to make sure that a kid is more likely to be assigned the sport "basketball" than "chess". 
+
+Note that the solution above is not particularly efficient since it uses the `rowwise()` function to make sure that a different random value for height is drawn for each row. Running this code will get slow for large samples. A more efficient solution would be the following: 
+
+```{r}
+# number of kids 
+tmp.nkids = 100000
+
+# make reproducible 
+set.seed(3)
+
+df.camp2 = tibble(
+  kid = 1:tmp.nkids,
+  sport = sample(c("chess", "basketball"),
+                 size = tmp.nkids,
+                 replace = T,
+                 prob = c(prior_chess, prior_basketball))) %>% 
+  arrange(sport) %>% 
+  mutate(height = c(rnorm(sum(sport == "basketball"),
+                          mean = mean_basketball,
+                          sd = sd_basketball),
+                    rnorm(sum(sport == "chess"),
+                          mean = mean_chess,
+                          sd = sd_chess)))
+```
+
+In this solution, I take advantage of the fact that `rnorm()` is vectorized. That is, it can produce many random draws in one call. To make this work, I first arrange the data frame, and then draw the correct number of samples from each of the two distributions. This works fast, even if I'm drawing a large number of samples. 
+
+How can we now use these samples to answer our question of interest? Let's see what doesn't work first: 
+
+```{r, eval=F}
+tmp.height = 175
+
+df.camp %>% 
+  filter(height == tmp.height) %>% 
+  count(sport) %>% 
+  pivot_wider(names_from = sport, values_from = n) %>% 
+  summarize(prob_basketball = basketball/(basketball + chess))
+```
+
+The reason this doesn't work is because none of our kids is exactly 175cm tall. Instead, we need to filter kids that are within a certain height range. 
+
+```{r}
+tmp.height = 175
+tmp.margin = 1
+
+df.camp %>% 
+  filter(between(height,
+          left = tmp.height - tmp.margin,
+          right = tmp.height + tmp.margin)) %>% 
+  count(sport) %>% 
+  pivot_wider(names_from = sport,
+              values_from = n) %>% 
+  summarize(prob_basketball = basketball/(basketball + chess))
+```
+
+Here, I've used the `between()` function which is a shortcut for otherwise writing `x >= left & x <= right`. You can play around with the margin to see how the result changes. 
 
 ## Additional resources 
 

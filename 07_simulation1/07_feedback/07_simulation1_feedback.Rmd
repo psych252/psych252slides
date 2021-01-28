@@ -1,7 +1,7 @@
 ---
 title: "07_Simulation1"
 author: "Tobias Gerstenberg"
-date: "1/22/2020"
+date: "1/27/2021"
 output: 
   html_document:
     toc: true
@@ -13,47 +13,39 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
-theme_set(theme_classic() + 
-            theme(text = element_text(size = 20),
-                  panel.grid.major.y = element_line(color = "gray90")))
+
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
 ```
-
-> I would like to see, at the start, where these concepts we are learning will be used in the future. It is obvious that they are building blocks for useful skills we will learn. An example showcasing how these are used will better motivate the lecture.
-
-> I would've liked more context for knowing how and why different distribution shapes matter.
-
-> I really liked the combination of r code and abstract examples in the class notes (without spending time going through actual r examples in class). it helped me feel like I could actually go and apply the material to my own work later this afternoon.
-
-> Today's lecture felt very abstract, especially during the second half – I think it would have been more helpful to have more examples (similar to the summer camp example). I'm also wondering how these basic concepts relate to regression and think it might be helpful to understand that more broadly.
-
-> I think the class was a little too theoretical -- not because theory is bad, but because it wasn't really anchored by anything. I'm not sure what is important for me to know or not, or what the "key points" I should've taken away are. It was also a bit strange to think about these probabilities outside the context of hypotheses, for example. In any case, a more "narrative" lecture would've been helpful for me, personally.
-
-> It'd be great if you can walk through the codes more thoroughly and slowly. Some of the codes had a few functions or arguments that I was not familiar with.
-
-> I thought some of the more challenging audience participation exercises sometimes feel like you're putting the room on the spot a bit. I still think they're good, but maybe giving a bit more time to think it over might be useful.
-
-> The description of density. Clearest explanation of it I've had to-date. Really liked "seeing whats under the hood."
 
 ## Student feedback 
 
+> i liked working on the penguin questions in a breakout room, but i felt a little frustrated that we didn't have enough time to get through much of it. i'd have appreciated more focus on the different types of probability distributions/more explanation of when to use each
+
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-7.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
 ### PollEverywhere results 
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read.csv("how-was-the-pace-of-7.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
@@ -62,35 +54,25 @@ ggplot(data = df.pace,
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-7.csv") %>% 
-  set_names(c("response", "date")) %>% 
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
          response = factor(response, levels = 1:5,
                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
 ```
 
 ## What to do next time
 
-- this lecture needs some work
-- give a clear outlook at the beginning what the different things we are covering in this class will be useful for
-- make the first part of the lecture more concrete: use a particular distribution (e.g. height of students), and then illustrate how we can use the different functions to get answers to questions about these distributions 
-- do think, pair, share a bit more often (rather than directly asking the whole class)
-- make this class more interactive; have more breaks in this class that let students think about the concepts as they are being introduced 
-- maybe: spend a little bit of time in RStudio illustrating stuff 
-- summer camp example works well 
-  - maybe: have another version for which the solution cannot be derived analytically 
-  - maybe: illustrate how updating works with multiple data points (a whole bus of kids arrives and you want to figure out to which camp they are going)
-- better motivate the class by pointing out the kinds of things that we'll need to do (and how the tools will help us get there)
-- include some interactive parts (either running code directly, or having the students play around with code to answer some questions)
-- try and give real-world examples to illustrate particular concepts 
-- spend more time explaining the QQ plots (if they are included in future classes)
+- go slower: less is more! 
+- show density and cumulative probability distributions for a few examples (e.g. dnorm(), dexp(), dgamma(), ...)
