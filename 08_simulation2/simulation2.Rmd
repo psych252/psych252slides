@@ -1,7 +1,7 @@
 ---
 title: "Class 8"
 author: "Tobias Gerstenberg"
-date: "January 24th, 2020"
+date: "January 29th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,53 +11,44 @@ output:
     pandoc_args: ["--number-offset=7"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Simulation 2 
 
 In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
-- Central limit theorem 
+
 - Sampling distributions 
 - p-value
 - Confidence interval
+- Bootstrapping 
 
 ## Load packages and set plotting theme  
 
-```{r simulation2-01, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("janitor"))
 ```
 
-```{r simulation2-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r simulation2-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
-## The central limit theorem 
-
-> The Central Limit Theorem (CLT) states that the sample mean of a sufficiently large number of independent and identically distributed (i.i.d.) random variables is approximately normally distributed. The larger the sample, the better the approximation.  The theorem is a key ("central") concept in probability theory because it implies that statistical methods that work for normal distributions can be applicable to many problems involving other types of distributions.
-
-Here are some nice interactive illustrations of the CLT: 
-
-- [seeing-theory.brown.edu](https://seeing-theory.brown.edu/probability-distributions/index.html#section3)
-- [http://mfviz.com/central-limit/](http://mfviz.com/central-limit/)
+## Making statistical inferences (frequentist style)
 
 ### Population distribution 
 
 Let's first put the information we need for our population distribution in a data frame. 
 
-```{r simulation2-04}
+```{r}
 # the distribution from which we want to sample (aka the heavy metal distribution)
 df.population = tibble(numbers = 1:6,
                        probability = c(1/3, 0, 1/6, 1/6, 0, 1/3))
@@ -65,7 +56,7 @@ df.population = tibble(numbers = 1:6,
 
 And then let's plot it: 
 
-```{r simulation2-05}
+```{r}
 # plot the distribution 
 ggplot(data = df.population,
        mapping = aes(x = numbers,
@@ -81,7 +72,7 @@ ggplot(data = df.population,
 
 Here are the true mean and standard deviation of our population distribution: 
 
-```{r simulation2-06}
+```{r}
 # mean and standard deviation (see: https://nzmaths.co.nz/category/glossary/standard-deviation-discrete-random-variable)
 
 df.population %>% 
@@ -96,7 +87,7 @@ df.population %>%
 
 Let's draw a single sample of size $n = 40$ from the population distribution and plot it: 
 
-```{r simulation2-07}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -117,12 +108,12 @@ ggplot(data = df.sample,
                  fill = "lightblue",
                  color = "black") +
   scale_x_continuous(breaks = min(df.sample$number):max(df.sample$number)) + 
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01)))
+  scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
 
 Here are the sample mean and standard deviation:
 
-```{r simulation2-08}
+```{r}
 # print out sample mean and standard deviation 
 df.sample %>% 
   summarize(sample_mean = mean(number),
@@ -136,7 +127,7 @@ df.sample %>%
 
 And let's now create the sampling distribution (making the unrealistic assumption that we know the population distribution). 
 
-```{r simulation2-09}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -178,7 +169,7 @@ df.sampling_distribution_means = df.sampling_distribution %>%
 
 And plot it: 
 
-```{r simulation2-10}
+```{r}
 # plot a histogram of the means with density overlaid 
 df.plot = df.sampling_distribution_means %>% 
   sample_frac(size = 1, replace = T)
@@ -192,14 +183,14 @@ ggplot(data = df.plot,
   stat_density(bw = 0.1,
                size = 2,
                geom = "line") + 
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01)))
+  scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
 
-That's the central limit theorem in action! Even though our population distribution was far from normal (and much more heavy-metal like), the means of that distribution are normally distributed. 
+Even though our population distribution was far from normal (and much more heavy-metal like), the means of the sampling  distribution are normally distributed. 
 
 And here are the mean and standard deviation of the sampling distribution: 
 
-```{r simulation2-11}
+```{r}
 # print out sampling distribution mean and standard deviation 
 df.sampling_distribution_means %>% 
   summarize(sampling_distribution_mean = mean(mean),
@@ -211,7 +202,7 @@ df.sampling_distribution_means %>%
 
 Here is a data frame that I've used for illustrating the idea behind how a sampling distribution is constructed from the population distribution. 
 
-```{r simulation2-12}
+```{r}
 # data frame for illustration in class 
 df.sampling_distribution %>% 
   filter(sample <= 10, draw <= 4) %>% 
@@ -231,7 +222,7 @@ Of course, in actuality, we never have access to the population distribution. We
 
 It urns out that we can approximate the sampling distribution only using our actual sample. The idea is to take the sample that we drew, and generate new samples from it by drawing with replacement. Essentially, we are treating our original sample like the population from which we are generating random samples to derive the sampling distribution. 
 
-```{r simulation2-13}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -254,7 +245,7 @@ df.bootstrap = tibble(bootstrap = 1:n_samples,
 
 Let's plot the bootstrapped sampling distribution: 
 
-```{r simulation2-14}
+```{r}
 # plot the bootstrapped sampling distribution
 ggplot(data = df.bootstrap, 
        mapping = aes(x = average)) +
@@ -271,7 +262,7 @@ ggplot(data = df.bootstrap,
 
 And let's calculate the mean and standard deviation: 
 
-```{r simulation2-15}
+```{r}
 # print out sampling distribution mean and standard deviation 
 df.sampling_distribution_means %>% 
   summarize(bootstrapped_distribution_mean = mean(mean),
@@ -282,117 +273,6 @@ df.sampling_distribution_means %>%
 ```
 
 Neat, as we can see, the mean and standard deviation of the bootstrapped sampling distribution are very close to the sampling distribution that we generated from the population distribution. 
-
-### Exploring the CLT 
-
-How do sample size and the number of samples affect what the sampling distribution looks like? Here are some simulations. Feel free to play around with: 
-
-- the population distributions to sample from
-- the sample size for each sample 
-- the number of samples
-
-```{r simulation2-16}
-ggplot(data = tibble(x = c(0, 20)), aes(x = x)) +
-  stat_function(fun = "dnorm",
-                args = list(mean = 10,
-                            sd = 5),
-                size = 1,
-                color = "red") +
-  stat_function(fun = "dunif",
-                args = list(min = 0,
-                            max = 20),
-                size = 1,
-                color = "green") +
-  stat_function(fun = "dexp",
-                args = list(rate = 0.1),
-                size = 1,
-                color = "blue") +
-  annotate(geom = "text",
-           label = "normal",
-           x = 0,
-           y = .03,
-           hjust = 0,
-           color = "red",
-           size = 6) +
-  annotate(geom = "text",
-           label = "uniform",
-           x = 0,
-           y = .055,
-           hjust = 0,
-           color = "green",
-           size = 6) +
-  annotate(geom = "text",
-           label = "exponential",
-           x = 0,
-           y = .105,
-           hjust = 0,
-           color = "blue",
-           size = 6)
-```
-
-
-```{r simulation2-17}
-# Parameters for the simulation
-n_samples = c(10, 100, 1000, 10000)
-sample_size = c(5, 10, 25, 100)
-distributions = c("normal", "uniform", "exponential")
-
-# take samples (of size n) from specified distribution and calculate the mean 
-fun.sample_mean = function(n, distribution){
-  if (distribution == "normal"){
-    tmp = rnorm(n, mean = 10, sd = 5)
-  }else if (distribution == "uniform"){
-    tmp = runif(n, min = 0, max = 20) 
-  }else if (distribution == "exponential"){
-    tmp = rexp(n, rate = 0.1)
-  }
-  return(mean(tmp)) 
-}
-
-df.central_limit = tibble()
-
-for (i in 1:length(n_samples)){
-  for (j in 1:length(sample_size)){
-    for (k in 1:length(distributions)){
-      # calculate sample mean 
-      sample_mean = replicate(n_samples[i], 
-                              fun.sample_mean(sample_size[j],
-                                              distributions[k]))
-      df.tmp = tibble(n_samples = n_samples[i], 
-                       sample_size = sample_size[j],
-                       distribution = distributions[k],
-                       mean_value = list(sample_mean))
-      df.central_limit = rbind(df.central_limit, df.tmp)
-    }
-  }
-}
-
-# transform from list column
-df.plot = df.central_limit %>% 
-  unnest(cols = mean_value) %>% 
-  mutate(sample_size = str_c("sample size = ", sample_size),
-         sample_size = factor(sample_size,
-                              levels = str_c("sample size = ", c(5, 10, 25, 100))),
-         n_samples = str_c("n samples = ", n_samples),
-         distribution = factor(distribution,
-                               levels = c("normal", "uniform", "exponential")))
-  
-# densities of sample means 
-ggplot(df.plot, aes(x = mean_value, color = distribution)) +
-  stat_density(geom = "line", position = "identity") +
-  facet_grid(n_samples ~ sample_size, scales = "free") +
-  scale_x_continuous(breaks = c(0, 10, 20)) +
-  coord_cartesian(xlim = c(0, 20)) +
-  labs(x = "sample mean") +
-  theme(axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 10),
-        strip.text.y = element_text(size = 6),
-        strip.text.x = element_text(size = 8),
-        legend.position = "bottom",
-        panel.background = element_rect(color = "black"))
-```
-
-No matter where we start, as long as we draw samples that are independent and identically distributed, and these samples combine in an additive way, we end up with a normal distribution (note that this takes considerably longer when we start with an exponential distribution -- shown in blue -- compared to the other population distributions).
 
 ## Understanding p-values 
 
@@ -411,7 +291,7 @@ An intutive way for illustrating (this rather unintuitive procedure) is the perm
 
 Let's start by generating some random data from two different normal distributions (simulating a possible experiment). 
 
-```{r simulation2-18}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -426,7 +306,7 @@ df.permutation = tibble(control = rnorm(25, mean = 5.5, sd = 2),
 
 Here is a summary of how each group performed: 
 
-```{r simulation2-19}
+```{r}
 df.permutation %>% 
   group_by(condition) %>%
   summarize(mean = mean(performance),
@@ -443,7 +323,7 @@ df.permutation %>%
 
 Let's plot the results: 
 
-```{r simulation2-20}
+```{r}
 ggplot(data = df.permutation, 
        mapping = aes(x = condition, y = performance)) +
   geom_point(position = position_jitter(height = 0, width = 0.1),
@@ -464,7 +344,7 @@ ggplot(data = df.permutation,
 
 We are interested in the difference in the mean performance between the two groups: 
 
-```{r simulation2-21}
+```{r}
 # calculate the difference between conditions
 difference_actual = df.permutation %>% 
   group_by(condition) %>% 
@@ -477,7 +357,7 @@ The difference in the mean rating between the control and experimental condition
 
 Let's answer the question using simulation. Here is the main idea: imagine that we were very sloppy in how we recorded the data, and now we don't remember anymore which participants were in the controld condition and which ones were in experimental condition (we still remember though, that we tested 25 participants in each condition). 
 
-```{r simulation2-22}
+```{r}
 set.seed(0)
 df.permutation = df.permutation %>% 
   mutate(permutation = sample(condition)) #randomly assign labels
@@ -494,7 +374,7 @@ Here, the difference between the two conditions is `r df.permutation %>% filter(
 
 After randomly shuffling the condition labels, this is how the results would look like: 
 
-```{r simulation2-23}
+```{r}
 ggplot(data = df.permutation, aes(x = permutation, y = performance))+
   geom_point(aes(color = condition), position = position_jitter(height = 0, width = 0.1)) +
   stat_summary(fun.data = mean_cl_boot, geom = 'linerange', size = 1) +
@@ -506,13 +386,13 @@ ggplot(data = df.permutation, aes(x = permutation, y = performance))+
 
 The idea is now that, similar to bootstrapping above, we can get a sampling distribution of the difference in the means between the two conditions (assuming that the null hypothesis were true), by randomly shuffling the labels and calculating the difference in means (and doing this many times). What we get is a distribution of the differences we would expect, if there was no effect of condition. 
 
-```{r simulation2-24}
+```{r}
 set.seed(1)
 
 n_permutations = 500
 
 # permutation function
-func_permutations = function(df){
+fun.permutations = function(df){
   df %>%
     mutate(condition = sample(condition)) %>% #we randomly shuffle the condition labels
     group_by(condition) %>%
@@ -523,7 +403,7 @@ func_permutations = function(df){
 
 # data frame with permutation results 
 df.permutations = tibble(permutation = 1:n_permutations, 
-  mean_difference = replicate(n = n_permutations, func_permutations(df.permutation)))
+  mean_difference = replicate(n = n_permutations, fun.permutations(df.permutation)))
 
 #plot the distribution of the differences 
 ggplot(data = df.permutations, aes(x = mean_difference)) +
@@ -544,10 +424,81 @@ ggplot(data = df.permutations, aes(x = mean_difference)) +
 
 And we can then simply calculate the p-value by using some basic data wrangling (i.e. finding the proportion of differences that were as or more extreme than the one we observed).
 
-```{r simulation2-25}
+```{r}
 #calculate p-value of our observed result
 df.permutations %>% 
   summarize(p_value = sum(mean_difference <= difference_actual)/n())
+```
+
+### t-test by hand 
+
+Examining the t-distribution. 
+
+```{r}
+set.seed(1)
+
+n_simulations = 1000 
+sample_size = 100
+mean = 5
+sd = 2
+
+fun.normal_sample_mean = function(sample_size, mean, sd){
+  rnorm(n = sample_size, mean = mean, sd = sd) %>% 
+    mean()
+}
+
+df.ttest = tibble(simulation = 1:n_simulations) %>% 
+  mutate(sample1 = replicate(n = n_simulations,
+                             expr = fun.normal_sample_mean(sample_size, mean, sd)),
+         sample2 = replicate(n = n_simulations, 
+                             expr = fun.normal_sample_mean(sample_size, mean, sd))) %>% 
+  mutate(difference = sample1 - sample2,
+         # assuming the same standard deviation in each sample
+         tstatistic = difference / sqrt(sd^2 * (1/sample_size + 1/sample_size)))
+
+df.ttest
+```
+
+Population distribution 
+
+```{r}
+mean = 0
+sd = 1
+
+ggplot(data = tibble(x = c(mean - 3 * sd, mean + 3 * sd)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dnorm(.,mean = mean, sd = sd),
+                color = "black",
+                size = 2) + 
+  geom_vline(xintercept = qnorm(c(0.025, 0.975), mean = mean, sd = sd),
+             linetype = 2)
+  # labs(x = "performance")
+```
+
+Distribution of differences in means
+
+```{r}
+ggplot(data = df.ttest,
+       mapping = aes(x = difference)) + 
+  geom_density(size = 1) + 
+  geom_vline(xintercept = quantile(df.ttest$difference,
+                                   probs = c(0.025, 0.975)),
+             linetype = 2) 
+```
+
+t-distribution 
+
+```{r}
+ggplot(data = df.ttest,
+       mapping = aes(x = tstatistic)) + 
+  stat_function(fun = ~ dt(., df = sample_size * 2 - 2),
+                color = "red",
+                size = 2) +
+  geom_density(size = 1) + 
+  geom_vline(xintercept = qt(c(0.025, 0.975), df = sample_size * 2 - 2),
+             linetype = 2) + 
+  scale_x_continuous(limits = c(-4, 4),
+                     breaks = seq(-4, 4, 1))
 ```
 
 
@@ -563,7 +514,7 @@ For smaller sample sizes, we can use the $t$-distribution instead with $n-1$ deg
 
 So let's run a a simulation to check whether the definition of the confidence interval seems right. We will use our heavy metal distribution from above, take samples from the distribution, calculate the mean and confidende interval, and check how often the true mean of the population ($M = 3.5$) is contained within the confidence interval. 
 
-```{r simulation2-26}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -622,6 +573,70 @@ So, out of the `r sample_n` samples that we drew the 95% confidence interval of 
 
 Feel free to play around with the code above. For example, change the sample size, the number of samples, the confidence level.  
 
+### `mean_cl_boot()` explained
+
+```{r}
+set.seed(1)
+
+n = 10 # sample size per group
+k = 3 # number of groups 
+
+df.data = tibble(participant = 1:(n*k),
+                 condition = as.factor(rep(1:k, each = n)),
+                 rating = rnorm(n*k, mean = 7, sd = 1))
+
+p = ggplot(data = df.data,
+       mapping = aes(x = condition,
+                     y = rating)) + 
+  geom_point(alpha = 0.1,
+             position = position_jitter(width = 0.1, height = 0)) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               shape = 21, 
+               size = 1,
+               fill = "lightblue")
+
+print(p)
+```
+
+Peeking behind the scenes 
+
+```{r}
+build = ggplot_build(p)
+
+build$data[[2]] %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+Let's focus on condition 1 
+
+```{r}
+set.seed(1)
+
+df.condition1 = df.data %>% 
+  filter(condition == 1)
+
+fun.sample_with_replacement = function(df){
+  df %>% 
+    slice_sample(n = nrow(df),
+                 replace = T) %>% 
+    summarize(mean = mean(rating)) %>% 
+    pull(mean)
+}
+
+bootstraps = replicate(n = 100, fun.sample_with_replacement(df.condition1))
+
+quantile(bootstraps, prob = c(0.025, 0.975))
+
+ggplot(data = as_tibble(bootstraps),
+       mapping = aes(x = value)) + 
+  geom_density(size = 1) + 
+  geom_vline(xintercept = quantile(bootstraps,
+                                   probs = c(0.025, 0.975)),
+             linetype = 2) 
+```
+
 ## Additional resources 
 
 ### Datacamp 
@@ -632,6 +647,6 @@ Feel free to play around with the code above. For example, change the sample siz
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r simulation2-27}
+```{r}
 sessionInfo()
 ```

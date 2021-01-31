@@ -1,7 +1,7 @@
 ---
-title: "08_Simulation2"
+title: "07_Simulation2"
 author: "Tobias Gerstenberg"
-date: "1/25/2019"
+date: "1/29/2021"
 output: 
   html_document:
     toc: true
@@ -13,7 +13,9 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
 theme_set(
   theme_classic() + 
@@ -26,24 +28,55 @@ theme_set(
 
 ## Student feedback 
 
-> Central limit theorem was a little bit confusing......
 
-> Good explanation. I haven't really understood the CLT before
+> Toni, your explanation of p-values was the most sensical explanation I have ever heard.
 
-> I think you spent too long on CLT which isn't intuitively difficult and would like more time on the harder topics near the end
+> I find it a little difficult to go back and forth between the R code and the concept. Not sure if it's possible but if we could finish a review of the concept and then go over the R code related to that concept it'd help me out I think
+
+> The pace was great and I really appreciated how much detail you went into about p-values and CIs. These concepts have never been super clear to me and this lecture really helped
 
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-8.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+```
 
 ## What to do next time
 
-- this lecture needs some work 
-- drop the gender height example -- it's more confusing than helpful 
-- better introduce the three key distributions: sample distribution, sampling distribution, population distribution
-- visualization and examples for CLT work well otherwise
-- maybe: shift the balance (less time on CLT and more time on p-values and confidence intervals)
+- try to always first explain conceptually, and then using R code (like I did for the permutation test); doing both at the same time can be challenging
