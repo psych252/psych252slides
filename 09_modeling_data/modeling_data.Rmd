@@ -1,7 +1,7 @@
 ---
 title: "Class 9"
 author: "Tobias Gerstenberg"
-date: "January 27th, 2020"
+date: "February 1st, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,33 +11,30 @@ output:
     pandoc_args: ["--number-offset=8"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Modeling data
 
 ## Load packages and set plotting theme  
 
-```{r modeling-data-01, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r modeling-data-02}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
 ## Modeling data 
 
 ### Simplicity vs. accuracy trade-off 
 
-```{r modeling-data-03, warning=F, fig.cap="Tradeoff between fit and model simplicity."}
+```{r, warning=F, fig.cap="Tradeoff between fit and model simplicity."}
 # make example reproducible 
 set.seed(1)
 
@@ -61,7 +58,7 @@ ggplot(data = df.data,
         axis.text = element_blank())
 ```
 
-```{r modeling-data-04, fig.cap="Figure that I used to illustrate that fitting more data points with fewer parameter is more impressive."}
+```{r, fig.cap="Figure that I used to illustrate that fitting more data points with fewer parameter is more impressive."}
 # make example reproducible 
 set.seed(1)
 # n_samples = 20
@@ -81,21 +78,20 @@ ggplot(data = df.pre,
   theme(axis.ticks = element_blank(),
         axis.title = element_blank(),
         axis.text = element_blank())
-
 ```
 
 ### Error definitions and best estimators
 
 Let's start with some simple data:
 
-```{r modeling-data-05}
+```{r}
 df.data = tibble(observation = 1:5,
                  value = c(1, 3, 5, 9, 14))
 ```
 
 And plot the data
 
-```{r modeling-data-06}
+```{r}
 ggplot(data = df.data,
        mapping = aes(x = "1",
                      y = value)) + 
@@ -110,7 +106,7 @@ ggplot(data = df.data,
 
 This is what the sum of absolute errors looks like for a given `value_predicted`. 
 
-```{r modeling-data-07, warning=FALSE, fig.cap="Sum of absolute errors."}
+```{r, warning=FALSE, fig.cap="Sum of absolute errors."}
 value_predicted = 7
 
 df.data = df.data %>% 
@@ -168,8 +164,7 @@ ggplot(data = df.data,
 
 Play around with the code below to see how using (1) the sum of absolute errors, or (2) the sum of squared errors affects what estimate minimizes the error. 
 
-```{r modeling-data-08}
-
+```{r}
 value_predicted = seq(0, 50, 0.1)
 # value_predicted = seq(0, 10, 1)
 
@@ -205,7 +200,7 @@ ggplot(data = df.model,
   labs(y = "Sum of squared errors")
 ```
 
-```{r modeling-data-09, echo=F, fig.cap="Relationship between error definition and best estimators."}
+```{r, echo=F, fig.cap="Relationship between error definition and best estimators."}
 tibble(`Error definition` = c("Count of errors",
                               "Sum of absolute errors",
                               "Sum of squared errors"),
@@ -217,8 +212,7 @@ tibble(`Error definition` = c("Count of errors",
                 full_width = F)
 ```
 
-```{r modeling-data-10, fig.cap="Mean, median, and mode on the normal distribution."}
-
+```{r, fig.cap="Mean, median, and mode on the normal distribution."}
 mu = 0 
 sigma = 1
 
@@ -227,35 +221,34 @@ median = mu
 mode = mu
 
 ggplot(data = tibble(x = c(-3, 3)),
-            mapping = aes(x = x)) + 
+       mapping = aes(x = x)) + 
   stat_function(fun = "dnorm",
                 size = 1) +
-  geom_segment(aes(x = median,
-                   xend = median,
-                   y = dnorm(median),
-                   yend = 0),
+  geom_segment(mapping = aes(x = median,
+                             xend = median,
+                             y = dnorm(median),
+                             yend = 0),
                color = "green",
                size = 2) +
-  geom_segment(aes(x = mode,
-                   xend = mode,
-                   y = dnorm(mode),
-                   yend = 0),
+  geom_segment(mapping = aes(x = mode,
+                             xend = mode,
+                             y = dnorm(mode),
+                             yend = 0),
                color = "red",
                size = 2) +
-  geom_segment(aes(x = mean,
-                   xend = mean,
-                   y = dnorm(mean),
-                   yend = 0),
+  geom_segment(mapping = aes(x = mean,
+                             xend = mean,
+                             y = dnorm(mean),
+                             yend = 0),
                color = "blue",
                size = 2) +
   labs(y = "density") +
   scale_x_continuous(breaks = -2:2,
                      expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-
+  scale_y_continuous(expand = expansion(add = c(0.001, 0.1)))
 ```
 
-```{r modeling-data-11, fig.cap="Mean, median, and mode on the exponential distribution."}
+```{r, fig.cap="Mean, median, and mode on the exponential distribution."}
 rate = 1 
 
 mean = rate
@@ -287,13 +280,12 @@ ggplot(data = tibble(x = c(-0.1, 3)),
   labs(y = "density") +
   scale_x_continuous(breaks = 0:2,
                      expand = c(0, 0)) +
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1)))
-
+  scale_y_continuous(expand = expansion(add = c(0.001, 0.1)))
 ```
 
 ### Sampling distributions for median and mean 
 
-```{r modeling-data-12}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -335,7 +327,7 @@ df.sampling_distribution_summaries = df.sampling_distribution %>%
 
 And plot it: 
 
-```{r modeling-data-13}
+```{r}
 # plot a histogram of the means with density overlaid 
 
 ggplot(data = df.sampling_distribution_summaries,
@@ -343,17 +335,17 @@ ggplot(data = df.sampling_distribution_summaries,
   stat_density(bw = 0.1,
                size = 2,
                geom = "line") + 
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01)))
+  scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
 
 ## Hypothesis testing: "One-sample t-test" 
 
-```{r modeling-data-14, warning=F}
+```{r, warning=F}
 df.internet = read_table2(file = "data/internet_access.txt") %>% 
   clean_names()
 ```
 
-```{r modeling-data-15, fig.cap="Selection of the data."}
+```{r, fig.cap="Selection of the data."}
 df.internet %>% 
   mutate(i = 1:n()) %>% 
   select(i, internet, everything()) %>% 
@@ -364,7 +356,7 @@ df.internet %>%
 ```
 
 
-```{r modeling-data-16, fig.cap="Sum of squared errors, proportional reduction in error (PRE), F statistic, p-value."}
+```{r, fig.cap="Sum of squared errors, proportional reduction in error (PRE), F statistic, p-value."}
 # parameters per model 
 pa = 1
 pc = 0 
@@ -392,7 +384,7 @@ df.model %>%
 ```
 
 
-```{r modeling-data-17, fig.cap="F-distribution"}
+```{r, fig.cap="F-distribution"}
 df1 = 1
 df2 = 49
 
@@ -410,14 +402,14 @@ ggplot(data = tibble(x = c(0, 10)),
                            df1 = df1,
                            df2 = df2),
                 size = 0.5) + 
-  scale_y_continuous(expand = expand_scale(add = c(0.001, 0.1))) +
+  scale_y_continuous(expand = expansion(add = c(0.001, 0.1))) +
   labs(y = "Density",
        x = "Proportional reduction in error")
 ```
 
 We've implemented a one sample t-test (compare the p-value here to the one I computed above using PRE and the F statistic).
 
-```{r modeling-data-18}
+```{r}
 t.test(df.internet$internet, mu = 75)
 ```
 
@@ -432,7 +424,7 @@ whereby I assume that $\epsilon_i \sim \mathcal{N}(0, \sigma)$.
 
 For this example, I assume that I know the population distribution. I first draw a sample from that distribution, and then calculate PRE. 
 
-```{r modeling-data-19}
+```{r}
 # make example reproducible
 set.seed(1)
 
@@ -455,7 +447,7 @@ df.summary = df.sample %>%
 
 To generate the sampling distribution, I assume that the null hypothesis is true, and then take a look at what values for PRE we could expect by chance for our given sample size. 
 
-```{r modeling-data-20, warning=F, message=F}
+```{r, warning=F, message=F}
 # simulation parameters
 n_samples = 1000
 sample_size = 50 
@@ -477,7 +469,7 @@ samples = n_samples %>%
 
 # put samples in data frame and compute PRE 
 df.samples = samples %>% 
-  as_tibble(.name_repair = ~ 1:ncol(samples)) %>% 
+  as_tibble(.name_repair = ~ str_c(1:ncol(samples))) %>% 
   mutate(sample = 1:n()) %>% 
   pivot_longer(cols = -sample,
                names_to = "index",
@@ -504,7 +496,7 @@ df.samples %>%
 
 Some code I wrote to show a subset of the samples. 
 
-```{r modeling-data-21, warning=F, message=F}
+```{r, warning=F, message=F}
 samples %>% 
   as_tibble(.name_repair = "unique") %>% 
   mutate(sample = 1:n()) %>% 
@@ -525,7 +517,6 @@ samples %>%
                 full_width = F)
 ```
 
-
 ## Additional resources 
 
 ### Reading 
@@ -540,6 +531,6 @@ samples %>%
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r modeling-data-22}
+```{r}
 sessionInfo()
 ```

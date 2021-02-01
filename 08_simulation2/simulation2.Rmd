@@ -133,7 +133,7 @@ set.seed(1)
 
 # parameters 
 sample_size = 40 # size of each sample
-sample_n = 1000 # number of samples
+sample_n = 10000 # number of samples
 
 # define a function that draws samples from a discrete distribution
 fun.draw_sample = function(sample_size, distribution){
@@ -242,6 +242,21 @@ df.bootstrap = tibble(bootstrap = 1:n_samples,
                       average = replicate(n = n_samples, func.bootstrap(df.sample)))
 
 ```
+Let's plot our sample first: 
+
+```{r}
+# plot the distribution 
+ggplot(data = df.sample,
+       mapping = aes(x = number)) +
+  geom_bar(stat = "count",
+           fill = "lightblue",
+           color = "black") +
+  scale_x_continuous(breaks = 1:6,
+                     labels = 1:6,
+                     limits = c(0.1, 6.9)) +
+  coord_cartesian(expand = F)
+```
+
 
 Let's plot the bootstrapped sampling distribution: 
 
@@ -257,16 +272,16 @@ ggplot(data = df.bootstrap,
                size = 1.5,
                bw = 0.1) +
   labs(x = "mean") +
-  scale_y_continuous(expand = expand_scale(mult = c(0, 0.01)))
+  scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
 
 And let's calculate the mean and standard deviation: 
 
 ```{r}
 # print out sampling distribution mean and standard deviation 
-df.sampling_distribution_means %>% 
-  summarize(bootstrapped_distribution_mean = mean(mean),
-            bootstrapped_distribution_sd = sd(mean)) %>% 
+df.bootstrap %>% 
+  summarize(bootstrapped_distribution_mean = mean(average),
+            bootstrapped_distribution_sd = sd(average)) %>% 
   kable(digits = 2) %>% 
   kable_styling(bootstrap_options = "striped",
                 full_width = F)
