@@ -10,12 +10,6 @@ output:
 bibliography: [references.bib]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Load packages 
 
 ```{r}
@@ -28,10 +22,16 @@ library("kableExtra") # for nice tables
 library("corrr")      # for correlation tables
 library("lme4")       # for linear mixed effects models 
 library("MASS")       # for additional function (e.g. multivariate Gaussian)
+library("janitor")    # for cleaning column names
 library("tidyverse")  # for everything else 
 
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+options(dplyr.summarise.inform = F)
 ```
 
 # degrees of freedom 
@@ -372,7 +372,6 @@ df.poker %>%
   kable_styling(bootstrap_options = "striped",
               full_width = F)
 ```
-
 
 
 ```{r}
@@ -1015,3 +1014,81 @@ df.permutation %>%
              color = "red",
               size = 1)
 ```
+
+# normally distributed dv vs. residuals 
+
+```{r}
+set.seed(1)
+n = 50
+reference = 1 
+difference = 10 
+sd = 2
+
+# create data 
+df.data = tibble(participant = 1:(n*2),
+                 condition = rep(0:1, each = n),
+                 response = reference + condition * difference + rnorm(n = n*2, sd = sd)) %>% 
+  mutate(condition = condition + 1,
+         condition = as.factor(condition))
+
+# plot the data 
+ggplot(data = df.data,
+       mapping = aes(x = condition,
+                     y = response)) + 
+  geom_point(position = position_jitter(width = 0, height = 0),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               shape = 21, 
+               fill = "lightblue",
+               size = 1)
+
+# test for normality of the dependent variable 
+shapiro.test(df.data$response)
+
+# fit a normal distribution to the data 
+fit_normal_dv = fitdistr(df.data$response, densfun = "normal")
+
+# plot dependent variable and normal distribution 
+ggplot(data = df.data,
+       mapping = aes(x = response)) + 
+  geom_density(bw = 1) + 
+  stat_function(fun = ~dnorm(x = .,
+                             mean = fit_normal_dv$estimate[1],
+                             sd = fit_normal_dv$estimate[2]),
+                color = "red",
+                size = 1) +
+  stat_function(fun = ~dnorm(x = .,
+                             mean = reference,
+                             sd = sd)/2,
+                color = "blue",
+                linetype = 2,
+                size = 1) + 
+  stat_function(fun = ~dnorm(x = .,
+                             mean = reference + difference,
+                             sd = sd)/2,
+                color = "blue",
+                linetype = 2,
+                size = 1)
+
+# fit the model to the data 
+fit_model = lm(formula = response ~ 1 + condition,
+               data = df.data)
+
+df.fit = fit_model %>% 
+  augment() %>% 
+  clean_names()
+
+# fit a normal distribution to the residuals 
+fit_normal_residuals = fitdistr(df.fit$resid, densfun = "normal")
+
+# plot residual and normal distribution 
+ggplot(data = df.fit,
+       mapping = aes(x = resid)) + 
+  geom_density(bw = 1) + 
+  stat_function(fun = ~dnorm(x = .,
+                             mean = fit_normal_residuals$estimate[1],
+                             sd = fit_normal_residuals$estimate[2]),
+                color = "red",
+                size = 1)
+```
+

@@ -1,7 +1,7 @@
 ---
-title: "11 Linear Model 2"
+title: "11_linear_model2"
 author: "Tobias Gerstenberg"
-date: "1/31/2020"
+date: "2/5/2021"
 output: 
   html_document:
     toc: true
@@ -13,39 +13,65 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
 
+> Note: I forgot to clear the feedback from the previous class. This time, I only asked for feedback using the open ended response question. 
 
-## Homework 3
+## Student feedback 
+
+> i liked having a short discussion about multiple regression, it helped to clarify why we do the things we do in stats and get at the bigger picture. i was wondering if it would be possible to have a stretch break earlier in the class? 2:10 always feels very far away
+
+
+```{r echo=FALSE, message=FALSE}
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.hw3_happy = read_csv("how-do-you-feel-about-hw3.csv") %>% 
-  set_names(c("response", "date")) %>% 
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
          response = factor(response, levels = 1:5,
                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
-ggplot(data = df.hw3_happy,
+ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
-  labs(y = "number of students", x = "", title = "How happy were you with hw3?") +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
 ```
 
 ## What to do next time
 
-- this class went well
+- move the stretch break earlier 
 

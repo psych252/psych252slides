@@ -1,7 +1,7 @@
 ---
 title: "Class 12"
 author: "Tobias Gerstenberg"
-date: "February 3th, 2020"
+date: "February 8th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,15 +13,6 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib")
-```
-
 # Linear model 3
 
 ## Learning goals 
@@ -32,13 +23,13 @@ knitr::write_bib(.packages(), "packages.bib")
   - planned contrasts 
 - ANOVA with unbalanced designs
 
-```{r linear-model3-01, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 install.packages(c("afex", "car"))
 ```
 
 ## Load packages and set plotting theme  
 
-```{r linear-model3-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
@@ -49,14 +40,21 @@ library("emmeans")    # for calculating constrasts
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r linear-model3-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+# these options here change the formatting of how comments are rendered
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "packages.bib")
 ```
 
 ## Load data sets 
 
-```{r linear-model3-04, message=F, warning=FALSE}
+```{r, message=F, warning=FALSE}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -77,7 +75,7 @@ df.poker.unbalanced = df.poker %>%
 
 Selection of the data: 
 
-```{r linear-model3-05}
+```{r}
 df.poker %>% 
   group_by(skill, hand, limit) %>% 
   filter(row_number() < 3) %>% 
@@ -92,7 +90,7 @@ df.poker %>%
 
 ### Visualization 
 
-```{r linear-model3-06}
+```{r}
 df.poker %>% 
   ggplot(mapping = aes(x = hand,
                        y = balance,
@@ -115,7 +113,7 @@ df.poker %>%
 
 We pass the result of the `lm()` function to `anova()` to calculate an analysis of variance like so: 
 
-```{r linear-model3-07}
+```{r}
 lm(formula = balance ~ hand, 
    data = df.poker) %>% 
   anova()
@@ -125,7 +123,7 @@ lm(formula = balance ~ hand,
 
 The F-test reported by the ANOVA compares the fitted model with a compact model that only predicts the grand mean: 
 
-```{r linear-model3-08}
+```{r}
 # fit the models 
 fit_c = lm(formula = balance ~ 1, data = df.poker)
 fit_a = lm(formula = balance ~ hand, data = df.poker)
@@ -138,7 +136,7 @@ anova(fit_c, fit_a)
 
 Here is the model prediction of the compact model:
 
-```{r linear-model3-09}
+```{r}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -147,17 +145,18 @@ df.plot = df.poker %>%
 df.augment = fit_c %>% 
   augment() %>% 
   clean_names() %>% 
-  bind_cols(df.plot %>% select(balance, hand, hand_jitter))
+  bind_cols(df.plot %>% 
+              select(hand, hand_jitter))
 
 ggplot(data = df.plot, 
        mapping = aes(x = hand_jitter,
-                       y = balance,
-                       fill = hand)) + 
+                     y = balance,
+                     fill = hand)) + 
   geom_hline(yintercept = mean(df.poker$balance)) +
   geom_point(alpha = 0.5) + 
   geom_segment(data = df.augment,
-               aes(xend = hand_jitter,
-                   yend = fitted),
+               mapping = aes(xend = hand_jitter,
+                             yend = fitted),
                alpha = 0.2) +
   labs(y = "balance") + 
   theme(legend.position = "none",
@@ -170,9 +169,8 @@ ggplot(data = df.plot,
 
 And here is the prediction of the augmented model (which predicts different means for each group).
 
-```{r linear-model3-10}
+```{r}
 set.seed(1)
-
 
 df.plot = df.poker %>% 
   mutate(hand_jitter = hand %>% as.numeric(),
@@ -180,41 +178,39 @@ df.plot = df.poker %>%
 
 df.tidy = fit_a %>% 
   tidy() %>% 
-  select_if(is.numeric) %>% 
-  mutate_all(~ round(., digits = 2))
+  select(where(is.numeric)) %>% 
+  mutate(across(.fns = ~ round(., digits = 2)))
 
 df.augment = fit_a %>% 
   augment() %>%
   clean_names() %>% 
-  bind_cols(df.plot %>% select(hand_jitter))
+  bind_cols(df.plot %>% 
+              select(hand_jitter))
 
 ggplot(data = df.plot,
        mapping = aes(x = hand_jitter,
-                       y = balance,
-                       color = hand)) + 
+                     y = balance,
+                     color = hand)) + 
   geom_point(alpha = 0.8) +
   geom_segment(data = NULL,
-               aes(x = 0.6,
-                   xend = 1.4,
-                   y = df.tidy$estimate[1],
-                   yend = df.tidy$estimate[1]
-                   ),
+               mapping = aes(x = 0.6,
+                             xend = 1.4,
+                             y = df.tidy$estimate[1],
+                             yend = df.tidy$estimate[1]),
                color = "red",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
-                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]
-                   ),
+                   yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "orange",
                size = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[3],
-                   yend = df.tidy$estimate[1] + df.tidy$estimate[3]
-                   ),
+                   yend = df.tidy$estimate[1] + df.tidy$estimate[3]),
                color = "green",
                size = 1) +
   geom_segment(data = df.augment,
@@ -233,7 +229,7 @@ The vertical lines illustrate the residual sum of squares.
 
 We can illustrate the model sum of squares like so: 
 
-```{r linear-model3-11}
+```{r}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -295,7 +291,7 @@ This captures the variance in the data that is accounted for by the `hand` varia
 
 Just for kicks, let's calculate our cherished proportion of reduction in error PRE:
 
-```{r linear-model3-12}
+```{r}
 df.c = fit_c %>% 
   augment() %>% 
   clean_names() %>% 
@@ -311,7 +307,7 @@ print(pre %>% round(2))
 ```
 Note that this is the same as the $R^2$ for the augmented model: 
 
-```{r linear-model3-13}
+```{r}
 fit_a %>% 
   summary()
 ```
@@ -320,7 +316,7 @@ fit_a %>%
 
 Let's check that we understand how dummy-coding works for a variable with more than 2 levels: 
 
-```{r linear-model3-14}
+```{r}
 # dummy code the hand variable
 df.poker = df.poker %>% 
   mutate(hand_neutral = ifelse(hand == "neutral", 1, 0),
@@ -352,7 +348,7 @@ Here are some follow up questions we may ask about the data.
 
 Are bad hands different from neutral hands? 
 
-```{r linear-model3-15}
+```{r}
 df.poker %>% 
   filter(hand %in% c("bad", "neutral")) %>% 
   lm(formula = balance ~ hand, 
@@ -362,7 +358,7 @@ df.poker %>%
 
 Are neutral hands different from good hands? 
 
-```{r linear-model3-16}
+```{r}
 df.poker %>% 
   filter(hand %in% c("neutral", "good")) %>% 
   lm(formula = balance ~ hand, 
@@ -372,7 +368,7 @@ df.poker %>%
 
 Doing the same thing by recoding our hand factor and taking "neutral" to be the reference category:
 
-```{r linear-model3-17}
+```{r}
 df.poker %>% 
   mutate(hand = fct_relevel(hand, "neutral")) %>% 
   lm(formula = balance ~ hand,
@@ -384,7 +380,7 @@ df.poker %>%
 
 Let's first run the model 
 
-```{r linear-model3-18}
+```{r}
 fit = lm(formula = balance ~ hand, 
          data = df.poker)
 
@@ -396,7 +392,7 @@ fit %>%
 
 And then let's make sure that we understand how the variance is broken down:  
 
-```{r linear-model3-19}
+```{r}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(hand) %>% 
@@ -411,7 +407,7 @@ df.poker %>%
 
 ##### Total variance
 
-```{r linear-model3-20}
+```{r}
 set.seed(1)
 
 fit_c = lm(formula = balance ~ 1,
@@ -423,7 +419,7 @@ df.plot = df.poker %>%
 df.augment = fit_c %>% 
   augment() %>% 
   clean_names() %>% 
-  bind_cols(df.plot %>% select(balance, hand, hand_jitter))
+  bind_cols(df.plot %>% select(hand, hand_jitter))
 
 ggplot(data = df.plot, 
        mapping = aes(x = hand_jitter,
@@ -444,7 +440,7 @@ ggplot(data = df.plot,
 
 ##### Model variance
 
-```{r linear-model3-21}
+```{r}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -499,12 +495,11 @@ ggplot(data = df.plot,
   scale_y_continuous(breaks = c(0, 10, 20), labels = c(0, 10, 20), limits = c(0, 25)) + 
   theme(legend.position = "none",
         axis.title.x = element_blank())
-
 ```
 
 ##### Residual variance 
 
-```{r linear-model3-22}
+```{r}
 set.seed(1)
 
 fit_a = lm(formula = balance ~ hand,
@@ -516,8 +511,8 @@ df.plot = df.poker %>%
 
 df.tidy = fit_a %>% 
   tidy() %>% 
-  select_if(is.numeric) %>% 
-  mutate_all(~ round(., digits = 2))
+  select(where(is.numeric)) %>% 
+  mutate(across(.fns = ~ round(., digits = 2)))
 
 df.augment = fit_a %>% 
   augment() %>%
@@ -571,7 +566,7 @@ Now let's take a look at a case where we have multiple categorical predictors.
 
 Let's look at the overall effect of skill: 
 
-```{r linear-model3-23}
+```{r}
 ggplot(data = df.poker,
        mapping = aes(x = skill,
                      y = balance)) +
@@ -596,7 +591,7 @@ ggplot(data = df.poker,
 
 And now let's take a look at the means for the full the 3 (hand) x 2 (skill) design:
 
-```{r linear-model3-24}
+```{r}
 ggplot(data = df.poker,
        mapping = aes(x = hand,
                      y = balance,
@@ -626,7 +621,7 @@ ggplot(data = df.poker,
 
 For N-way ANOVAs, we need to be careful about what sums of squares we are using. The standard (based on the SPSS output) is to use type III sums of squares. We set this up in the following way: 
 
-```{r linear-model3-25}
+```{r}
 lm(formula = balance ~ hand * skill,
    data = df.poker,
    contrasts = list(hand = "contr.sum",
@@ -638,7 +633,7 @@ So, we fit our linear model, but set the contrasts to "contr.sum" (which yields 
 
 Alternatively, we could use the `afex` package and specify the ANOVA like so: 
 
-```{r linear-model3-26}
+```{r}
 aov_ez(id = "participant",
        dv = "balance",
        data = df.poker,
@@ -652,7 +647,7 @@ The `afex` package uses effect coding and type 3 sums of squares by default.
 
 Code I've used to generate the different plots in the competition: 
 
-```{r linear-model3-27}
+```{r}
 set.seed(1)
 
 b0 = 15
@@ -709,7 +704,7 @@ ggplot(df.data,
 
 And here is one specific example. Let's generate the data first: 
 
-```{r linear-model3-28}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -736,7 +731,7 @@ df.data = tibble(
 
 Show part of the generated data frame: 
 
-```{r linear-model3-29}
+```{r}
 # show data frame
 df.data %>% 
   group_by(condition, treatment) %>% 
@@ -750,7 +745,7 @@ df.data %>%
 
 Plot the data:
 
-```{r linear-model3-30}
+```{r}
 # plot data
 ggplot(df.data,
        aes(x = condition,
@@ -770,7 +765,7 @@ ggplot(df.data,
 
 And check whether we can successfully infer the parameters that we used to generate the data: 
 
-```{r linear-model3-31}
+```{r}
 # infer parameters
 lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
    data = df.data) %>% 
@@ -781,18 +776,17 @@ lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
 
 Let's fit the model first:
 
-```{r linear-model3-32}
-fit = lm(formula = balance ~ hand + skill, 
+```{r}
+fit = lm(formula = balance ~ hand * skill, 
          data = df.poker)
 
 fit %>%
   anova()
-
 ```
 
 #### Calculate sums of squares
 
-```{r linear-model3-33}
+```{r}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(skill) %>% 
@@ -810,7 +804,7 @@ df.poker %>%
 
 ##### `Skill` factor
 
-```{r linear-model3-34}
+```{r}
 set.seed(1)
 
 df.plot = df.poker %>% 
@@ -863,9 +857,9 @@ ggplot(data = df.plot,
 
 ### Two-way ANOVA (with interaction)
 
-Let's firt a two-way ANOVA with the interaction term. 
+Let's fit a two-way ANOVA with the interaction term. 
 
-```{r linear-model3-38}
+```{r}
 fit = lm(formula = balance ~ hand * skill, data = df.poker)
 fit %>% 
   anova()
@@ -873,7 +867,7 @@ fit %>%
 
 And let's compute how the the sums of squares are decomposed:
 
-```{r linear-model3-39}
+```{r}
 df.poker %>% 
   mutate(mean_grand = mean(balance)) %>% 
   group_by(skill) %>% 
@@ -896,7 +890,7 @@ df.poker %>%
 
 For the standard `anova()` function, the order of the independent predictors matters when the design is unbalanced. 
 
-```{r linear-model3-35}
+```{r}
 # one order 
 lm(formula = balance ~ skill + hand, 
          data = df.poker.unbalanced) %>% 
@@ -908,19 +902,19 @@ lm(formula = balance ~ hand + skill,
   anova()
 ```
 
-For unbalanced designs, we should compute an ANOVA with type 3 sums of squares. 
+We should compute an ANOVA with type 3 sums of squares, and set the contrast to sum contrasts. 
 
-```{r linear-model3-36}
+```{r}
 # one order
 lm(formula = balance ~ hand + skill,
-   data = df.poker,
+   data = df.poker.unbalanced,
    contrasts = list(hand = "contr.sum", 
                     skill = "contr.sum")) %>% 
   Anova(type = "3")
 
 # another order
 lm(formula = balance ~ skill + hand,
-   data = df.poker,
+   data = df.poker.unbalanced,
    contrasts = list(hand = "contr.sum", 
                     skill = "contr.sum")) %>% 
   Anova(type = "3")
@@ -930,10 +924,16 @@ Now, the order of the independent variables doesn't matter anymore.
 
 We can also use the `aov_ez()` function from the `afex` package. 
 
-```{r linear-model3-37}
+```{r}
+lm(formula = balance ~ skill * hand,
+   data = df.poker.unbalanced,
+   contrasts = list(hand = "contr.sum", 
+                    skill = "contr.sum")) %>% 
+  Anova(type = "3")
+
 fit = aov_ez(id = "participant",
              dv = "balance",
-             data = df.poker,
+             data = df.poker.unbalanced,
              between = c("hand", "skill"))
 fit$Anova
 ```
@@ -954,7 +954,7 @@ fit$Anova
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r linear-model3-40 session}
+```{r session}
 sessionInfo()
 ```
 

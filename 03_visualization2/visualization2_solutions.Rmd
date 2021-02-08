@@ -28,7 +28,7 @@ theme_set(theme_classic()+ #set the theme
             theme(text = element_text(size = 20))) #set the default text size
 
 opts_chunk$set(collapse = TRUE,
-               comment = "#>")
+               comment = "")
 
 options(dplyr.summarise.inform = F)
 ```
