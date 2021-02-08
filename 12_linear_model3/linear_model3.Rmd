@@ -50,6 +50,9 @@ opts_chunk$set(comment = "",
 
 # include references for used packages
 write_bib(.packages(), "packages.bib")
+
+# suppress grouping warnings 
+options(dplyr.summarise.inform = F)
 ```
 
 ## Load data sets 
@@ -855,7 +858,7 @@ ggplot(data = df.plot,
 
 ```
 
-### Two-way ANOVA (with interaction)
+## Two-way ANOVA (with interaction)
 
 Let's fit a two-way ANOVA with the interaction term. 
 
@@ -885,7 +888,6 @@ df.poker %>%
             variance_residual = variance_total - variance_skill - variance_hand - 
               variance_hand_skill)
 ```
-
 ## ANOVA with unbalanced design
 
 For the standard `anova()` function, the order of the independent predictors matters when the design is unbalanced. 
@@ -937,6 +939,32 @@ fit = aov_ez(id = "participant",
              between = c("hand", "skill"))
 fit$Anova
 ```
+
+## Interpreting parameters (very important!)
+
+```{r}
+fit = lm(formula = balance ~ skill * hand,
+         data = df.poker)
+
+fit %>% 
+  summary()
+```
+
+> Important: The t-statistic for `skillexpert` is not telling us that there is a main effect of skill. Instead, it shows the difference between `skill = average` and `skill = expert` when all other predictors in the model are 0!!
+
+Here, this parameter just captures whether there is a significant difference between average and skilled players **when they have a bad hand** (because that's the reference category here). Let's check that this is true. 
+
+```{r}
+df.poker %>% 
+  group_by(skill, hand) %>% 
+  summarize(mean = mean(balance)) %>% 
+  filter(hand == "bad") %>% 
+  pivot_wider(names_from = skill,
+              values_from = mean) %>% 
+  mutate(difference = expert - average)
+```
+
+We see here that the difference in balance between the average and expert players when they have a bad hand is 2.7098. This is the same value as the `skillexpert` parameter in the `summary()` table above, and the corresponding significance test captures whether this difference is significantly different from 0. It doesn't capture, whether there is an effect of skill overall! To test this, we need to do an analysis of variance (using the `Anova(type = 3)` function).
 
 ## Additional resources 
 
