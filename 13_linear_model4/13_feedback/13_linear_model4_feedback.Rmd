@@ -1,7 +1,7 @@
 ---
-title: "13 Linear Model 4"
+title: "13_linear_model4"
 author: "Tobias Gerstenberg"
-date: "2/6/2019"
+date: "2/10/2021"
 output: 
   html_document:
     toc: true
@@ -13,135 +13,67 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
+
+> Today was a lot of information. Was it mostly for us to understand the behind the scenes bits? I'm a little unclear on the application part of it, and how to use the different things we looked at to answer specific questions about the data.
+
+> Does it ever actually make sense to run anovas? Versus to hand-code constrasts on categorical variables (however makes sense, sometimes helmert, sometimes contrast coding, etc) so that the summary output is interpretable?
+
+> I think that this class can often get really bogged down in the R, but I wish there could be more in the way of statistical theory. Is there perhaps, a glossary of some of the terms that are used?
 
 ## Student feedback 
 
-### Datacamp
-
-> This is just a comment about hw. But sometimes the data camp question can take a lot of time because I'm trying to figure out what I did wrong and it ended up the reason why was because I labelled things differently than what data camp recognizes. Looking at the answer is much more helpful than bashing, but we get docked for it. Is there a way to minimize this?
-
-> I find the datacamp homework a bit frustrating. I'm familiar with a lot that is taught there and except for watching it in 1.5x speed, there is no way for me to skim through it. I would have liked to put more time instead into the second part of the homework which I found more challenging but I didn't have any time left. So I felt that I spent more time on things I already knew and couldn't focus on the things I actually needed practice in.
-
-### Questions
-
-> I'm having mixed feelings about both the frequency and time spent on questions in class -- it makes following the narrative of the lecture that much harder...I'm wondering if there could be a better way for individual questions to be documented and resolved, perhaps via PollEV? Having a text box open throughout the class for people to type in their questions and reserve the last 15 mins of the class to address them? Not sure if this would work, just a thought...
-
-### Contrasts
-
-> is there any technique/ will we learn how to select the numbers for the contrast model (like 1, 1,4). Do you tell by looking at the data plots?
-
-> Thanks for helping us reproduce the SPSS ANOVA. That's really important for one of my projects. It's hard that we're getting bogged down and not able to get through as much material. But it is confusing, and I don't understand some of it, so I don't necessarily thing that powering ahead is helpful. Maybe covering materials and then letting people review it on their own and then come back to class with questions would be helpful. Also, thanks for all the effort you've put into the class. It's fantastic, and we're giving feedback to only try to make it better.
-
-> I was confused on how we're choosing the variables to encode the contrasts still? it seems arbitrary?
-
-> Was a little confused about the mixed linear effects model at the end. Otherwise all made sense!
-
-> Really really helpful and clear explanation of linear contrasts. Thank you!!
-
-### Slides
-
-> The posted PDFs of the slides are missing part of the additive slide content (e.g, slides 20 and 22nare missing code)
-
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-13.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
-### PollEverywhere results 
+## PollEverywhere results 
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read.csv("how-was-the-pace-of-13.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
-ggsave("pace.pdf", width = 8, height = 6)
 ```
 
 ```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-13.csv") %>% 
-  set_names(c("response", "date")) %>% 
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
          response = factor(response, levels = 1:5,
                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
-ggsave("overall.pdf", width = 8, height = 6)
-```
-
-## Homework 4
-
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.hw4_hours = read.csv("how-many-hours-hw4.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response,
-                           levels = c(1:9, "10 or more"))) %>% 
-  count(response) %>% 
-  complete(response)
-
-ggplot(data = df.hw4_hours,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on hw3?")
-# ggsave("hw4_hours.pdf", width = 8, height = 6)
-```
-
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.hw4_happy = read_csv("how-do-you-feel-about-regression.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
-  mutate(response = as.numeric(response),
-         response = factor(response, levels = 1:5,
-                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
-
-ggplot(data = df.hw4_happy,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
-  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
-  labs(y = "number of students", x = "", title = "How happy were you with the datacamp class\n'Correlation and Regression'?") +
-  theme(title = element_text(size = 18))
-ggsave("hw4_happy.pdf", width = 8, height = 6)
 ```
 
 ## What to do next time
 
-- fix mistakes on plot axis labels
-- fix some equations (the order of $b$ and dummy variable was flipped)
-- only managed to get until slide 44; maybe have some periods of time without taking questions?!
-- don't assign "correlation and regression" data camp course next time 
-- define the quadratic contrast in the example as orthogonal (rather than just using the I(group^2) notation)
-- rewrite the ANOVA model simulation code so tha the intercepts encode main effects rather than simple effects 
-- show the $SS_{\text{residual}}$ for the two-way additive ANOVA
-- explain what "contr.sum" does
-- don't use white rectangles to cover equations (since they block the equations in the pdfs ...)
+- This class may need a little more motivation. Understanding linear contrasts is hard ... 
+
 

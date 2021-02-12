@@ -1,7 +1,7 @@
 ---
 title: "Class 13"
 author: "Tobias Gerstenberg"
-date: "February 5th, 2020"
+date: "February 10th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,17 +13,9 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(
-  comment = "",
-  results = "hold",
-  fig.show = "hold")
-```
-
 # Linear model 4
 
-```{r install-packages, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 install.packages("afex")
 ```
 
@@ -38,23 +30,27 @@ library("afex")       # for running ANOVAs
 library("emmeans")    # for calculating contrasts
 library("car")        # for calculating ANOVAs
 library("tidyverse")  # for wrangling, plotting, etc.
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r set-theme}
+```{r}
 theme_set(
   theme_classic() + #set the theme 
     theme(text = element_text(size = 20)) #set the default text size
 )
+
+# these options here change the formatting of how comments are rendered
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "packages.bib") 
 ```
 
 ## Load data sets
 
 Read in the data:
 
-```{r linear-model4-1}
+```{r, message=FALSE}
 df.poker = read_csv("data/poker.csv") %>% 
   mutate(skill = factor(skill,
                         levels = 1:2,
@@ -70,11 +66,11 @@ df.poker = read_csv("data/poker.csv") %>%
   select(participant, everything())
 ```
 
-## Planned contrasts 
+## Linear contrasts 
 
-Here is a planned contrast that assumes that there is a linear relationship between the quality of one's hand, and the final balance.  
+Here is a linear contrast that assumes that there is a linear relationship between the quality of one's hand, and the final balance.  
 
-```{r linear-model4-15}
+```{r}
 df.poker = df.poker %>% 
   mutate(hand_contrast = factor(hand,
                                 levels = c("bad", "neutral", "good"),
@@ -82,14 +78,12 @@ df.poker = df.poker %>%
          hand_contrast = hand_contrast %>% as.character() %>% as.numeric())
 
 fit.contrast = lm(formula = balance ~ hand_contrast,
-         data = df.poker)
-
-fit.contrast %>% summary()
+                  data = df.poker)
 ```
 
 Here is a visualization of the model prediction together with the residuals. 
 
-```{r linear-model4-16}
+```{r}
 df.plot = df.poker %>% 
   mutate(hand_jitter = hand %>% as.numeric(),
          hand_jitter = hand_jitter + runif(n(), min = -0.4, max = 0.4))
@@ -146,7 +140,7 @@ ggplot(data = df.plot,
 
 Here is some code to generate a hypothetical developmental data set. 
 
-```{r linear-model4-17}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -158,7 +152,7 @@ sd = 2
 sample_size = 20
 
 # generate data 
-df.contrast = tibble(
+df.development = tibble(
   group = rep(c("3-4", "5-6", "7-8"), each = sample_size),
   performance = NA) %>% 
   mutate(performance = ifelse(group == "3-4",
@@ -185,47 +179,44 @@ df.contrast = tibble(
            as.numeric())
 ```
 
-Let's define a linear contrast, and test whether it's significant. 
+Let's define a linear contrast using the `emmeans` package, and test whether it's significant. 
 
-```{r linear-model4-18}
+```{r}
 fit = lm(formula = performance ~ group,
-   data = df.contrast)
+         data = df.development)
 
-# define the contrasts of interest 
-contrasts = list(linear = c(-1, 0, 1))
-
-# compute estimated marginal means
-leastsquare = emmeans(fit, "group")
-
-# run follow-up analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
+fit %>% 
+  emmeans("group",
+          contr = list(linear = c(-0.5, 0, 0.5)),
+          adjust = "bonferroni") %>% 
+  pluck("contrasts")
 ```
+
+Yes, we see that there is a significant positive linear contrast with an estimate of 8.45. This means, it predicts a difference of 8.45 in performance between each of the consecutive age groups. For a visualization of the predictions of this model, see Figure \@ref{fig:linear-contrast-model}. 
 
 ### Visualization
 
 Total variance: 
 
-```{r linear-model4-19}
+```{r}
 set.seed(1)
 
 fit_c = lm(formula = performance ~ 1,
-           data = df.contrast)
+           data = df.development)
 
-df.plot = df.contrast %>% 
+df.plot = df.development %>% 
   mutate(group_jitter = 1 + runif(n(), min = -0.25, max = 0.25))
 
 df.augment = fit_c %>% 
   augment() %>% 
   clean_names() %>% 
-  bind_cols(df.plot %>% select(performance, group, group_jitter))
+  bind_cols(df.plot %>% select(group, group_jitter))
 
 ggplot(data = df.plot, 
        mapping = aes(x = group_jitter,
                        y = performance,
                        fill = group)) + 
-  geom_hline(yintercept = mean(df.contrast$performance)) +
+  geom_hline(yintercept = mean(df.development$performance)) +
   geom_point(alpha = 0.5) + 
   geom_segment(data = df.augment,
                aes(xend = group_jitter,
@@ -240,26 +231,26 @@ ggplot(data = df.plot,
 
 With contrast
 
-```{r linear-model4-20}
+```{r linear-contrast-model, fig.cap="Predictions of the linear contrast model"}
 # make example reproducible 
 set.seed(1)
 
 fit = lm(formula = performance ~ group_contrast,
-         data = df.contrast)
+         data = df.development)
 
-df.plot = df.contrast %>% 
+df.plot = df.development %>% 
   mutate(group_jitter = group %>% as.numeric(),
          group_jitter = group_jitter + runif(n(), min = -0.4, max = 0.4))
 
 df.tidy = fit %>% 
   tidy() %>% 
-  select_if(is.numeric) %>% 
-  mutate_all(funs(round, .args = list(digits = 2)))
+  select(where(is.numeric)) %>% 
+  mutate(across(.fns = ~ round(. , 2)))
 
 df.augment = fit %>% 
   augment() %>%
   clean_names() %>% 
-  bind_cols(df.plot %>% select(group_jitter, group_contrast))
+  bind_cols(df.plot %>% select(group_jitter))
 
 ggplot(data = df.plot,
        mapping = aes(x = group_jitter,
@@ -292,30 +283,29 @@ ggplot(data = df.plot,
                    y = performance,
                    yend = fitted),
                alpha = 0.3) +
-  labs(y = "balance") + 
+  labs(y = "performance") + 
   scale_color_manual(values = c("red", "orange", "green")) + 
-  scale_x_continuous(breaks = 1:3, labels = levels(df.contrast$group)) +
+  scale_x_continuous(breaks = 1:3, labels = levels(df.development$group)) +
   theme(legend.position = "none",
         axis.title.x = element_blank())
 ```
 
 Results figure
 
-```{r linear-model4-21}
-df.contrast %>% 
+```{r}
+df.development %>% 
   ggplot(aes(x = group, y = performance)) + 
   geom_point(alpha = 0.3, position = position_jitter(width = 0.1, height = 0)) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1) + 
-  stat_summary(fun = "mean", geom = "point", shape = 21, fill = "white", size = 3)
+  stat_summary(fun.data = "mean_cl_boot",
+               shape = 21, 
+               fill = "white",
+               size = 0.75)
 ```
 
-### Constrasts 
+Here we test some more specific hypotheses: the the two youngest groups of children are different from the oldest group, and that the 3 year olds are different from the 5 year olds. 
 
-Estimated marginal means: 
-
-```{r linear-model4-22}
-df.development = df.contrast
-
+```{r}
+#  fit the linear model 
 fit = lm(formula = performance ~ group,
          data = df.development)
 
@@ -324,64 +314,100 @@ levels(df.development$group)
 
 # define the contrasts of interest 
 contrasts = list(young_vs_old = c(-0.5, -0.5, 1),
-                 three_vs_five = c(-1, 1, 0))
-
-# compute estimated marginal means
-leastsquare = emmeans(fit, "group")
-
-# run analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
-```
-
-```{r}
-fit = lm(formula = performance ~ group,
-         data = df.development)
-
-# check factor levels 
-levels(df.development$group)
-
-# define the contrasts of interest 
-contrasts = list(young_vs_old = c(-1, -1, 2),
                  three_vs_five = c(-0.5, 0.5, 0))
 
-# compute estimated marginal means
-leastsquare = emmeans(fit, "group")
-
-# run analyses
-contrast(leastsquare,
-         contrasts,
-         adjust = "bonferroni")
+# compute significance test on contrasts 
+fit %>% 
+  emmeans("group",
+          contr = contrasts,
+          adjust = "bonferroni") %>% 
+  pluck("contrasts")
 ```
 
 ### Post-hoc tests
 
-Post-hoc tests for a single predictor:
+Post-hoc tests for a single predictor (using the poker data set). 
 
-```{r linear-model4-23}
-fit = lm(formula = performance ~ group,
-         data = df.development)
+```{r}
+fit = lm(formula = balance ~ hand,
+         data = df.poker)
 
 # post hoc tests 
-leastsquare = emmeans(fit, "group")
-pairs(leastsquare,
-      adjust = "bonferroni")
+fit %>% 
+  emmeans(pairwise ~ hand,
+          adjust = "bonferroni") %>% 
+  pluck("contrasts")
 ```
 
-Post-hoc tests for two predictors:
+Post-hoc tests for two predictors (:
 
-```{r linear-model4-24}
+```{r}
 # fit the model
 fit = lm(formula = balance ~ hand + skill,
          data = df.poker)
 
 # post hoc tests 
-leastsquare = emmeans(fit, c("hand", "skill"))
-pairs(leastsquare,
-      adjust = "bonferroni")
+fit %>% 
+  emmeans(pairwise ~ hand + skill,
+          adjust = "bonferroni") %>% 
+  pluck("contrasts")
 ```
 
+
+```{r}
+fit = lm(formula = balance ~ hand,
+         data = df.poker)
+
+# comparing each to the mean 
+fit %>% 
+  emmeans(eff ~ hand) %>% 
+  pluck("contrasts")
+
+# one vs. all others 
+fit %>% 
+  emmeans(del.eff ~ hand) %>% 
+  pluck("contrasts")
+```
+
+### Understanding dummy coding 
+
+```{r}
+fit = lm(formula = balance ~ 1 + hand,
+         data = df.poker)
+
+fit %>% 
+  summary()
+
+model.matrix(fit) %>% 
+  as_tibble() %>% 
+  distinct()
+
+df.poker %>% 
+  select(participant, hand, balance) %>% 
+  group_by(hand) %>% 
+  top_n(3, wt = -participant) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+### Understanding effect coding 
+
+```{r}
+fit = lm(formula = balance ~ 1 + hand,
+         contrasts = list(hand = "contr.sum"),
+         data = df.poker)
+
+fit %>% 
+  summary()
+
+model.matrix(fit) %>% 
+  as_tibble() %>% 
+  distinct() %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
 
 ## Session info 
 

@@ -1,7 +1,7 @@
 ---
 title: "Class 14: Solutions"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2020"
+date: "February 13th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,12 +11,6 @@ output:
     pandoc_args: ["--number-offset=13"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Power analysis
 
 ## Load packages and set plotting theme  
@@ -25,6 +19,7 @@ knitr::opts_chunk$set(comment = "#>",
 library("knitr")      # for knitting RMarkdown 
 library("broom")      # for tidying up model fits
 library("pwr")        # for power calculations
+library("car")        # for Anova() 
 library("tictoc")     # for measuring execution time 
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
@@ -32,9 +27,12 @@ library("tidyverse")  # for wrangling, plotting, etc.
 ```{r set-theme}
 theme_set(theme_classic() + #set the theme 
     theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
-## Practice 1 
+## Practice 1 -- Having fun with `map()`
 
 Use the `map2_dbl()` function to create a new variable in this data frame that's the maximum of each row across columns `a` and `b`. 
 
@@ -75,7 +73,7 @@ df2 = df %>%
 toc()
 ```
 
-## Practice 2 
+## Practice 2 -- `map()`ping out the `nest()`
 
 In the `mtcars` data set, run separate linear models with `cyl` (number of cylinders) and `am` (whether the car has automatic or manual transmission) as predictors (including their interaction), and `mpg` (miles per galon), and `hp` (horse power) as dependent variables. Create a data frame that contains one column with the names of the dependent variables, one column with the names of the predictors, and one column with the p-value for each predictor. 
 
@@ -83,15 +81,17 @@ Here is the general strategy for how to go about this:
 
 - Make a data frame that only contains the dependent variables. 
 - Pass that data frame as a first argument to the `map()` function. 
-- The second argument in the `map()` function (the formula `f. = `) should be a linear model (`lm()`) for which you should use `.x` as the dependent variable (this will )
+- The second argument in the `map()` function (the formula `f. = `) should be a linear model (`lm()`) for which you should use `.x` (the first argument from the `map()` function) as the dependent variable
+- Use the `Anova()` function to get the main effects for each of the predictors as well as the interaction effect. 
+- Use the `tidy()` function in combination with `map_dfr()` to extract the p-values
 
 ```{r}
 # write your code here 
 mtcars %>%
   select(mpg, hp) %>%
-  map(~ lm(.x ~ cyl * am,
-           data = mtcars) %>% 
-        anova()) %>%
+  map(.f = ~ lm(.x ~ cyl * am,
+                data = mtcars) %>% 
+        Anova(type = 3)) %>%
   map_dfr(tidy, .id = "source") %>%
   mutate(p.value = round(p.value, digits = 3)) %>% 
   na.omit() %>% 
@@ -139,7 +139,7 @@ Let's estimate the parameters based on our sample:
 ```{r}
 # parameter estimates for the coefficients based on the sample 
 b = lm(formula = z ~ x * y,
-   data = df.linear) %>% 
+       data = df.linear) %>% 
   tidy() %>% 
   select(term, estimate, p.value)
 
@@ -150,7 +150,7 @@ sigma = lm(formula = z ~ x * y,
   pull(sigma)
 ```
 
-Run a power analysis to see how many participants you would need to have an 80% of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
+Run a power analysis to see how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
 
 Here is the basic strategy: 
 
@@ -161,7 +161,7 @@ Here is the basic strategy:
 - Extract the coefficients of each model fit, and check whether the interaction is significant. 
 - Make a plot that shows how power changes with the sample size n. 
 
-```{r}
+```{r, message=FALSE}
 set.seed(1)
 
 # fit the model 
@@ -190,8 +190,8 @@ df.power3 = crossing(n = seq(10, 500, 50),
                             y = rep(c(0, 1), each = n/2),
                             z = b[1] + b[2] * x + b[3] * y + b[4] * x * y + rnorm(n = n, sd = sigma)))) %>% 
   group_by(index, n, simulation) %>% 
-  mutate(fit = map(data, 
-                   ~ lm(formula = z ~ x * y,
+  mutate(fit = map(.x = data, 
+                   .f = ~ lm(formula = z ~ x * y,
                               data = .x))) %>% 
   mutate(coef = map(fit, tidy)) %>% 
   select(simulation, n, index, coef) %>% 
@@ -215,7 +215,7 @@ ggplot(data = df.power3,
 
 Run the same power analysis this time assuming the ground truth parameters from the population (rather than the parameters that we've estimated from the sample). 
 
-```{r}
+```{r, message=FALSE}
 set.seed(1)
 
 # population parameters 

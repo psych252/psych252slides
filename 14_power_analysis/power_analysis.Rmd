@@ -1,7 +1,7 @@
 ---
 title: "Class 14"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2020"
+date: "February 12th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -12,12 +12,6 @@ output:
 bibliography: [packages.bib]
 nocite: '@*'
 ---
-
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
 
 # Power analysis
 
@@ -31,34 +25,41 @@ knitr::opts_chunk$set(comment = "#>",
   - Understanding `map()` and its children. 
   - Understanding `nest()` and `unnest()`.
 
-```{r power-analysis-01, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 install.packages(c("lsr", "pwr"))
 ```
 
 ## Load packages and set plotting theme  
 
-```{r power-analysis-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("broom")      # for tidying up model fits
 library("magrittr")   # for going all in with the pipe
-library("lsr")        # for computing effect size measures
 library("effectsize") # for computing effect size measures
+library("car")        # for Anova()
 library("pwr")        # for power calculations
 library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r power-analysis-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
     theme(text = element_text(size = 20))) #set the default text size
+
+# markdown settings for rendered code chunks 
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "packages.bib") 
+
+# suppress summary warnings 
+options(dplyr.summarise.inform = F)
 ```
 
 ## Load data sets 
 
-```{r power-analysis-04, warning=F, message=F}
+```{r, warning=F, message=F}
 df.poker = read_csv("data/poker.csv")
 ```
 
@@ -66,7 +67,7 @@ df.poker = read_csv("data/poker.csv")
 
 Figures to illustrate power: 
 
-```{r power-analysis-05}
+```{r}
 mu0 = 10
 mu1 = 18
 # mu0 = 8
@@ -97,8 +98,7 @@ ggplot(data = tibble(x = c(0, 30)),
                 alpha = 0.5,
                 args = list(mean = mu0,
                             sd = sd0),
-                xlim = c(qnorm(1-alpha, mean = mu0, sd = sd0), 20)
-                ) +
+                xlim = c(qnorm(1-alpha, mean = mu0, sd = sd0), 20)) +
   stat_function(fun = "dnorm",
                 geom = "area",
                 size = 1,
@@ -106,8 +106,7 @@ ggplot(data = tibble(x = c(0, 30)),
                 alpha = 0.5,
                 args = list(mean = mu1,
                             sd = sd1),
-                xlim = c(0, c(qnorm(1-alpha, mean = mu0, sd = sd0)))
-                ) +
+                xlim = c(0, c(qnorm(1-alpha, mean = mu0, sd = sd0)))) +
   geom_vline(xintercept = qnorm(1-alpha, mean = mu0, sd = sd0),
              size = 1) +
   coord_cartesian(expand = F)
@@ -115,55 +114,6 @@ ggplot(data = tibble(x = c(0, 30)),
 ```
 
 ## Effect sizes
-
-### eta-squared and partial eta-squared
-
-One-way ANOVA: 
-
-```{r power-analysis-06}
-fit = lm(formula = balance ~ hand, 
-         data = df.poker)
-
-# use function
-etaSquared(fit)
-
-# compute by hand 
-fit %>% 
-  anova %>% 
-  tidy() %>% 
-  pull(sumsq) %>% 
-  divide_by(sum(.)) %>% 
-  magrittr::extract(1)
-```
-
-Two-way ANOVA: 
-
-```{r power-analysis-07}
-fit = lm(formula = balance ~ hand * skill, 
-         data = df.poker)
-
-# use function
-etaSquared(fit)
-
-# compute by hand 
-eta_squared = fit %>% 
-  anova %>% 
-  tidy() %>% 
-  pull(sumsq) %>% 
-  divide_by(sum(.)) %>% 
-  magrittr::extract(1)
-
-# compute partial eta squared by hand
-eta_partial_squared = fit %>% 
-  anova %>% 
-  tidy() %>% 
-  filter(term %in% c("hand","Residuals")) %>% 
-  select(term, sumsq) %>% 
-  spread(term, sumsq) %>% 
-  summarize(eta_partial_squared = hand / (hand + Residuals)) %>% 
-  pull(eta_partial_squared)
-  
-```
 
 ### Cohen's d
 
@@ -180,10 +130,10 @@ s_p = \sqrt\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}
 $$
 
 
-```{r power-analysis-08}
-# use function from "lsr" package
-cohensD(x = balance ~ skill,
-        data = df.poker)
+```{r}
+# using the effectsize package 
+cohens_d(x = balance ~ skill,
+         data = df.poker)
 
 # compute by hand
 df.cohen = df.poker %>% 
@@ -191,25 +141,19 @@ df.cohen = df.poker %>%
   summarize(mean = mean(balance),
             var = var(balance),
             n = n()) %>% 
-  ungroup()
+  ungroup() %>% 
+  pivot_wider(names_from = skill,
+              values_from = c(mean, var, n),
+              names_sep = "") %>% 
+  mutate(sp = sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2)),
+         d = abs(mean1 - mean2) / sp)
 
-n1 = df.cohen$n[1]
-n2 = df.cohen$n[2]
-var1 = df.cohen$var[1]
-var2 = df.cohen$var[2]
-mean1 = df.cohen$mean[1]
-mean2 = df.cohen$mean[2]
-
-sp = sqrt(((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2))
-
-d = abs(mean1 - mean2) / sp
-print(d)
-
+print(df.cohen)
 ```
 
 ## Determining sample size 
 
-One way to deterime sample size is by using the `pwr` package. While this packages is very convenient, we cannot compute power for all the hypotheses that we might be interested in testing. 
+One way to determine sample size is by using the `pwr` package. While this packages is very convenient, we cannot compute power for all the hypotheses that we might be interested in testing. 
 
 ### `pwr` package
 
@@ -217,9 +161,9 @@ The `pwr` package has a number of functions that we can use do determine the des
 
 #### Binomial test
 
-We can determine what sample size we need for a Binomal test that compares two different proportions like so: 
+We can determine what sample size we need for a Binomial test that compares two different proportions like so: 
 
-```{r power-analysis-09}
+```{r}
 pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
@@ -232,7 +176,7 @@ To have an 80% chance of detecting a difference between a proportion of `p1 = 0.
 
 We can use the `plot()` function to illustrate what power we would get for different sample sizes. 
 
-```{r power-analysis-10}
+```{r}
 pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
@@ -242,7 +186,7 @@ pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50),
 
 Notice that this is a ggplot object, so we could tweak it further if we'd like to, like so: 
 
-```{r power-analysis-11}
+```{r}
 pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
@@ -258,7 +202,7 @@ pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50),
 
 Here is how we could calculate the desired sample size for a t-test with two independent samples. 
 
-```{r power-analysis-12}
+```{r}
 pwr.t.test(d = 0.3,
            power = 0.8,
            type = "two.sample",
@@ -286,13 +230,13 @@ Luckily, there is a very flexible approach to determining sample size: via simul
 
 Let's take a look at the help function. 
 
-```{r power-analysis-13, eval=F}
+```{r, eval=F}
 help(map)
 ```
 
 As the help function says, `map()` allows us to apply a function to each element of a vector. Here is a simple example: 
 
-```{r power-analysis-14}
+```{r}
 map(.x = 1:3, .f = ~ .x^2)
 ```
 
@@ -302,7 +246,7 @@ I've passed the vector of numbers `.x = 1:3` to `map()`, and then applied the an
 
 As with many R functions, you can achieve the same outcome in many different ways. Here are a number of ways to do the same thing: 
 
-```{r power-analysis-15, echo=F}
+```{r, echo=F}
 # omitting arguments, and using . instead of .x
 tmp1 = map(1:3, ~ .^2) 
 
@@ -323,26 +267,26 @@ str_c("Is tmp2 identical to tmp3? ", identical(tmp2, tmp3))
 
 Notice that the output of `map()` is a list. 
 
-```{r power-analysis-16}
+```{r}
 map(.x = 1:3, .f = ~ .x^2) %>% 
   str()
 ```
 
 The `map()` function has many children that differ in what they output. For example, `map_dbl()` outputs a numeric vector instead of a list. 
 
-```{r power-analysis-17}
+```{r}
 map_dbl(.x = 1:3, .f = ~ .x^2)
 ```
 
 And `map_lgl()` returns logical values. 
 
-```{r power-analysis-18}
+```{r}
 map_lgl(.x = 1:3, .f = ~ .x == 1)
 ```
 
 We can also return data frames by using either `map_dfr()` which binds data frames by row, or `map_dfc()` which binds data frames by column. Here is an example:
 
-```{r power-analysis-19}
+```{r}
 set.seed(1)
 
 # function to create a data frame 
@@ -360,14 +304,14 @@ map_dfr(1:3, ~ fun_make_df(.))
 
 A nice use-case of the `map_dfr()` function can be to read in a number of csv files from individual participants into one larger data frame. Let's simulate some data first, and save the data of each participant as a separate csv file (using `map()` of course). 
 
-```{r power-analysis-20}
+```{r}
 set.seed(1)
 
 fun_simulate_csv = function(x){
   n_observations = sample(3:6, size = 1)
   df = tibble(age = sample(18:99, size = n_observations),
               responses = rnorm(n = n_observations, mean = 100, sd = 10))
-  write_csv(df, path = str_c("data/participant", x, ".csv"))
+  write_csv(df, file = str_c("data/participant", x, ".csv"))
 }
 
 map(1:3, fun_simulate_csv)
@@ -375,34 +319,18 @@ map(1:3, fun_simulate_csv)
 
 Now, let's read in the data from the three participants and combine it into a single data frame.
 
-```{r power-analysis-21, warning=F, message=F}
-map_dfr(.x = 1:3, ~ read_csv(str_c("data/participant", .x, ".csv")))
-```
-
-One problem is that I now don't know which data is coming from which participant. `mutate()` comes to our rescue here: 
-
-```{r power-analysis-22, warning=F, message=F}
-map_dfr(.x = 1:3,
-        .f = ~ read_csv(str_c("data/participant", .x, ".csv")) %>%
-            mutate(participant = .x)) %>%
-  select(participant, age, responses)
-```
-
-Another neat way to achieve the same thing (same same but different) is to use the `.id` argument of the `map_dfr()` function.
-
-```{r power-analysis-23, warning=F, message=F}
+```{r, warning=F, message=F}
 map_dfr(.x = 1:3,
         .f = ~ read_csv(str_c("data/participant", .x, ".csv")),
-        .id = "participant") %>% 
-  select(participant, age, responses)
+        .id = "participant")
 ```
-
+Notice how I used the `.id = ` argument of the function to add a `participant` column to my data frame in this case. 
 
 ##### Use `map2()` for functions with more than one input 
 
 If you have a function with more than one input, `map2()` is your friend. Here is a silly example: 
 
-```{r power-analysis-24}
+```{r}
 map2_dbl(.x = c(1.23, 2.13, 5.32),
          .y = c(0, 1, 2),
          .f = ~ round(.x, digits = .y))
@@ -411,7 +339,7 @@ map2_dbl(.x = c(1.23, 2.13, 5.32),
 Here, I took the vector of numbers `.x` and rounded it to a different number of digits according to what I've specified it `.y`. 
 The same works with data frames, too, like so: 
 
-```{r power-analysis-25}
+```{r}
 tibble(x = c(1.23, 2.13, 5.32),
        n = c(0, 1, 2)) %>% 
   mutate(rounded = map2_dbl(.x = x,
@@ -423,7 +351,7 @@ tibble(x = c(1.23, 2.13, 5.32),
 
 `pmap()` is your friend for functions that have more than two arguments. Here is an example: 
 
-```{r power-analysis-26}
+```{r}
 tibble(x = c(1, 2, 3),
        y = c(23, 12, 1),
        z = c(4, 5, 4)) %>% 
@@ -436,7 +364,7 @@ Notice than when using more than two arguments, we refer to each function argume
 
 Use the `map2_dbl()` function to create a new variable in this data frame that's the maximum of each row across columns `a` and `b`. 
 
-```{r power-analysis-27}
+```{r}
 df = tibble(a = c(12, 14, 52, 23, 23),
             b = c(29, 12, 4, 48, 37))
 # write your code here 
@@ -444,7 +372,7 @@ df = tibble(a = c(12, 14, 52, 23, 23),
 
 For the fast ones: For each row in the data frame, write a function that calculates the mean of columns `a` and `b`, and the rounds to the number of digits specified in column `d`. 
 
-```{r power-analysis-28}
+```{r}
 df = tibble(a = c(12.123, 53.234, 23.324, 54.232, 12.454),
             b = c(12.456, 23.234, 6.736, 3.346, 7.232),
             d = c(1, 2, 2, 3, 1))
@@ -455,53 +383,54 @@ df = tibble(a = c(12.123, 53.234, 23.324, 54.232, 12.454),
 
 `map()` becomes particularly powerful when combined with list columns. List columns allow you to put data frames into a column of your data frame. For example, you can do something like this: 
 
-```{r power-analysis-29}
-df = tibble(participant = 1, 
+```{r}
+df.data = tibble(participant = 1, 
             age = 23,
             data = list(tibble(trial = c(1, 2, 3),
                                response = c(23, 95, 37))))
 
-print(df)
+print(df.data)
 ```
 
 We could access what's in this data column like so 
 
-```{r power-analysis-30}
-df$data[[1]]
+```{r}
+df.data %>% 
+  pluck("data", 1)
 ```
 
 ##### `unnest()`
 
 For getting data frames out of list columns, we can use the `unnest()` function. 
 
-```{r power-analysis-31}
-df %>% 
+```{r}
+df.data %>% 
   unnest(cols = data)
 ```
-
-Notice how the data frame from the list column 
 
 ##### `nest()`
 
 We can use the `nest()` function to create list columns. `nest()` works particularly well in combination with `group_by()`. For example, here I'm created three separate data sets where the size of each data set is determined by the `x` column.
 
-```{r power-analysis-32}
+```{r}
 # original data frame 
-df = tibble(x = c(1, 1, 1, 2, 2, 3),
+df.data = tibble(x = c(1, 1, 1, 2, 2, 3),
             y = 1:6,
             z = 6:1)
-print(df)
+print(df.data)
 
 # nested data frame 
-df = df %>% 
+df.data = df.data %>% 
   group_by(x) %>% 
-  nest()
-print(df)
+  nest() %>% 
+  ungroup()
+
+print(df.data)
 
 # and back to the original data frame  
-df = df %>% 
+df.data = df.data %>% 
   unnest(cols = data)
-print(df)
+print(df.data)
 ```
 
 And, of course, I can use unnest() to get back to my original data frame. 
@@ -512,29 +441,29 @@ And, of course, I can use unnest() to get back to my original data frame.
 
 I'll demonstrate via the infamous `mtcars` data set that comes with R. 
 
-```{r power-analysis-33}
+```{r}
 mtcars %>% 
   head(10)
 ```
 
 What I want to do is to fit separate regression models predicting `mpg` (miles per gallon) as a function of `wt` (the car's weight) for cars with different numbers of cylinders. Here is how that works. 
 
-```{r power-analysis-34}
+```{r}
 mtcars %>%
   group_by(cyl) %>% 
   nest() %>% 
-  mutate(fit = map(data, ~ lm(mpg ~ 1 + wt, data = .x)))
+  mutate(fit = map(data, ~ lm(mpg ~ 1 + wt, data = .)))
 ```
 
 I first grouped by the `cyl` (the number of cylinders), used `nest()` to put the rest of the data into a list column, and then used `mutate()` to run a separate linear model on each data set and saved the modle result into the `fit` column. 
 
 With some more wrangling, I could, for example, extract the coefficients of each model like so: 
 
-```{r power-analysis-35}
+```{r}
 mtcars %>%
   group_by(cyl) %>% 
   nest() %>% 
-  mutate(fit = map(data, ~ lm(mpg ~ 1 + wt, data = .x)),
+  mutate(fit = map(data, ~ lm(mpg ~ 1 + wt, data = .)),
          coef = map(fit, tidy)) %>% 
   unnest(cols = coef) %>% 
   select(-c(data, fit))
@@ -552,9 +481,11 @@ Here is the general strategy for how to go about this:
 
 - Make a data frame that only contains the dependent variables. 
 - Pass that data frame as a first argument to the `map()` function. 
-- The second argument in the `map()` function (the formula `f. = `) should be a linear model (`lm()`) for which you should use `.x` as the dependent variable (this will )
+- The second argument in the `map()` function (the formula `f. = `) should be a linear model (`lm()`) for which you should use `.x` (the first argument from the `map()` function) as the dependent variable
+- Use the `Anova()` function to get the main effects for each of the predictors as well as the interaction effect. 
+- Use the `tidy()` function in combination with `map_dfr()` to extract the p-values
 
-```{r power-analysis-36}
+```{r}
 # write your code here 
 ```
 
@@ -568,7 +499,7 @@ Let's start with the Binomial test that we played around with above. We want to 
 
 Here is how we would go about this. First, I'll set up a simulation grid.
 
-```{r power-analysis-37}
+```{r}
 # make reproducible 
 set.seed(1)
 
@@ -589,7 +520,7 @@ The `crossing()` function creates a data frame that contains all the combination
 
 Now, let's generate data according to our hypothesis. 
 
-```{r power-analysis-38}
+```{r}
 df.power = df.power %>% 
   group_by(index, n, simulation) %>% 
   mutate(response = rbinom(n = n(), size = n, prob = p))
@@ -597,24 +528,23 @@ df.power = df.power %>%
 df.power
 ```
 
-The `response` variable now contains samples from the sample size `n` according to the probability specified in `p`. Now it's time for `group_by()` and `nest()` because we want to calculate the p-value for observing this reponse if in fact the null hypothesis was true (i.e. p = 0.5). 
+The `response` variable now contains samples from the sample size `n` according to the probability specified in `p`. Now it's time for `group_by()` and `nest()` because we want to calculate the p-value for observing this response if in fact the null hypothesis was true (i.e. p = 0.5). 
 
-```{r power-analysis-39}
+```{r}
 df.power = df.power %>% # generate random data
   group_by(index, simulation, p) %>% 
   nest() %>% # put data in list column
   mutate(fit = map(data, 
                    ~ binom.test(x = .$response, # define formula
-                          n = .$n,
-                          p = 0.5,
-                          alternative = "two.sided")))
+                                n = .$n,
+                                p = 0.5,
+                                alternative = "two.sided")))
 df.power
 ```
 
 Now that we've fitted a bunch of binomial models, we only need to get at the p-values. Again, we can use the `tidy()` function from the `broom` package for help, like so: 
 
-
-```{r power-analysis-40}
+```{r}
 df.power = df.power %>% 
   mutate(coef = map(fit, tidy)) %>% 
   select(simulation, p, index, coef) %>% 
@@ -622,10 +552,9 @@ df.power = df.power %>%
   rename(n = parameter)
 df.power
 ```
-
 Finally, all that's left is to calculate power by looking at the proportion of times in which we rejected the null hypothesis. 
 
-```{r power-analysis-41}
+```{r}
 df.power %>% 
   group_by(n) %>% 
   summarize(power = sum(p.value < 0.05) / n())
@@ -635,7 +564,7 @@ Notice here that the power values fluctuate quite a bit. This is because we only
 
 But first, let's make a plot that visualizes what we found: 
 
-```{r power-analysis-42}
+```{r, message=FALSE}
 df.plot = df.power %>% 
   group_by(n) %>% 
   summarize(power = sum(p.value < 0.05) / n())
@@ -654,7 +583,7 @@ As expected, the power increases with the sample size n.
 
 Now let's run the same simulation again, with a larger sample size, and also for two different alternative hypotheses: p1 = 0.75, and p2 = 0.9. 
 
-```{r power-analysis-43}
+```{r, message=FALSE}
 # make reproducible 
 set.seed(1)
 
@@ -680,7 +609,8 @@ df.power = crossing(n = seq(10, 40, 2),
   unnest(cols = coef) %>% 
   rename(n = parameter) %>% 
   group_by(n, p) %>% 
-  summarize(power = sum(p.value < 0.05) / n())
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup()
 
 # visualize results
 ggplot(data = df.power, 
@@ -707,7 +637,7 @@ The procedure will be very similar to the Binomial test above. The only thing th
 
 Let's say that we collected the following pilotdata set: 
 
-```{r power-analysis-44}
+```{r}
 set.seed(1)
 # parameters
 n = 10 
@@ -727,7 +657,7 @@ df.ttest = tibble(group1 = rnorm(n = n,
 
 The two groups in our sample don't differ significantly from each other. 
 
-```{r power-analysis-45}
+```{r, message=FALSE}
 ggplot(data = df.ttest,
        mapping = aes(x = name,
                      y = value)) + 
@@ -747,7 +677,7 @@ $$s_p = \sqrt\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}$$
 
 In our sample, the effect size Cohen's d was: 
 
-```{r power-analysis-46}
+```{r}
 df = df.ttest %>% 
   group_by(name) %>% 
   summarize(mean = mean(value),
@@ -764,7 +694,7 @@ d
 
 Let's double check that we got it right: 
 
-```{r power-analysis-47}
+```{r}
 cohens_d(x = value ~ name, 
          data = df.ttest)
 ```
@@ -773,7 +703,7 @@ We did!
 
 So let's now calculate the means and standard deviations based on our pilot data and run a power analysis to determine how many participants we would need, to have an 80% chance of rejecting the null hypothesis for the estimated effect size. 
 
-```{r power-analysis-48}
+```{r, message=FALSE}
 # make reproducible 
 set.seed(1)
 
@@ -807,7 +737,8 @@ df.power2 = crossing(n = seq(from = 10, to = 60, by = 2),
   # select(simulation, n, index, coef) %>%
   # unnest(cols = coef) %>%
   group_by(n) %>% 
-  summarize(power = sum(p.value < 0.05) / n())
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup()
 
 # visualize results
 ggplot(data = df.power2, 
@@ -825,7 +756,7 @@ ggplot(data = df.power2,
 
 Let's compare to what we'd get from the `pwr` package. 
 
-```{r power-analysis-49}
+```{r}
 pwr.t.test(d = 0.5874251,
            power = 0.8,
            type = "two.sample",
@@ -838,7 +769,7 @@ Looks pretty similar!
 
 Try to run a simulation to determine how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction based on the following pilot data set:  
 
-```{r power-analysis-50}
+```{r}
 set.seed(1)
 # population parameters 
 b0 = 1
@@ -855,7 +786,7 @@ df.linear = tibble(x = runif(n = n),
 
 Let's visualize the pilot data first: 
 
-```{r power-analysis-51}
+```{r, message=FALSE}
 ggplot(data = df.linear,
        mapping = aes(x = x,
                      y = z,
@@ -872,7 +803,7 @@ ggplot(data = df.linear,
 
 Let's estimate the parameters based on our sample: 
 
-```{r power-analysis-52}
+```{r}
 # parameter estimates for the coefficients based on the sample 
 b = lm(formula = z ~ x * y,
    data = df.linear) %>% 
@@ -897,14 +828,14 @@ Here is the strategy:
 - Extract the coefficients of each model fit, and check whether the interaction is significant. 
 - Make a plot that shows how power changes with the sample size n. 
 
-```{r power-analysis-53}
+```{r}
 set.seed(1)
 # write your code here 
 ```
 
 Run the same power analysis this time assuming the ground truth parameters from the population (rather than the parameters that we've estimated from the sample). 
 
-```{r power-analysis-54}
+```{r}
 set.seed(1)
 # write your code here 
 ```
@@ -933,7 +864,7 @@ set.seed(1)
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r power-analysis-55}
+```{r}
 sessionInfo()
 ```
 
