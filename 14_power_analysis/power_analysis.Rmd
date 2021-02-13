@@ -268,8 +268,7 @@ str_c("Is tmp2 identical to tmp3? ", identical(tmp2, tmp3))
 Notice that the output of `map()` is a list. 
 
 ```{r}
-map(.x = 1:3, .f = ~ .x^2) %>% 
-  str()
+map(.x = 1:3, .f = ~ .x^2)
 ```
 
 The `map()` function has many children that differ in what they output. For example, `map_dbl()` outputs a numeric vector instead of a list. 
@@ -385,9 +384,9 @@ df = tibble(a = c(12.123, 53.234, 23.324, 54.232, 12.454),
 
 ```{r}
 df.data = tibble(participant = 1, 
-            age = 23,
-            data = list(tibble(trial = c(1, 2, 3),
-                               response = c(23, 95, 37))))
+                 age = 23,
+                 data = list(tibble(trial = c(1, 2, 3),
+                                    response = c(23, 95, 37))))
 
 print(df.data)
 ```
@@ -414,14 +413,14 @@ We can use the `nest()` function to create list columns. `nest()` works particul
 
 ```{r}
 # original data frame 
-df.data = tibble(x = c(1, 1, 1, 2, 2, 3),
-            y = 1:6,
-            z = 6:1)
+df.data = tibble(participant = c(1, 1, 1, 2, 2, 3),
+                 response1 = 1:6,
+                 response2 = 6:1)
 print(df.data)
 
 # nested data frame 
 df.data = df.data %>% 
-  group_by(x) %>% 
+  group_by(participant) %>% 
   nest() %>% 
   ungroup()
 
@@ -449,7 +448,7 @@ mtcars %>%
 What I want to do is to fit separate regression models predicting `mpg` (miles per gallon) as a function of `wt` (the car's weight) for cars with different numbers of cylinders. Here is how that works. 
 
 ```{r}
-mtcars %>%
+df.data = mtcars %>%
   group_by(cyl) %>% 
   nest() %>% 
   mutate(fit = map(data, ~ lm(mpg ~ 1 + wt, data = .)))
@@ -500,9 +499,6 @@ Let's start with the Binomial test that we played around with above. We want to 
 Here is how we would go about this. First, I'll set up a simulation grid.
 
 ```{r}
-# make reproducible 
-set.seed(1)
-
 # number of simulations
 n_simulations = 10
 
@@ -516,7 +512,6 @@ df.power
 ```
 
 The `crossing()` function creates a data frame that contains all the combinations of the variables. 
-
 
 Now, let's generate data according to our hypothesis. 
 
