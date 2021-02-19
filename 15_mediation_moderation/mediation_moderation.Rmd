@@ -1,7 +1,7 @@
 ---
 title: "Class 15"
 author: "Tobias Gerstenberg"
-date: "02/10/2020"
+date: "02/19/2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -12,12 +12,6 @@ output:
 bibliography: [references.bib]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 ```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
 install.packages(c("mediation", "multilevel", "rsvg", "DiagrammeRsvg"))
 ```
@@ -27,10 +21,10 @@ install.packages(c("mediation", "multilevel", "rsvg", "DiagrammeRsvg"))
 
 These notes are adapted from this tutorial: [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
 
-> _Mediation analysis_ tests a hypothetical causal chain where one variable __X__ affects a second variable __M__ and, in turn, that variable affects a third variable __Y__. Mediators describe the how or why of a (typically well-established) relationship between two other variables and are sometimes called intermediary variables since they often describe the process through which an effect occurs. This is also sometimes called an indirect effect. For instance, people with higher incomes tend to live longer but this effect is explained by the mediating influence of having access to better health care. 
-
 ## Learning goals 
 
+- Understanding what controlling for variables means. 
+- Learning a graphical procedure that helps identify when it's good vs. bad to control for variables. 
 - Simulating a mediation analysis.
 - Baron and Kenny's (1986) steps for mediation. 
 - Testing the significance of a mediation. 
@@ -63,6 +57,11 @@ library("tidyverse")     # for wrangling, plotting, etc.
 ```{r set-theme}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+options(dplyr.summarise.inform = FALSE) # Disable summarize ungroup messages
 ```
 
 ## Controlling for variables 
@@ -472,7 +471,7 @@ lm(formula = y ~ x + z,
 
 ### Bad controls
 
-#### Common effect (with direct link)
+#### Common effect
 
 ##### DAG
 
@@ -500,7 +499,6 @@ digraph neato {
   
   # edges between nodes
   edge [color = black]
-  x -> y
   x -> z
   y -> z
   
@@ -510,10 +508,10 @@ digraph neato {
 ")
 
 # export as pdf 
-# g %>% 
-#   export_svg %>% 
-#   charToRaw %>% 
-#   rsvg_pdf("figures/common_effect_with_direct_link.pdf")
+# g %>%
+#   export_svg %>%
+#   charToRaw %>%
+#   rsvg_pdf("figures/common_effect.pdf")
 
 # show plot
 g
@@ -522,9 +520,8 @@ g
 ##### Regression 
 
 ```{r}
-set.seed(2)
-n = 100
-b_xy = 2
+set.seed(1)
+n = 1000
 b_xz = 2
 b_yz = 2
 sd = 1
@@ -536,7 +533,7 @@ fun_error = function(n, sd){
 }
 
 df = tibble(x = fun_error(n, sd),
-            y = x * b_xy + fun_error(n, sd),
+            y = fun_error(n, sd),
             z = x * b_xz + y * b_yz + fun_error(n, sd))
 
 # without control
@@ -586,11 +583,11 @@ graph neato {
 ")
 
 # export as pdf 
-# g %>% 
-#   export_svg %>% 
-#   charToRaw %>% 
-#   rsvg_pdf("figures/common_effect_with_direct_link_undirected1.pdf")
-#   # rsvg_pdf("figures/common_effect_with_direct_link_undirected2.pdf")
+# g %>%
+#   export_svg %>%
+#   charToRaw %>%
+#   rsvg_pdf("figures/common_effect_undirected1.pdf")
+#   rsvg_pdf("figures/common_effect_undirected2.pdf")
 
 # show plot
 g

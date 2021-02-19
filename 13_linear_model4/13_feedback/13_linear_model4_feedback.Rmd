@@ -1,7 +1,7 @@
 ---
-title: "13_linear_model4"
+title: "14_power_analysis"
 author: "Tobias Gerstenberg"
-date: "2/10/2021"
+date: "2/15/2021"
 output: 
   html_document:
     toc: true
@@ -22,19 +22,12 @@ theme_set(theme_classic() +
                   panel.grid.major.y = element_line(color = "gray90")))
 ```
 
-> Today was a lot of information. Was it mostly for us to understand the behind the scenes bits? I'm a little unclear on the application part of it, and how to use the different things we looked at to answer specific questions about the data.
-
-> Does it ever actually make sense to run anovas? Versus to hand-code constrasts on categorical variables (however makes sense, sometimes helmert, sometimes contrast coding, etc) so that the summary output is interpretable?
-
-> I think that this class can often get really bogged down in the R, but I wish there could be more in the way of statistical theory. Is there perhaps, a glossary of some of the terms that are used?
-
 ## Student feedback 
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
-
 ## PollEverywhere results 
 
 ```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
@@ -74,6 +67,5 @@ ggplot(data = df.overall,
 
 ## What to do next time
 
-- This class may need a little more motivation. Understanding linear contrasts is hard ... 
 
 
