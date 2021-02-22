@@ -1,7 +1,7 @@
 ---
 title: "Class 16"
 author: "Tobias Gerstenberg"
-date: "February 14th, 2020"
+date: "February 22th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,17 +13,7 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Model comparison
-
-```{r model-comparison-01, include=FALSE, eval=FALSE}
-install.packages("cowplot")
-```
 
 ## Learning goals 
 
@@ -37,22 +27,25 @@ install.packages("cowplot")
 
 ## Load packages and set plotting theme  
 
-```{r model-comparison-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")      # for tidying up linear models 
-library("cowplot")    # for figure panels
+library("patchwork")  # for figure panels
 library("modelr")     # for cross-validation
 library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r model-comparison-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "packages.bib") 
 ```
 
 ## Model comparison 
@@ -73,7 +66,7 @@ $$
 $$
 Here, I'll use the following parameters: $\beta_0 = 10$, $\beta_1 = 3$, and $\beta_2 = 2$ to generate the data:
 
-```{r model-comparison-04}
+```{r, warning=FALSE}
 set.seed(1)
 
 n_plots = 3
@@ -81,22 +74,16 @@ n_samples = 20 # sample size
 n_parameters = c(1:4, seq(7, 19, length.out = 5)) # number of parameters in the polynomial regression
 
 # generate data 
-df.data = tibble(
-  x = runif(n_samples, min = 0, max = 10), 
-  y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20)
-)
+df.data = tibble(x = runif(n_samples, min = 0, max = 10), 
+                 y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20))
 
 # plotting function
 plot_fit = function(i){
   # calculate RMSE
   rmse = lm(formula = y ~ poly(x, degree = i, raw = TRUE),
-            data = df.data) %>% 
-    augment() %>% 
-    summarize(rmse = .resid^2 %>% 
-                mean() %>% 
-                sqrt() %>% 
-                round(2))
-    
+           data = df.data) %>% 
+    rmse(data = df.data)
+
   # make a plot
   ggplot(data = df.data,
              mapping = aes(x = x,
@@ -107,7 +94,7 @@ plot_fit = function(i){
     annotate(geom = "text",
              x = Inf,
              y = -Inf,
-             label = str_c("RMSE = ", rmse),
+             label = str_c("RMSE = ", round(rmse, 2)),
              hjust = 1.1,
              vjust = -0.3) + 
     theme(axis.ticks = element_blank(),
@@ -119,12 +106,12 @@ plot_fit = function(i){
 l.p = map(n_parameters, plot_fit)
 
 # make figure panel 
-plot_grid(plotlist = l.p, ncol = 3)
+wrap_plots(plotlist = l.p, ncol = 3)
 ```
 
 As we can see, RMSE becomes smaller and smaller the more parameters the model has to fit the data. But how does the RMSE look like for new data that is generated from the same underlying ground truth? 
 
-```{r model-comparison-05}
+```{r, warning=FALSE}
 set.seed(1)
 
 n_plots = 3
@@ -152,20 +139,13 @@ plot_fit = function(i){
   fit = lm(formula = y ~ poly(x, degree = i, raw = TRUE),
             data = df.data)
   
+  # calculate RMSE for training data
   rmse = fit %>% 
-    augment() %>% 
-    summarize(rmse = .resid^2 %>% 
-                mean() %>% 
-                sqrt() %>% 
-                round(2))
+    rmse(data = df.data)
   
   # calculate RMSE for new data 
   rmse_new = fit %>% 
-    augment(newdata = df.more_data) %>% 
-    summarize(rmse = (y - .fitted)^2 %>% 
-                mean() %>% 
-                sqrt() %>% 
-                round(2))
+    rmse(data = df.more_data)
     
   # make a plot
   ggplot(data = df.data,
@@ -180,13 +160,13 @@ plot_fit = function(i){
     annotate(geom = "text",
              x = Inf,
              y = -Inf,
-             label = str_c("RMSE = ", rmse),
+             label = str_c("RMSE = ", round(rmse, 2)),
              hjust = 1.1,
              vjust = -0.3) + 
     annotate(geom = "text",
              x = Inf,
              y = -Inf,
-             label = str_c("RMSE = ", rmse_new),
+             label = str_c("RMSE = ", round(rmse_new, 2)),
              hjust = 1.1,
              vjust = -2,
              color = "red") + 
@@ -199,14 +179,14 @@ plot_fit = function(i){
 l.p = map(n_parameters, plot_fit)
 
 # make figure panel 
-plot_grid(plotlist = l.p, ncol = 3)
+wrap_plots(plotlist = l.p, ncol = 3)
 ```
 
 The RMSE in black shows the root mean squared error for the data that the model was fit on. The RMSE in red shows the RMSE on the new data. As you can see, the complex models do really poorly. They overfit the noise in the original data which leads to make poor predictions for new data. The simplest model (with two parameters) doesn't do particularly well either since it misses out on the quadratic trend in the data. Both the model with the quadratic term (top middle) and a model that includes a cubic term (top right) provide a good balance -- their RMSE on the new data is lowest. 
 
 Let's generate another data set: 
 
-```{r model-comparison-06}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -218,16 +198,14 @@ b2 = 3
 sd = 0.5
 
 # sample
-df.data = tibble(
-  participant = 1:sample_size,
-  x = runif(sample_size, min = 0, max = 1),
-  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)
-) 
+df.data = tibble(participant = 1:sample_size,
+                 x = runif(sample_size, min = 0, max = 1),
+                 y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)) 
 ```
 
 And plot it: 
 
-```{r model-comparison-07}
+```{r}
 ggplot(data = df.data,
        mapping = aes(x = x,
                     y = y)) + 
@@ -244,7 +222,7 @@ $$
 \widehat Y_i = b_0 + b_1 \cdot X_i + b_2 \cdot X_i^2
 $$
 
-```{r model-comparison-08}
+```{r}
 # fit models to the data 
 fit_simple = lm(y ~ 1 + x, data = df.data)
 fit_correct = lm(y ~ 1 + x + I(x^2), data = df.data)
@@ -280,15 +258,13 @@ Different versions of cross-validation differ in how the training and test data 
 
 I've used code similar to this one to illustrate how LOO works in class. Here is a simple data set with 9 data points. We fit 9 models, where for each model, the training set includes one of the data points, and then we look at how well the model captures the held-out data point. We can then characterize the model's performance by calculating the mean squared error across the 9 runs. 
 
-```{r model-comparison-09}
+```{r, warning=FALSE}
 # make example reproducible 
 set.seed(1)
 
 # sample
-df.loo = tibble(
-  x = 1:9,
-  y = c(5, 2, 4, 10, 3, 4, 10, 2, 8)
-) 
+df.loo = tibble(x = 1:9,
+                y = c(5, 2, 4, 10, 3, 4, 10, 2, 8)) 
 
 df.loo_cross = df.loo %>% 
   crossv_loo() %>% 
@@ -304,13 +280,15 @@ df.plot = df.loo %>%
 fun.cv_plot = function(data_point){
   
   # determine which point to leave out 
-  df.plot$color[data_point] = 2
+  df.plot = df.plot %>% 
+    mutate(color = ifelse(row_number() == data_point, 2, color))
   
   # fit 
   df.fit = df.plot %>% 
     filter(color != 2) %>% 
-    lm(y ~ x, data = .) %>% 
-    augment(newdata = df.plot[df.plot$color == 2,]) %>% 
+    lm(formula = y ~ x, data = .) %>% 
+    augment(newdata = df.plot %>% 
+              filter(color == 2)) %>% 
     clean_names()
   
   p = ggplot(df.plot,
@@ -335,7 +313,7 @@ fun.cv_plot = function(data_point){
 l.plots = map(1:9, fun.cv_plot)
 
 # make figure panel 
-plot_grid(plotlist = l.plots, ncol = 3)
+wrap_plots(plotlist = l.plots, ncol = 3)
 
 ```
 
@@ -343,11 +321,8 @@ As you can see, the regression line changes quite a bit depending on which data 
 
 Now, let's use LOO to evaluate the models on the data set I've created above: 
 
-```{r model-comparison-10}
+```{r}
 # fit the models and calculate the RMSE for each model on the test set 
-
-library("modelr")
-
 df.cross = df.data %>% 
   crossv_loo() %>% # function which generates training and test data sets 
   mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
@@ -356,7 +331,9 @@ df.cross = df.data %>%
   pivot_longer(cols = contains("model"),
                names_to = "model",
                values_to = "fit") %>% 
-  mutate(rmse = map2_dbl(.x = fit, .y = test, ~ rmse(.x, .y)))
+  mutate(rmse = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ rmse(.x, .y)))
 
 # show the average RMSE for each model 
 df.cross %>% 
@@ -368,13 +345,33 @@ As we can see, the `model_correct` has the lowest average RMSE on the test data.
 
 One downside with LOO is that it becomes unfeasible when the number of data points is very large, as the number of cross validation runs equals the number of data points. The next cross-validation procedures help in this case. 
 
+```{r}
+df.cross = df.data %>% 
+  crossv_loo() %>% # function which generates training and test data sets 
+  mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
+         model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
+         model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "model",
+               values_to = "fit") %>% 
+  mutate(rmse = map2_dbl(.x = fit,
+                         .y = test,
+                         .f = ~ rmse(.x, .y)))
+
+# show the average RMSE for each model 
+df.cross %>% 
+  group_by(model) %>% 
+  summarize(mean_rmse = mean(rmse) %>% round(3))
+```
+
+
 #### k-fold cross-validation 
 
 For k-fold cross-validation, we split the data set in k folds, and then use k-1 folds as the training set, and the remaining fold as the test set. 
 
 The code is almost identical as before. Instead of `crossv_loo()`, we use the `crossv_kfold()` function instead and say how many times we want to "fold" the data. 
 
-```{r model-comparison-11}
+```{r}
 # crossvalidation scheme 
 df.cross = df.data %>% 
   crossv_kfold(k = 10) %>% 
@@ -397,7 +394,7 @@ Note, for this example, I've calculated $R^2$ (the variance explained by each mo
 
 Finally, let's consider another very flexible version of cross-validation. For this version of cross-validation, we determine how many random splits into training set and test set we would like to do, and what proportion of the data should be in the test set. 
 
-```{r model-comparison-12}
+```{r}
 # crossvalidation scheme 
 df.cross = df.data %>% 
   crossv_mc(n = 50, test = 0.5) %>% # number of samples, and percentage of test 
@@ -422,7 +419,7 @@ We can also use the `modelr` package for bootstrapping. The idea is the same as 
 
 Here is an example for how to boostrap confidence intervals for a mean. 
 
-```{r model-comparison-13}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -438,13 +435,15 @@ mean(df.data$x)
 # bootstrap to get confidence intervals around the mean 
 df.data %>%
   bootstrap(n = 1000) %>% # create 1000 bootstrapped samples
-  mutate(estimate = map_dbl(strap, ~ mean(.$data$x[.$idx]))) %>% # get the sample mean
+  mutate(estimate = map_dbl(.x = strap,
+                        .f = ~ .x %>% 
+                              as_tibble() %>% 
+                              pull(x) %>% 
+                              mean())) %>% 
   summarize(mean = mean(estimate),
             low = quantile(estimate, 0.025), # calculate the 2.5 / 97.5 percentiles
             high = quantile(estimate, 0.975))
 ```
-
-Note the somewhat weird construction `~ mean(.$data$x[.$idx]))`. This is just because the `bootstrap` function stores the information about each boostrapped data set in that way. Each bootstrapped sample simply points to the original data set, and then uses a different set of indices `idx` to indicate which values from the original data set it sampled (with replacement). 
 
 ### AIC and BIC 
 
@@ -462,7 +461,7 @@ where $k$ is the number of parameters in the model, $n$ is the number of observa
 
 Calculating AIC and BIC in R is straightforward. We simply need to fit a linear model, and then call the `AIC()` or `BIC()` functions on the fitted model like so: 
 
-```{r model-comparison-14}
+```{r}
 set.seed(0)
 
 # let's generate some data 
@@ -482,21 +481,19 @@ BIC(fit)
 
 We can also just use the `broom` package to get that information: 
 
-```{r model-comparison-15}
+```{r}
 # fit %>% 
 #   summary()
 
 fit %>% 
-  glance() %>% 
-  kable(digits = 2) %>% 
-  kable_styling(full_width = F)
+  glance()
 ```
 
 Both AIC and BIC take the number of parameters and the model's likelihood into account. BIC additionally considers the number of observations. But how is the likelihood of a linear model determined? 
 
 Let's visualize the data first: 
 
-```{r model-comparison-16}
+```{r, message=FALSE}
 # plot the data with a linear model fit  
 ggplot(df.example,
        aes(x, y)) + 
@@ -506,7 +503,7 @@ ggplot(df.example,
 
 Now, let's take a look at the residuals by plotting the fitted values on the x axis, and the residuals on the y axis. 
 
-```{r model-comparison-17}
+```{r}
 # residual plot 
 df.plot = df.example %>% 
   lm(y ~ x, data = .) %>% 
@@ -522,7 +519,7 @@ Remember that the linear model makes the assumption that the residuals are norma
 
 Let's make a plot that shows a normal distribution alongside the residuals: 
 
-```{r model-comparison-18}
+```{r}
 # define a normal distribution 
 df.normal = tibble(
   y = seq(-5, 5, 0.1),
@@ -543,7 +540,7 @@ Instead of multiplying likelihoods, we often sum the log likelihoods instead. Th
 
 To better understand AIC and BIC, let's calculate them by hand: 
 
-```{r model-comparison-19}
+```{r}
 # we first get the estimate of the standard deviation of the residuals 
 sigma = fit %>% 
   glance() %>% 
@@ -567,7 +564,7 @@ print(bic)
 
 Cool! The values are the same as when we use the `glance()` function like so (except for a small difference due to rounding): 
 
-```{r model-comparison-20}
+```{r}
 fit %>% 
   glance() %>% 
   select(AIC, BIC)
@@ -575,7 +572,7 @@ fit %>%
 
 #### log() is your friend 
 
-```{r model-comparison-21}
+```{r}
 ggplot(data = tibble(x = c(0, 1)),
        mapping = aes(x = x)) + 
   stat_function(fun = "log",
@@ -598,15 +595,11 @@ ggplot(data = tibble(x = c(0, 1)),
 
 - [R for Data Science: Chapter 25](https://r4ds.had.co.nz/many-models.html)
 
-### Misc 
-
-- [G*Power 3.1](http://www.gpower.hhu.de/): Software for power calculations
-
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r model-comparison-22}
+```{r}
 sessionInfo()
 ```
 

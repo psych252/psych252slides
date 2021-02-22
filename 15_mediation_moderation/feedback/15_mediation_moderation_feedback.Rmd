@@ -1,7 +1,7 @@
 ---
-title: "15_Mediation & Moderation"
+title: "15_mediation_moderation"
 author: "Tobias Gerstenberg"
-date: "2/10/2020"
+date: "2/19/2021"
 output: 
   html_document:
     toc: true
@@ -13,78 +13,33 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
-```
-
-> Important topic. I feel like this procedure for determining good and bad controls is a bit convoluted. I feel like there's a simpler shorthand. Does another factor influence both x and y? Does another factor influence x? What's wrong with that simpler algorithm?
-
-> I didn't understand the final explanation today (of control variables). What did you mean by causal path? I mean, this is just correlation, right? So when you add a beta coefficient to your path, we'd get an inverse path the other way around, right? In that case, though, we shouldn't get a difference between the first and second example, but we did. Anyway, just a little confused.
-
-> I think it'd be great if you could go over what happens if you want to control for more than 1 variable and what that then means. I also didn't understand how controlling vs. confounding was relevant/meant in the context of today's class, since it felt like that part was a bit rushed at the end.
-
-> It would be nice to get examples of what these concepts look like in actual studies/research applications
-
-> The review of r code was too fast and complex for me to follow. I'd love to use that strategy for determining power and ideal sample size, but I couldn't follow.
-
-> It may be helpful to give some concrete examples for the control variable problem. I would also like to hear how the last question in HW4 can be understood under the framework of d-separation.
-
-> Some signposts during the lecture would be appreciated (clearer indication that we are transitioning between topics and clearer articulation of the "why" behind concepts)
-
-> Even after going over the power analysis more in depth, I think many of us are still very confused about the specifics of the code (and what each code chunk does). Would it be possible to buzz over this again, but with a little more detail paid to the actual code instead of the theory?
-
-> The R is always confusing to learn in lecture style. I did like the visualization of the theoretical concepts. Still very very confused about "controlling" for variables (probably more confused then before the lecture, but I guess that's a good thing...)
-
-> Keep up the good meme work.
-
-## Homework 4
-
-```{r echo=FALSE, fig.height=4, fig.width=8, message=FALSE, warning=FALSE, results='hide'}
-df.hw_hours = read.csv("how-many-hours-did-it-4.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
-  mutate(response = factor(response,
-                           levels = c(1:14, "15 or more"),
-                           labels = c(1:14, "15\nor more"))) %>% 
-  count(response) %>% 
-  complete(response)
-
-ggplot(data = df.hw_hours,
-       mapping = aes(x = response, y = n)) + 
-  geom_bar(stat = "identity",
-           fill = "lightblue",
-           color = "black") +
-  scale_y_continuous(breaks = seq(0, 50, 2),
-                     expand = c(0, 0)) +
-  labs(y = "number of students", x = "", title = "How many hours did you spend on homework 4?")
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
 
 ## Student feedback 
 
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-15.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
-### PollEverywhere results 
+## PollEverywhere results 
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.pace = read.csv("how-was-the-pace-of-15.csv", header = F) %>%
-  filter(row_number() > which(.$V2 == "Created At")) %>% 
-  set_names(c("response", "date")) %>% 
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE, eval=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.pace,
        mapping = aes(x = response, y = n)) + 
@@ -92,26 +47,27 @@ ggplot(data = df.pace,
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("how-happy-were-you-with-15.csv") %>% 
-  set_names(c("response", "date")) %>% 
+```{r echo=FALSE, message=FALSE, results='hide', eval=FALSE}
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
          response = factor(response, levels = 1:5,
                            labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
-  count(response) %>% 
-  complete(response, fill = list(n = 0))
+  count(response,
+        .drop = F)
 
 ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
 ```
 
 ## What to do next time
 
-- try to provide clearer sign posts and structure 
-- the mapping from d-separation to good/bad controls is not quite as direct as hoped 
-- provide some concrete explanations and show where inferences have gone wrong 
+- Try to cover mediation and moderation before the midterm next time (or don't ask for controlling in the midterm).
+- Try to make the idea of controlling for variables more clear by using a concrete example. 
+- Encourage questions, and cover less. 
