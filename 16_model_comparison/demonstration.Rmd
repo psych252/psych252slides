@@ -79,19 +79,23 @@ ggplot(data = df.data,
 
 ```{r}
 df.cross = df.data %>% 
-  # crossv_mc(n = 50, test = 0.5) %>% 
-  crossv_kfold(k = 5) %>%
-  # crossv_loo() %>% 
+  # crossv_mc(n = 50, test = 0.1) %>%
+  # crossv_kfold(k = 2) %>%
+  crossv_loo() %>%
   mutate(model_simple = map(train, ~ lm(y ~ 1 + x, data = .)),
          model_correct = map(train, ~ lm(y ~ 1 + x + I(x^2), data = .)),
          model_complex = map(train, ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
   pivot_longer(cols = contains("model"),
                names_to = "index",
                values_to = "model") %>% 
-  mutate(rmse = map2_dbl(.x = model, .y = test, ~ rmse(.x, .y)))
+  mutate(rmse = map2_dbl(.x = model,
+                         .y = test,
+                         .f = ~ rmse(.x, .y)))
 
 df.cross %>% 
   group_by(index) %>% 
-  summarize(mean_rmse = mean(rmse))
+  summarize(mean_rmse = mean(rmse),
+            low = quantile(rmse, 0.1),
+            high = quantile(rmse, 0.9))
 ```
 

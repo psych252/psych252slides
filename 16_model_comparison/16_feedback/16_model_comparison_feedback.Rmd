@@ -1,7 +1,7 @@
 ---
-title: "16 Model comparison"
+title: "16_model_comparison"
 author: "Tobias Gerstenberg"
-date: "2/14/2020"
+date: "2/22/2021"
 output: 
   html_document:
     toc: true
@@ -13,71 +13,62 @@ output:
 ```{r setup, include=FALSE}
 library("knitr")
 library("DT")
+library("janitor")
 library("tidyverse")
+
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
-
-> Pacing feels fast. Are you rushing to get to a certain point in 10 weeks? Many concepts could be done with greater depth, possibly resulting in deeper levels of understanding. In terms of the mid-term, the primary tension in the class manifested: is this an R class, or a statistics class? The class, as it's designed, is great at breaking down the bigger statistical concepts, albeit a bit too fast. But the R learning is secondary by a long shot. I spent 90% of the time on the midterm stressing and fretting about code. I would just prefer to stress over concepts more than knitting. Analysis and interpretation was pushed aside. If you give me data, and a visualization, then my focus is the interpretation. If you ask me do elaborate code, then my focus is the coding. If I'm supposed to learn coding on my own, then why make it such a integral part of nearly every assignment? Any ability that I have to interpret data or understand certain methods of data analysis is constantly limited by my R knowledge. Assessment would be better if you found a way to separate the two domains of knowledge, at least on occasion.
-
-> Way too hard and too long, the midterm!
-
-> I think it's great that you changed the late policy for the midterm to be more lenient. However, I strongly disagree with your approach (that you suggested you might follow in future) of keeping the late policy secret until after these test. Transparency with students and respecting their ability to make decisions after having all the information about the policy seems best.
-
-> I thought the midterm was pretty fair overall, but quite long and some questions were more difficult than they needed to be to get that we understood the material (like replicating the plot). I also felt like some questions (specifically the simulations) tested our coding ability more than our theoretical understanding of the material.
-
-> Great class today. Thank you for the explanation about controlling for variables. I understood it better than the other day. The class today was very interesting. I had heard many times about crossvalidation, but had no idea about how to do it, so I found this class very helpful.
-
-> Today's class exemplified for me a larger issue with the course is that I often don't understand is there is a unifying approach to what we're learning--I know that generally we're learning about building models but if we could use more examples about how to map that onto theory that would be useful.
-
-> The midterm was extremely long. I heard that the students from last year also found it extremely long.
 
 ## Student feedback 
 
+> Today's pace was a little too fast. Too many models were discussed back to back and I would love for there to be some recall in coming lectures to help parse these out.
+
 ```{r echo=FALSE, message=FALSE}
-read_csv("what-did-you-like-about-16.csv") %>% 
-  set_names(c("response", "date")) %>% 
-  select(response) %>% 
+read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
   datatable()
 ```
 
-## Midterm
+## PollEverywhere results 
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, results='hide'}
-df.midterm_hours = read_csv("how-many-hours-midterm.csv") %>%
-  set_names(c("response", "date"))
+```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE, eval=FALSE}
+df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
+  rename(response = `Results Summary`) %>% 
+  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+  clean_names() %>%  
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response,
+        .drop = F)
 
-ggplot(data = df.midterm_hours,
-       mapping = aes(x = response)) + 
-  geom_histogram(fill = "lightblue", color = "black") +
-  labs(x = "hours",
-       y = "number of students",
-       title = "How many hours did you spend on the midterm?") +
-  scale_x_continuous(breaks = seq(2, 40, 2),
-                     labels = seq(2, 40, 2)) +
-  coord_cartesian(xlim = c(4.5, 36.5),
-                  ylim = c(0, 8.1),
-                  expand = F) + 
-  theme(title = element_text(size = 16),
-        plot.margin = margin(r = 1, unit = "cm"))
-# ggsave("midterm_hours.pdf", width = 8, height = 6)
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
 
+```{r echo=FALSE, message=FALSE, results='hide', eval=FALSE}
+df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+  clean_names() %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+```
 
 ## What to do next time
 
-- midterm feedback: 
-  - still too long 
-  - part 3 on power analysis was too challenging 
-  - remove the need to draw arrows in the plot from the midterm
-  - plotting the model predictions on different facets wasn't easy 
-- provide some concrete examples for which "controlling" for variables goes wrong (not just in the abstract)
-- generally: more examples that make things concrete 
-- class still feels rushed to some (maybe try and do less but in more detail)
-- some additional work on intepreting model parameters might be needed 
+- go slower in that lesson next time
+

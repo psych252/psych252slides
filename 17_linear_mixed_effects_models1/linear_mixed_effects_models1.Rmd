@@ -1,7 +1,7 @@
 ---
 title: "Class 17"
 author: "Tobias Gerstenberg"
-date: "February 20th, 2019"
+date: "February 24th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,15 +13,9 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Linear mixed effects models 1
 
-```{r lmer1-01, include=FALSE, eval=FALSE}
+```{r, include=FALSE, eval=FALSE}
 install.packages(c("lme4", "lmerTest", "pbkrtest"))
 ```
 
@@ -35,29 +29,31 @@ install.packages(c("lme4", "lmerTest", "pbkrtest"))
 
 ## Load packages and set plotting theme  
 
-```{r lmer1-02, message=FALSE}
-library("knitr")      # for knitting RMarkdown 
-library("kableExtra") # for making nice tables
-library("janitor")    # for cleaning column names
-library("broom")      # for tidying up linear models 
-library("patchwork")  # for making figure panels
-library("lme4")       # for linear mixed effects models
-library("tidyverse")  # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
+```{r, message=FALSE}
+library("knitr")        # for knitting RMarkdown 
+library("kableExtra")   # for making nice tables
+library("janitor")      # for cleaning column names
+library("broom.mixed")  # for tidying up linear models 
+library("patchwork")    # for making figure panels
+library("lme4")         # for linear mixed effects models
+library("tidyverse")    # for wrangling, plotting, etc. 
 ```
 
-```{r lmer1-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+write_bib(.packages(), "packages.bib") 
 ```
 
 ## Dependence 
 
 Let's generate a data set in which two observations from the same participants are dependent, and then let's also shuffle this data set to see whether taking into account the dependence in the data matters. 
 
-```{r lmer1-04}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -69,7 +65,7 @@ df.dependence = tibble(participant = 1:20,
 
 Let's visualize the original and shuffled data set: 
 
-```{r lmer1-05}
+```{r}
 df.plot = df.dependence %>% 
   pivot_longer(cols = -participant,
                names_to = "condition",
@@ -107,7 +103,7 @@ p1 + p2
 
 Let's save the two original and shuffled data set as two separate data sets.
 
-```{r lmer1-06}
+```{r}
 # separate the data sets 
 df.original = df.dependence %>% 
   pivot_longer(cols = -participant,
@@ -126,7 +122,7 @@ df.shuffled = df.dependence %>%
 
 Let's run a linear model, and independent samples t-test on the original data set. 
 
-```{r lmer1-07}
+```{r}
 # linear model (assuming independent samples)
 lm(formula = value ~ condition,
    data = df.original) %>% 
@@ -142,7 +138,7 @@ The mean difference between the conditions is extremely small, and non-significa
 
 Let's fit a linear mixed effects model with a random intercept for each participant: 
 
-```{r lmer1-08}
+```{r}
 # fit a linear mixed effects model 
 lmer(formula = value ~ condition + (1 | participant),
      data = df.original) %>% 
@@ -151,7 +147,7 @@ lmer(formula = value ~ condition + (1 | participant),
 
 To test for whether condition is a significant predictor, we need to use our model comparison approach: 
 
-```{r lmer1-09}
+```{r}
 # fit models
 fit.compact = lmer(formula = value ~ 1 + (1 | participant),
                    data = df.original)
@@ -164,7 +160,7 @@ anova(fit.compact, fit.augmented)
 
 This result is identical to running a paired samples t-test: 
 
-```{r lmer1-10}
+```{r}
 t.test(df.original$value[df.original$condition == "1"],
        df.original$value[df.original$condition == "2"],
        alternative = "two.sided",
@@ -175,7 +171,7 @@ But, unlike in the paired samples t-test, the linear mixed effects model explici
 
 Let's fit a linear model and a linear mixed effects model to the original (non-shuffled) data. 
 
-```{r lmer1-11}
+```{r}
 # model assuming independence
 fit.independent = lm(formula = value ~ 1 + condition,
                      data = df.original)
@@ -187,7 +183,7 @@ fit.dependent = lmer(formula = value ~ 1 + condition + (1 | participant),
 
 Let's visualize the linear model's predictions: 
 
-```{r lmer1-12}
+```{r}
 # plot with predictions by fit.independent 
 fit.independent %>% 
   augment() %>% 
@@ -208,7 +204,7 @@ fit.independent %>%
 
 And this is what the residuals look like: 
 
-```{r lmer1-13}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -244,7 +240,7 @@ It's clear from this residual plot, that fitting two separate lines (or points) 
 
 Let's visualize the predictions of the linear mixed effects model: 
 
-```{r lmer1-14}
+```{r}
 # plot with predictions by fit.independent 
 fit.dependent %>% 
   augment() %>% 
@@ -263,7 +259,7 @@ fit.dependent %>%
 
 Let's compare the residuals of the linear model with that of the linear mixed effects model: 
 
-```{r lmer1-15}
+```{r}
 # linear model 
 p1 = fit.independent %>% 
   augment() %>% 
@@ -289,7 +285,7 @@ p1 + p2
 
 The residuals of the linear mixed effects model are much smaller. Let's test whether taking the individual variation into account is worth it (statistically speaking). 
 
-```{r lmer1-16}
+```{r}
 # fit models (without and with dependence)
 fit.compact = lm(formula = value ~ 1 + condition,
                  data = df.original)
@@ -314,7 +310,7 @@ Yes, the likelihood of the data given the linear mixed effects model is signific
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r lmer1-17}
+```{r}
 sessionInfo()
 ```
 
