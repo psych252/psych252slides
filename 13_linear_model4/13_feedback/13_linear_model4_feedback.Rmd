@@ -1,7 +1,7 @@
 ---
-title: "14_power_analysis"
+title: "13_linear_model4"
 author: "Tobias Gerstenberg"
-date: "2/15/2021"
+date: "2/10/2021"
 output: 
   html_document:
     toc: true
@@ -60,7 +60,7 @@ ggplot(data = df.overall,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
-  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  scale_y_continuous(breaks = seq(0, 40, 1)) + 
   labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
   theme(title = element_text(size = 18))
 ```
