@@ -1,7 +1,7 @@
 ---
 title: "Class 19"
 author: "Tobias Gerstenberg"
-date: "February 24th, 2020"
+date: "March 1st, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,52 +13,54 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
 # Linear mixed effects models 3
-
-```{r lmer3-01, include=FALSE, eval=FALSE}
-# install.packages(c("lme4", "lmerTest", "pbkrtest", "broom.mixed"))
-```
 
 ## Learning goals 
 
-- Bootstrapping linear mixed effects models. 
-- Getting p-values. 
 - Pitfalls in fitting `lmers()`s (and what to do about it). 
 - Understanding `lmer()` syntax even better.
 
 ## Load packages and set plotting theme  
 
-```{r lmer3-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")       # for knitting RMarkdown 
 library("kableExtra")  # for making nice tables
 library("janitor")     # for cleaning column names
-library("broom")       # for tidying up linear models 
 library("broom.mixed") # for tidying up linear mixed effects models 
 library("patchwork")   # for making figure panels
 library("lme4")        # for linear mixed effects models
+library("afex")        # for ANOVAs
+library("car")         # for ANOVAs
+library("datarium")    # for ANOVA dataset
 library("modelr")      # for bootstrapping
 library("boot")        # also for bootstrapping
 library("ggeffects")   # for plotting marginal effects
+library("emmeans")     # for marginal effects
 library("tidyverse")   # for wrangling, plotting, etc. 
-
-# include references for used packages
-knitr::write_bib(.packages(), "packages.bib") 
 ```
 
-```{r lmer3-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
             theme(text = element_text(size = 20))) #set the default text size
+
+# knitr display options 
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# include references for used packages
+write_bib(.packages(), "packages.bib") 
+
+
+# set contrasts to using sum contrasts
+options(contrasts = c("contr.sum","contr.poly"))
+
+# suppress grouping warning messages
+options(dplyr.summarise.inform = F)
 ```
 
 ## Load data set 
 
-```{r lmer3-04}
+```{r}
 # load sleepstudy data set 
 df.sleep = sleepstudy %>% 
   as_tibble() %>% 
@@ -67,7 +69,7 @@ df.sleep = sleepstudy %>%
   select(subject, days, reaction)
 ```
 
-```{r lmer3-05}
+```{r}
 # add two fake participants (with missing data)
 df.sleep = df.sleep %>% 
   bind_rows(tibble(subject = "374",
@@ -78,11 +80,420 @@ df.sleep = df.sleep %>%
                    reaction = 245))
 ```
 
+## Understanding the lmer() syntax 
+
+Here is an overview of how to specify different kinds of linear mixed effects models.
+
+```{r, echo=F}
+tibble(formula = c("`dv ~ x1 + (1 | g)`",
+                   "`dv ~ x1 + (0 + x1 | g)`",
+                   "`dv ~ x1 + (x1 | g)`",
+                   "`dv ~ x1 + (x1 || g)`",
+                   "`dv ~ x1 + (1 | school) + (1 | teacher)`",
+                   "`dv ~ x1 + (1 | school/teacher)`"),
+       description = c("Random intercept for each level of `g`",
+                       "Random slope for each level of `g`",
+                       "Correlated random slope and intercept for each level of `g`",
+                       "Uncorrelated random slope and intercept for each level of `g`",
+                       "Random intercept for each level of `school` and for each level of `teacher` (crossed)",
+                       "Random intercept for each level of `school` and for each level of `teacher` in `school` (nested)")) %>% 
+  kable()
+```
+
+Note that this `(1 | school/teacher)` is equivalent to `(1 | school) + (1 | teacher:school)` (see [here](https://stats.stackexchange.com/questions/228800/crossed-vs-nested-random-effects-how-do-they-differ-and-how-are-they-specified)). 
+
+### Between subjects ANOVA 
+
+Let's start with a between subjects ANOVA (which means we are in `lm()` world.)
+
+```{r}
+df.reasoning = sk2011.1
+
+aov_ez(id = "id",
+       dv = "response",
+       between = "instruction",
+       data = df.reasoning)
+
+lm(formula = response ~ instruction,
+   data = df.reasoning %>% 
+     group_by(id, instruction) %>% 
+     summarize(response = mean(response)) %>% 
+     ungroup()) %>% 
+  Anova(type = 3,
+        method = "F")
+```
+
+
+### Repeated-measures ANOVA 
+
+```{r}
+df.reasoning_within = sk2011.1 %>% 
+  filter(instruction == "probabilistic")
+  
+aov_ez(id = "id",
+       dv = "response",
+       within = c("validity", "plausibility"),
+       data = df.reasoning_within)
+
+mixed(formula = response ~ validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
+      data = df.reasoning_within %>%
+        group_by(id, validity, plausibility) %>%
+        summarize(response = mean(response)))
+```
+
+### Mixed ANOVA 
+
+```{r}
+aov_ez(id = "id",
+       dv = "response",
+       between = "instruction",
+       within = c("validity", "plausibility"),
+       data = df.reasoning)
+
+mixed(formula = response ~ instruction * validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
+      data = df.reasoning %>%
+        group_by(id, validity, plausibility, instruction) %>%
+        summarize(response = mean(response)))
+
+
+lmer(formula = response ~ instruction * validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
+      data = df.reasoning %>%
+        group_by(id, validity, plausibility, instruction) %>%
+        summarize(response = mean(response))) %>% 
+  summary()
+```
+
+
+#### Reaction time data 
+
+```{r}
+df.reaction = md_12.1
+
+df.reaction.filtered = md_12.1 %>% 
+  filter(angle %in% c("0", "4"))
+
+# 1. single predictor with three levels: same results
+aov_ez(id = "id",
+       dv = "rt",
+       within = c("angle"),
+       data = df.reaction)
+
+lmer(formula = rt ~ 1 + angle + (1 | id),
+     data = df.reaction %>% 
+       group_by(id, angle) %>% 
+       summarize(rt = mean(rt)) %>% 
+       ungroup()) %>%
+  Anova(type = 3,
+        test.statistic = "F")
+
+
+# 2. two predictors, angle with only two levels: same results 
+aov_ez(id = "id",
+       dv = "rt",
+       within = c("noise", "angle"),
+       data = df.reaction.filtered)
+
+lmer(formula = rt ~ 1 + noise * angle  + (1 | id) + (1 | noise:id) + (1 | angle:id),
+     data = df.reaction.filtered) %>%
+  Anova(type = 3,
+        test.statistic = "F")
+
+# 3. two predictors, angle with THREE two levels: DIFFERENT results
+aov_ez(id = "id",
+       dv = "rt",
+       within = c("noise", "angle"),
+       data = df.reaction)
+
+mixed(formula = rt ~ 1 + noise * angle + (1 | id) + (1 | noise:id) + (1 | angle:id),
+      data = df.reaction)
+
+mixed(formula = rt ~ 1 + noise * angle + (1 | id) + (0 + noise | id) + (0 + angle | id),
+      data = df.reaction)
+```
+
+```{r}
+mixed(formula = rt ~ noise * angle + (noise + angle | id),
+      data = df.reaction)
+
+lmer(formula = rt ~ noise * angle + (noise + angle | id),
+      data = df.reaction) %>% 
+  Anova(type = 3,
+        test.statistic = "F")
+```
+
+
+
+#### Another data set 
+
+```{r, eval=FALSE}
+df.intelligence = md_15.1
+
+aov_ez(id = "id",
+       dv = "iq",
+       within = c("timecat"),
+       data = df.intelligence,
+       print.formula = T)
+
+aov_4(formula = iq ~ 1 + (timecat | id),
+        data = df.intelligence)
+
+lmer(formula = iq ~ 1 + timecat  + (1 | id),
+     data = df.intelligence) %>%
+  Anova(type = 3,
+        test.statistic = "F")
+```
+
+#### Final data set 
+
+```{r}
+df.naming = fhch2010
+
+df.naming = df.naming %>% 
+  filter(id %in% str_c(rep(c("N", "L"), each = 5), 1:4))
+  
+aov_ez(id = "id",
+       dv = "log_rt",
+       within = c("stimulus", "density", "frequency"),
+       data = df.naming,
+       print.formula = T)
+
+mixed(formula = log_rt ~ 1 + stimulus * density * frequency + (1 | id) + 
+        (1 | stimulus:id) + (1 | density:id) + (1 | frequency:id) + 
+        (1 | stimulus:density:id) + (1 | stimulus:frequency:id) + (1 | density:frequency:id),
+      data = df.naming %>% 
+        group_by(id, task, stimulus, density, frequency) %>% 
+        summarize(log_rt = mean(log_rt)) %>% 
+        ungroup())
+
+# aov_ez(id = "id",
+#        dv = "log_rt",
+#        within = c("stimulus","density", "frequency", "length"),
+#        between = c("task"),
+#        data = df.naming,
+#        print.formula = T)
+# 
+# aov_4(formula = log_rt ~ task + (stimulus * density * frequency * length | id),
+#         data = df.naming)
+# 
+# lmer(formula = log_rt ~ 1 + task + stimulus * density * frequency * length + (stimulus + density + frequency + length | id),
+#      data = df.naming) %>% 
+# Anova(type = 3,
+#       test.statistic = "F")
+```
+
+```{r, eval=FALSE}
+df.naming = fhch2010
+
+aov_ez(id = "id",
+       dv = "log_rt",
+       within = c("stimulus"),
+       between = c("task"),
+       data = df.naming,
+       print.formula = T)
+
+aov_4(formula = log_rt ~ task + (stimulus | id),
+        data = df.naming)
+
+lmer(formula = log_rt ~ 1 + task * stimulus + (1 | id),
+     data = df.naming) %>% 
+Anova(type = 3,
+      test.statistic = "F")
+
+
+
+```
+
+### Mixed ANOVA
+
+```{r}
+set.seed(123)
+data("weightloss", package = "datarium")
+
+# Modify it to have three-way mixed design
+df.weightloss = weightloss %>%
+  mutate(id = rep(1:24, 2)) %>% 
+  pivot_longer(cols = t1:t3,
+               names_to = "timepoint",
+               values_to = "score") %>% 
+  arrange(id)
+
+fit = aov_ez(id = "id",
+       dv = "score",
+       between = "exercises",
+       within = c("diet", "timepoint"),
+       data = df.weightloss)
+
+contrasts = list(first_two_vs_last = c(-0.5, -0.5, 1),
+                 linear_increase = c(-1, 0, 1))
+
+fit %>% 
+  emmeans(spec = "timepoint",
+          contr = contrasts)
+
+ggplot(data = df.weightloss,
+       mapping = aes(x = timepoint,
+                     y = score,
+                     group = diet,
+                     color = diet)) + 
+  geom_point(position = position_jitterdodge(dodge.width = 0.5,
+                                  jitter.width = 0.1,
+                                  jitter.height = 0),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot",
+               position = position_dodge(width = 0.5)) +
+  facet_wrap(~ exercises) + 
+  scale_color_brewer(palette = "Set1")
+
+
+ggplot(data = df.weightloss,
+       mapping = aes(x = timepoint,
+                     y = score)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot") +
+  scale_color_brewer(palette = "Set1")
+
+```
+
+### Lmer (mixed)
+
+```{r, message=FALSE}
+df.politeness = read_csv("data/politeness_data.csv") %>% 
+  mutate(scenario = as.factor(scenario))
+
+fit %>% 
+  summary()
+
+fit = mixed(formula = frequency ~ 1 + attitude * gender + (1 | subject) + (1 | scenario),
+      data = df.politeness)
+
+fit %>% 
+  emmeans(specs = pairwise ~ attitude + gender,
+          adjust = "none")
+
+
+aov_ez(id = "subject",
+       dv = "frequency",
+       between = "gender",
+       within = "attitude",
+       data = df.politeness)
+
+
+df.politeness %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+
+ggplot(data = df.politeness,
+        mapping = aes(x = attitude,
+                      y = frequency,
+                      group = gender,
+                      color = gender)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  scale_color_brewer(palette = "Set1")
+
+
+ggplot(data = df.politeness,
+        mapping = aes(x = scenario,
+                      y = frequency)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  scale_color_brewer(palette = "Set1")
+
+ggplot(data = df.politeness,
+        mapping = aes(x = subject,
+                      y = frequency)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  scale_color_brewer(palette = "Set1")
+```
+
+
+
+## Follow-up tests with emmeans
+
+```{r}
+fit = lmer(formula = reaction ~ 1 + days + (1 | subject),
+           data = df.sleep %>% 
+             mutate(days = as.factor(days)))
+
+fit %>% 
+  summary()
+
+contrast = list(first_vs_second = c(-1, 1, rep(0, 8)),
+                early_vs_late = c(rep(-1, 5)/5, rep(1, 5)/5))
+
+fit %>% 
+  emmeans(specs = "days",
+          contr = contrast) %>% 
+  pluck("contrasts")
+
+
+fit = mixed(formula = reaction ~ 1 + days + (1 | subject),
+           data = df.sleep %>% 
+             mutate(days = as.factor(days)))
+
+contrast = list(first_vs_second = c(-1, 1, rep(0, 8)),
+                early_vs_late = c(rep(-1, 5)/5, rep(1, 5)/5))
+
+fit %>% 
+  emmeans(specs = "days",
+          contr = contrast) %>% 
+  pluck("contrasts")
+
+df.sleep %>% 
+  filter(days %in% c(0, 1)) %>% 
+  group_by(days) %>% 
+  summarize(reaction = mean(reaction)) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+df.sleep %>% 
+  mutate(index = ifelse(days %in% 0:4, "early", "late")) %>% 
+  group_by(index) %>% 
+  summarize(reaction = mean(reaction)) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+df.sleep %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+
+
+ggplot(data = df.sleep %>% 
+         mutate(days = as.factor(days)),
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot")
+```
+
+```{r}
+df.cake = cake
+
+lmer(angle ~ recipe * temperature + (1|recipe:replicate),
+     data = df.cake) %>% 
+  Anova(type = 3)
+
+lme4::grouseticks
+
+```
+
+
 ## Mixtures of participants 
 
 What if we have groups of participants who differ from each other? Let's generate data for which this is the case.
 
-```{r lmer3-06}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -113,7 +524,7 @@ df.mixed = tibble(
 
 Let' first fit a model that ignores the fact that there are two different groups of participatns. 
 
-```{r lmer3-07}
+```{r}
 # fit model
 fit.mixed = lmer(formula = value ~ 1 + condition + (1 | participant),
                 data = df.mixed)
@@ -123,7 +534,7 @@ fit.mixed %>% summary()
 
 Let's look at the model's predictions: 
 
-```{r lmer3-08}
+```{r}
 fit.mixed %>%
   augment() %>%
   clean_names() %>%
@@ -142,7 +553,7 @@ fit.mixed %>%
 
 And let's simulate some data from the fitted model: 
 
-```{r lmer3-09}
+```{r}
 # simulated data 
 fit.mixed %>%
   simulate() %>%
@@ -161,7 +572,7 @@ As we can see, the simulated data doesn't look like the data that was used to fi
 
 Now, let's fit a model that takes the differences between groups into account by adding a fixed effect for `group`.
 
-```{r lmer3-10}
+```{r}
 # fit model
 fit.grouped = lmer(formula = value ~ 1 + group + condition + (1 | participant),
                 data = df.mixed)
@@ -173,7 +584,7 @@ Note how the variance of the random intercepts is much smaller now that we've ta
 
 Let's visualize the model's predictions:
 
-```{r lmer3-11}
+```{r}
 fit.grouped %>%
   augment() %>%
   clean_names() %>%
@@ -191,7 +602,7 @@ fit.grouped %>%
 
 And simulate some data from the model: 
 
-```{r lmer3-12}
+```{r}
 # simulated data 
 fit.grouped %>%
   simulate() %>%
@@ -207,7 +618,7 @@ fit.grouped %>%
 This time, the simulated data looks much more like the data that was used to fit the model. Yay! 
 
 
-```{r lmer3-13}
+```{r}
 ggpredict(model = fit.grouped,
           terms = "condition") %>% 
   plot()
@@ -230,7 +641,7 @@ The example above has shown that we can take overall differences between groups 
 
 Let's first generate some data with heterogeneous variance: 
 
-```{r lmer3-14}
+```{r}
 # make example reproducible 
 set.seed(1)
 
@@ -260,7 +671,7 @@ df.variance = tibble(
 
 Let's fit the model: 
 
-```{r lmer3-15}
+```{r}
 # fit model
 fit.variance = lmer(formula = value ~ 1 + group + condition + (1 | participant),
                 data = df.variance)
@@ -270,7 +681,7 @@ fit.variance %>% summary()
 
 Look at the data and model predictions: 
 
-```{r lmer3-16}
+```{r}
 fit.variance %>%
   augment() %>%
   clean_names() %>%
@@ -288,7 +699,7 @@ fit.variance %>%
 
 And the simulated data: 
 
-```{r lmer3-17}
+```{r}
 # simulated data 
 fit.variance %>%
   simulate() %>%
@@ -304,8 +715,6 @@ fit.variance %>%
 The `lmer()` fails here. It uses one normal distribution to model the variance between participants. It cannot account for the fact that the answers of one group of participants vary more than the answers from another groups of participants. Again, the simulated data doesn't look like the original data, even though we did take the grouping into account. 
 
 
-
-
 ## Bootstrapping 
 
 Bootstrapping is a good way to estimate our uncertainty on the parameter estimates in the model. 
@@ -314,7 +723,7 @@ Bootstrapping is a good way to estimate our uncertainty on the parameter estimat
 
 Let's briefly review how to do bootstrapping in a simple linear model. 
 
-```{r lmer3-40}
+```{r}
 # fit model 
 fit.lm = lm(formula = reaction ~ 1 + days,
             data = df.sleep)
@@ -336,7 +745,7 @@ df.boot = df.sleep %>%
 
 Let's illustrate the linear model with a confidence interval (making parametric assumptions using the t-distribution). 
 
-```{r lmer3-41}
+```{r}
 ggplot(data = df.sleep,
        mapping = aes(x = days, y = reaction)) + 
   geom_smooth(method = "lm") + 
@@ -345,7 +754,7 @@ ggplot(data = df.sleep,
 
 And let's compare this with the different regression lines that we get out of our bootstrapped samples:
 
-```{r lmer3-42}
+```{r}
 ggplot(data = df.sleep,
        mapping = aes(x = days, y = reaction)) + 
   geom_abline(data = df.boot,
@@ -360,7 +769,7 @@ ggplot(data = df.sleep,
 
 For the linear mixed effects model, we can use the `bootmer()` function to do bootstrapping. 
 
-```{r lmer3-43, message=F, warning=F}
+```{r, message=F, warning=F}
 set.seed(1)
 
 # fit the model 
@@ -389,41 +798,12 @@ boot.lmer$t %>%
   coord_cartesian(expand = F)
 ```
 
-## Getting p-values 
-
-We can use the "lmerTest" package to get p-values for the different fixed effects. 
-
-```{r lmer3-44}
-lmerTest::lmer(formula = reaction ~ 1 + days + (1 + days | subject),
-                data = df.sleep) %>% 
-  summary()
-```
-
-## Understanding the lmer() syntax 
-
-Here is an overview of how to specify different kinds of linear mixed effects models.
-
-```{r lmer3-45, echo=F}
-tibble(formula = c("`dv ~ x1 + (1 | g)`",
-                   "`dv ~ x1 + (0 + x1 | g)`",
-                   "`dv ~ x1 + (x1 | g)`",
-                   "`dv ~ x1 + (x1 || g)`",
-                   "`dv ~ x1 + (1 | school) + (1 | teacher)`",
-                   "`dv ~ x1 + (1 | school/teacher)`"),
-       description = c("Random intercept for each level of `g`",
-                       "Random slope for each level of `g`",
-                       "Correlated random slope and intercept for each level of `g`",
-                       "Uncorrelated random slope and intercept for each level of `g`",
-                       "Random intercept for each level of `school` and for each level of `teacher` (crossed)",
-                       "Random intercept for each level of `school` and for each level of `teacher` in `school` (nested)")) %>% 
-  kable()
-```
 
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r lmer3-46}
+```{r}
 sessionInfo()
 ```
 
