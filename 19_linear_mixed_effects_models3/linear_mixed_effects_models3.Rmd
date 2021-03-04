@@ -19,6 +19,7 @@ nocite: '@*'
 
 - Pitfalls in fitting `lmers()`s (and what to do about it). 
 - Understanding `lmer()` syntax even better.
+- ANOVA vs. Lmer 
 
 ## Load packages and set plotting theme  
 
@@ -52,13 +53,15 @@ write_bib(.packages(), "packages.bib")
 
 
 # set contrasts to using sum contrasts
-options(contrasts = c("contr.sum","contr.poly"))
+options(contrasts = c("contr.sum", "contr.poly"))
 
 # suppress grouping warning messages
 options(dplyr.summarise.inform = F)
 ```
 
-## Load data set 
+## Load data sets 
+
+### Sleep data 
 
 ```{r}
 # load sleepstudy data set 
@@ -67,9 +70,7 @@ df.sleep = sleepstudy %>%
   clean_names() %>% 
   mutate(subject = as.character(subject)) %>% 
   select(subject, days, reaction)
-```
 
-```{r}
 # add two fake participants (with missing data)
 df.sleep = df.sleep %>% 
   bind_rows(tibble(subject = "374",
@@ -78,6 +79,33 @@ df.sleep = df.sleep %>%
             tibble(subject = "373",
                    days = 0,
                    reaction = 245))
+```
+
+### Reasoning data 
+
+```{r}
+df.reasoning = sk2011.1
+```
+
+### Weight loss data 
+
+```{r}
+data("weightloss", package = "datarium")
+
+# Modify it to have three-way mixed design
+df.weightloss = weightloss %>%
+  mutate(id = rep(1:24, 2)) %>% 
+  pivot_longer(cols = t1:t3,
+               names_to = "timepoint",
+               values_to = "score") %>% 
+  arrange(id)
+```
+
+### Politness data 
+
+```{r}
+df.politeness = read_csv("data/politeness_data.csv") %>% 
+  mutate(scenario = as.factor(scenario))
 ```
 
 ## Understanding the lmer() syntax 
@@ -102,18 +130,26 @@ tibble(formula = c("`dv ~ x1 + (1 | g)`",
 
 Note that this `(1 | school/teacher)` is equivalent to `(1 | school) + (1 | teacher:school)` (see [here](https://stats.stackexchange.com/questions/228800/crossed-vs-nested-random-effects-how-do-they-differ-and-how-are-they-specified)). 
 
+## ANOVA vs. Lmer 
+
 ### Between subjects ANOVA 
 
-Let's start with a between subjects ANOVA (which means we are in `lm()` world.)
+Let's start with a between subjects ANOVA (which means we are in `lm()` world). We'll take a look whether what type of `instruction` participants received made a difference to their `response`. 
+
+First, we use the `aov_ez()` function from the "afex" package to do so. 
 
 ```{r}
-df.reasoning = sk2011.1
-
 aov_ez(id = "id",
        dv = "response",
        between = "instruction",
        data = df.reasoning)
+```
 
+Looks like there was no main effect of `instruction` on participants' responses. 
+
+An alternative route for getting at the same test, would be via combining `lm()` with `Anova()` (as we've done before in class). 
+
+```{r}
 lm(formula = response ~ instruction,
    data = df.reasoning %>% 
      group_by(id, instruction) %>% 
@@ -123,25 +159,37 @@ lm(formula = response ~ instruction,
         method = "F")
 ```
 
+The two routes yield the same result. Notice that for the `lm()` approach, I calculated the means for each participant in each condition first (using `group_by()` and `summarize()`). 
 
 ### Repeated-measures ANOVA 
 
+Now let's take a look whether `validity` and `plausibility` affected participants' responses in the reasoning task. These two factors were varied within participants. Again, we'll use the `aov_ez()` function like so: 
+
 ```{r}
-df.reasoning_within = sk2011.1 %>% 
-  filter(instruction == "probabilistic")
-  
 aov_ez(id = "id",
        dv = "response",
        within = c("validity", "plausibility"),
-       data = df.reasoning_within)
+       data = df.reasoning %>% 
+         filter(instruction == "probabilistic"))
+```
 
+For the linear model route, given that we have repeated observations from the same participants, we need to use `lmer()`. The repeated measures anova has the random effect structure as shown below: 
+
+```{r}
 mixed(formula = response ~ validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
-      data = df.reasoning_within %>%
+      data = df.reasoning %>% 
+        filter(instruction == "probabilistic") %>%
         group_by(id, validity, plausibility) %>%
         summarize(response = mean(response)))
 ```
 
+Here, I've used the `mixed()` function from the "afex" package. What's handy about that function is that it computes F-tests with p-values.
+
+Note though that the results of the ANOVA route and the `lmer()` route weren't identical here (although they were very close). For more information as to why this happens, see [this post](https://stats.stackexchange.com/questions/117660/what-is-the-lme4lmer-equivalent-of-a-three-way-repeated-measures-anova).
+
 ### Mixed ANOVA 
+
+Now let's take a look at both between- as well as within-subjects factors. Let's compare the `aov_ez()` route
 
 ```{r}
 aov_ez(id = "id",
@@ -149,187 +197,77 @@ aov_ez(id = "id",
        between = "instruction",
        within = c("validity", "plausibility"),
        data = df.reasoning)
+```
 
+with the `lmer()` route: 
+
+```{r}
 mixed(formula = response ~ instruction * validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
       data = df.reasoning %>%
         group_by(id, validity, plausibility, instruction) %>%
         summarize(response = mean(response)))
-
-
-lmer(formula = response ~ instruction * validity * plausibility + (1 | id) + (1 | validity:id) + (1 | plausibility:id),
-      data = df.reasoning %>%
-        group_by(id, validity, plausibility, instruction) %>%
-        summarize(response = mean(response))) %>% 
-  summary()
 ```
 
+Here, both routes yield the same results. 
 
-#### Reaction time data 
+## Follow-up tests with emmeans
+
+Just like with the linear model `lm()`, we can use linear contrasts to test more specific hypotheses with `lmer()`. The `emmeans()` function from the `emmeans` package will be our friend. 
+
+### Sleep study 
+
+Let's ask some more specific question aboust the sleep study. 
+
+1. Do reaction times differ between day 0 and the first day of sleep deprivation? 
+2. Do reaction times differ between the first and the second half of the study? 
+
+Let's visualize the data first: 
 
 ```{r}
-df.reaction = md_12.1
-
-df.reaction.filtered = md_12.1 %>% 
-  filter(angle %in% c("0", "4"))
-
-# 1. single predictor with three levels: same results
-aov_ez(id = "id",
-       dv = "rt",
-       within = c("angle"),
-       data = df.reaction)
-
-lmer(formula = rt ~ 1 + angle + (1 | id),
-     data = df.reaction %>% 
-       group_by(id, angle) %>% 
-       summarize(rt = mean(rt)) %>% 
-       ungroup()) %>%
-  Anova(type = 3,
-        test.statistic = "F")
-
-
-# 2. two predictors, angle with only two levels: same results 
-aov_ez(id = "id",
-       dv = "rt",
-       within = c("noise", "angle"),
-       data = df.reaction.filtered)
-
-lmer(formula = rt ~ 1 + noise * angle  + (1 | id) + (1 | noise:id) + (1 | angle:id),
-     data = df.reaction.filtered) %>%
-  Anova(type = 3,
-        test.statistic = "F")
-
-# 3. two predictors, angle with THREE two levels: DIFFERENT results
-aov_ez(id = "id",
-       dv = "rt",
-       within = c("noise", "angle"),
-       data = df.reaction)
-
-mixed(formula = rt ~ 1 + noise * angle + (1 | id) + (1 | noise:id) + (1 | angle:id),
-      data = df.reaction)
-
-mixed(formula = rt ~ 1 + noise * angle + (1 | id) + (0 + noise | id) + (0 + angle | id),
-      data = df.reaction)
+ggplot(data = df.sleep %>% 
+         mutate(days = as.factor(days)),
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_point(position = position_jitter(width = 0.1),
+             alpha = 0.1) + 
+  stat_summary(fun.data = "mean_cl_boot")
 ```
+
+And now let's fit the model, and compute the contrasts: 
 
 ```{r}
-mixed(formula = rt ~ noise * angle + (noise + angle | id),
-      data = df.reaction)
+fit = mixed(formula = reaction ~ 1 + days + (1 | subject),
+           data = df.sleep %>% 
+             mutate(days = as.factor(days)))
 
-lmer(formula = rt ~ noise * angle + (noise + angle | id),
-      data = df.reaction) %>% 
-  Anova(type = 3,
-        test.statistic = "F")
-```
-
-
-
-#### Another data set 
-
-```{r, eval=FALSE}
-df.intelligence = md_15.1
-
-aov_ez(id = "id",
-       dv = "iq",
-       within = c("timecat"),
-       data = df.intelligence,
-       print.formula = T)
-
-aov_4(formula = iq ~ 1 + (timecat | id),
-        data = df.intelligence)
-
-lmer(formula = iq ~ 1 + timecat  + (1 | id),
-     data = df.intelligence) %>%
-  Anova(type = 3,
-        test.statistic = "F")
-```
-
-#### Final data set 
-
-```{r}
-df.naming = fhch2010
-
-df.naming = df.naming %>% 
-  filter(id %in% str_c(rep(c("N", "L"), each = 5), 1:4))
-  
-aov_ez(id = "id",
-       dv = "log_rt",
-       within = c("stimulus", "density", "frequency"),
-       data = df.naming,
-       print.formula = T)
-
-mixed(formula = log_rt ~ 1 + stimulus * density * frequency + (1 | id) + 
-        (1 | stimulus:id) + (1 | density:id) + (1 | frequency:id) + 
-        (1 | stimulus:density:id) + (1 | stimulus:frequency:id) + (1 | density:frequency:id),
-      data = df.naming %>% 
-        group_by(id, task, stimulus, density, frequency) %>% 
-        summarize(log_rt = mean(log_rt)) %>% 
-        ungroup())
-
-# aov_ez(id = "id",
-#        dv = "log_rt",
-#        within = c("stimulus","density", "frequency", "length"),
-#        between = c("task"),
-#        data = df.naming,
-#        print.formula = T)
-# 
-# aov_4(formula = log_rt ~ task + (stimulus * density * frequency * length | id),
-#         data = df.naming)
-# 
-# lmer(formula = log_rt ~ 1 + task + stimulus * density * frequency * length + (stimulus + density + frequency + length | id),
-#      data = df.naming) %>% 
-# Anova(type = 3,
-#       test.statistic = "F")
-```
-
-```{r, eval=FALSE}
-df.naming = fhch2010
-
-aov_ez(id = "id",
-       dv = "log_rt",
-       within = c("stimulus"),
-       between = c("task"),
-       data = df.naming,
-       print.formula = T)
-
-aov_4(formula = log_rt ~ task + (stimulus | id),
-        data = df.naming)
-
-lmer(formula = log_rt ~ 1 + task * stimulus + (1 | id),
-     data = df.naming) %>% 
-Anova(type = 3,
-      test.statistic = "F")
-
-
-
-```
-
-### Mixed ANOVA
-
-```{r}
-set.seed(123)
-data("weightloss", package = "datarium")
-
-# Modify it to have three-way mixed design
-df.weightloss = weightloss %>%
-  mutate(id = rep(1:24, 2)) %>% 
-  pivot_longer(cols = t1:t3,
-               names_to = "timepoint",
-               values_to = "score") %>% 
-  arrange(id)
-
-fit = aov_ez(id = "id",
-       dv = "score",
-       between = "exercises",
-       within = c("diet", "timepoint"),
-       data = df.weightloss)
-
-contrasts = list(first_two_vs_last = c(-0.5, -0.5, 1),
-                 linear_increase = c(-1, 0, 1))
+contrast = list(first_vs_second = c(-1, 1, rep(0, 8)),
+                early_vs_late = c(rep(-1, 5)/5, rep(1, 5)/5))
 
 fit %>% 
-  emmeans(spec = "timepoint",
-          contr = contrasts)
+  emmeans(specs = "days",
+          contr = contrast) %>% 
+  pluck("contrasts")
 
+df.sleep %>% 
+  filter(days %in% c(0, 1)) %>% 
+  group_by(days) %>% 
+  summarize(reaction = mean(reaction))
+
+df.sleep %>% 
+  mutate(index = ifelse(days %in% 0:4, "early", "late")) %>% 
+  group_by(index) %>% 
+  summarize(reaction = mean(reaction))
+```
+### Weight loss study 
+
+For the weight loss data set, we want to check: 
+
+1. Whether there was a difference between the first two vs. the last time point. 
+2. Whether there was a linear trend across the time points. 
+
+Let's first visualize again: 
+
+```{r}
 ggplot(data = df.weightloss,
        mapping = aes(x = timepoint,
                      y = score,
@@ -352,39 +290,38 @@ ggplot(data = df.weightloss,
              alpha = 0.1) + 
   stat_summary(fun.data = "mean_cl_boot") +
   scale_color_brewer(palette = "Set1")
+```
+And then fit the model, and compute the contrasts:
 
+```{r}
+fit = aov_ez(id = "id",
+       dv = "score",
+       between = "exercises",
+       within = c("diet", "timepoint"),
+       data = df.weightloss)
+
+contrasts = list(first_two_vs_last = c(-0.5, -0.5, 1),
+                 linear_increase = c(-1, 0, 1))
+
+fit %>% 
+  emmeans(spec = "timepoint",
+          contr = contrasts)
 ```
 
-### Lmer (mixed)
+Because we only had one observation in each cell of our design, the ANOVA was appropriate here (no data points needed to be aggregated). 
 
-```{r, message=FALSE}
-df.politeness = read_csv("data/politeness_data.csv") %>% 
-  mutate(scenario = as.factor(scenario))
+Both contrasts are significant. 
 
-fit %>% 
-  summary()
+### Politeness study 
 
-fit = mixed(formula = frequency ~ 1 + attitude * gender + (1 | subject) + (1 | scenario),
-      data = df.politeness)
+For the politeness study, we'll be interested in one particular contrast: 
 
-fit %>% 
-  emmeans(specs = pairwise ~ attitude + gender,
-          adjust = "none")
+1. Was there an effect of attitude on frequency for female participants? 
 
+Let's visualize first: 
 
-aov_ez(id = "subject",
-       dv = "frequency",
-       between = "gender",
-       within = "attitude",
-       data = df.politeness)
-
-
-df.politeness %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-                full_width = F)
-
-
+```{r}
+# overview of the data 
 ggplot(data = df.politeness,
         mapping = aes(x = attitude,
                       y = frequency,
@@ -395,7 +332,7 @@ ggplot(data = df.politeness,
   stat_summary(fun.data = "mean_cl_boot") + 
   scale_color_brewer(palette = "Set1")
 
-
+# variation across scenarios 
 ggplot(data = df.politeness,
         mapping = aes(x = scenario,
                       y = frequency)) + 
@@ -404,6 +341,7 @@ ggplot(data = df.politeness,
   stat_summary(fun.data = "mean_cl_boot") + 
   scale_color_brewer(palette = "Set1")
 
+# variation across participants
 ggplot(data = df.politeness,
         mapping = aes(x = subject,
                       y = frequency)) + 
@@ -413,81 +351,30 @@ ggplot(data = df.politeness,
   scale_color_brewer(palette = "Set1")
 ```
 
+We fit the model and compute the contrasts. 
 
-
-## Follow-up tests with emmeans
-
-```{r}
-fit = lmer(formula = reaction ~ 1 + days + (1 | subject),
-           data = df.sleep %>% 
-             mutate(days = as.factor(days)))
+```{r, message=FALSE}
+fit = mixed(formula = frequency ~ 1 + attitude * gender + (1 | subject) + (1 | scenario),
+      data = df.politeness)
 
 fit %>% 
-  summary()
-
-contrast = list(first_vs_second = c(-1, 1, rep(0, 8)),
-                early_vs_late = c(rep(-1, 5)/5, rep(1, 5)/5))
-
-fit %>% 
-  emmeans(specs = "days",
-          contr = contrast) %>% 
-  pluck("contrasts")
-
-
-fit = mixed(formula = reaction ~ 1 + days + (1 | subject),
-           data = df.sleep %>% 
-             mutate(days = as.factor(days)))
-
-contrast = list(first_vs_second = c(-1, 1, rep(0, 8)),
-                early_vs_late = c(rep(-1, 5)/5, rep(1, 5)/5))
-
-fit %>% 
-  emmeans(specs = "days",
-          contr = contrast) %>% 
-  pluck("contrasts")
-
-df.sleep %>% 
-  filter(days %in% c(0, 1)) %>% 
-  group_by(days) %>% 
-  summarize(reaction = mean(reaction)) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-                full_width = F)
-
-df.sleep %>% 
-  mutate(index = ifelse(days %in% 0:4, "early", "late")) %>% 
-  group_by(index) %>% 
-  summarize(reaction = mean(reaction)) %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-                full_width = F)
-
-df.sleep %>% 
-  kable(digits = 2) %>% 
-  kable_styling(bootstrap_options = "striped",
-                full_width = F)
-
-
-ggplot(data = df.sleep %>% 
-         mutate(days = as.factor(days)),
-       mapping = aes(x = days,
-                     y = reaction)) + 
-  geom_point(position = position_jitter(width = 0.1),
-             alpha = 0.1) + 
-  stat_summary(fun.data = "mean_cl_boot")
+  emmeans(specs = pairwise ~ attitude + gender,
+          adjust = "none")
 ```
 
+Here, I've computed all pairwise contrasts. We were only interested in one: `inf F - pol F` and that one is significant. So the frequency of female participants' pitch differed between the informal and polite condition. 
+
+If we had used an ANOVA approach for this data set, we could have done it like so: 
+
 ```{r}
-df.cake = cake
-
-lmer(angle ~ recipe * temperature + (1|recipe:replicate),
-     data = df.cake) %>% 
-  Anova(type = 3)
-
-lme4::grouseticks
-
+aov_ez(id = "subject",
+       dv = "frequency",
+       between = "gender",
+       within = "attitude",
+       data = df.politeness)
 ```
 
+This approach ignores the variation across scenarios (and just computed the mean instead). Arguably, the `lmer()` approach is better here as it takes all of the data into account. 
 
 ## Mixtures of participants 
 
@@ -522,7 +409,7 @@ df.mixed = tibble(
 
 #### Ignoring mixture
 
-Let' first fit a model that ignores the fact that there are two different groups of participatns. 
+Let' first fit a model that ignores the fact that there are two different groups of participants. 
 
 ```{r}
 # fit model
@@ -626,12 +513,6 @@ ggpredict(model = fit.grouped,
 ggpredict(model = fit.mixed,
           terms = "condition") %>% 
   plot()
-
-# fit.mixed %>% 
-#   summary()
-# 
-# fit.grouped %>% 
-#   summary()
 ```
 
 
@@ -714,6 +595,7 @@ fit.variance %>%
 
 The `lmer()` fails here. It uses one normal distribution to model the variance between participants. It cannot account for the fact that the answers of one group of participants vary more than the answers from another groups of participants. Again, the simulated data doesn't look like the original data, even though we did take the grouping into account. 
 
+We will later see that it's straightforward in Bayesian models to explicitly model heterogeneity in variance. 
 
 ## Bootstrapping 
 
@@ -745,7 +627,7 @@ df.boot = df.sleep %>%
 
 Let's illustrate the linear model with a confidence interval (making parametric assumptions using the t-distribution). 
 
-```{r}
+```{r, message=FALSE}
 ggplot(data = df.sleep,
        mapping = aes(x = days, y = reaction)) + 
   geom_smooth(method = "lm") + 
