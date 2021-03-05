@@ -1,7 +1,7 @@
 ---
 title: "Class 21"
 author: "Tobias Gerstenberg"
-date: ""
+date: "March 5th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,41 +11,49 @@ output:
     pandoc_args: ["--number-offset=20"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
+```{r, eval=FALSE, include=FALSE}
+# Note: To get greta to work on my mac, I had to run the following commands 
+devtools::install_github("greta-dev/greta")
+greta::install_tensorflow(method = "conda",
+                   version = "1.14.0",
+                   extra_packages = "tensorflow-probability==0.7.0")
 ```
 
 # Bayesian data analysis
 
 ## Learning goals 
 
-- Comparison between frequentist and Bayesian data analysis. 
-- Objections to frequentist null hypothesis testing. 
-- Benefits of Bayesian data analysis. 
-- Bayesian models of cognition. 
-- A simple worked coin flip example. 
-- Posterior, prior, likelihood, sample size. 
+- Doing Bayesian inference "by hand"
+- Understanding the effect that prior, likelihood, and sample size have on the posterior. 
+- Doing Bayesian data analysis with `greta`
+  - A simple linear regression.
 
 ## Load packages and set plotting theme  
 
-```{r bda1-01, message=FALSE}
-library("knitr")      # for knitting RMarkdown 
+```{r, message=FALSE}
+library("knitr")      # for knitting RMarkdown
+library("janitor")    # for cleaning column names
 library("patchwork")  # for figure panels
+library("tidybayes")  # tidying up results from Bayesian models
+library("greta")      # for writing Bayesian models
+library("gganimate")  # for animations
+library("extraDistr") # additional probability distributions
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r bda1-02}
+```{r}
 theme_set(theme_classic() + #set the theme 
     theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
 ## Doing Bayesian inference "by hand"
 
 ### Sequential updating based on the Beta distribution 
 
-```{r bda1-03}
+```{r}
 # data 
 data = c(0, 1, 1, 0, 1, 1, 1, 1)
 
@@ -82,7 +90,7 @@ wrap_plots(plots, ncol = 3)
 
 Is the coin biased? 
 
-```{r bda1-04}
+```{r}
 # data 
 data = rep(0:1, c(8, 2))
 
@@ -110,7 +118,7 @@ df.coins = tibble(theta = theta,
 
 Visualize the results: 
 
-```{r bda1-05}
+```{r}
 df.coins %>% 
   pivot_longer(cols = -theta,
                names_to = "index",
@@ -139,9 +147,9 @@ df.coins %>%
 
 ### Bayesian inference by discretization
 
-### Effect of the prior 
+#### Effect of the prior 
 
-```{r bda1-06, fig.cap="Illustration of how the prior affects the posterior."}
+```{r, fig.cap="Illustration of how the prior affects the posterior."}
 # grid
 theta = seq(0, 1, 0.01)
 
@@ -193,9 +201,9 @@ df.prior_effect %>%
         axis.line = element_blank())
 ```
 
-### Effect of the likelihood 
+#### Effect of the likelihood 
 
-```{r bda1-07, fig.cap="Illustration of how the likelihood of the data affects the posterior."}
+```{r, fig.cap="Illustration of how the likelihood of the data affects the posterior."}
 # grid
 theta = seq(0, 1, 0.01)
 
@@ -217,7 +225,9 @@ df.likelihood_effect = tibble(theta = theta,
 df.likelihood_effect %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
          likelihood_index = factor(likelihood_index,
-                                   levels = c("likelihood_left", "likelihood_center", "likelihood_right"),
+                                   levels = c("likelihood_left",
+                                              "likelihood_center",
+                                              "likelihood_right"),
                                    labels = c("left", "center", "right"))) %>% 
   ggplot(data = .,
          mapping = aes(x = theta,
@@ -242,17 +252,21 @@ df.likelihood_effect %>%
   
 ```
 
-### Effect of the sample size  
+#### Effect of the sample size  
 
-```{r bda1-08}
+```{r}
 # grid
 theta = seq(0, 1, 0.01)
 
 df.sample_size_effect = tibble(theta = theta, 
                                prior = dbeta(theta, shape1 = 5, shape2 = 5),
                                likelihood_low = dbeta(theta, shape1 = 2, shape2 = 8),
-                               likelihood_medium = dbeta(theta, shape1 = 10, shape2 = 40),
-                               likelihood_high = dbeta(theta, shape1 = 20, shape2 = 80)) %>% 
+                               likelihood_medium = dbeta(theta,
+                                                         shape1 = 10,
+                                                         shape2 = 40),
+                               likelihood_high = dbeta(theta,
+                                                       shape1 = 20,
+                                                       shape2 = 80)) %>% 
   pivot_longer(cols = -c(theta, prior),
                names_to = "likelihood_index",
                values_to = "likelihood") %>% 
@@ -266,7 +280,9 @@ df.sample_size_effect = tibble(theta = theta,
 df.sample_size_effect %>% 
   mutate(index = factor(index, levels = c("prior", "likelihood", "posterior")),
          likelihood_index = factor(likelihood_index,
-                                   levels = c("likelihood_low", "likelihood_medium", "likelihood_high"),
+                                   levels = c("likelihood_low",
+                                              "likelihood_medium",
+                                              "likelihood_high"),
                                    labels = c("n = low", "n = medium", "n = high"))) %>% 
   ggplot(data = .,
          mapping = aes(x = theta,
@@ -289,10 +305,227 @@ df.sample_size_effect %>%
         axis.line = element_blank())
 ```
 
+## Doing Bayesian inference with Greta 
+
+You can find out more about how get started with "greta" here: [https://greta-stats.org/articles/get_started.html](https://greta-stats.org/articles/get_started.html). Make sure to install the development version of "greta" (as shown in the "install-packages" code chunk above: `devtools::install_github("greta-dev/greta")`).
+
+### Attitude data set 
+
+```{r}
+# load the attitude data set 
+df.attitude = attitude
+```
+
+Visualize relationship between how well complaints are handled and the overall rating of an employee
+
+```{r}
+ggplot(data = df.attitude,
+       mapping = aes(x = complaints,
+                     y = rating)) +
+  geom_point()
+```
+
+### Frequentist analysis 
+
+```{r}
+# fit model 
+fit = lm(formula = rating ~ 1 + complaints, 
+         data = df.attitude)
+
+# print summary
+fit %>% 
+  summary()
+```
+
+Visualize the model's predictions
+
+```{r}
+ggplot(data = df.attitude,
+       mapping = aes(x = complaints,
+                     y = rating)) +
+  geom_smooth(method = "lm",
+              color = "black") + 
+  geom_point()
+```
+
+### Bayesian regression
+
+#### Fit the model
+
+```{r}
+set.seed(1)
+
+# variables & priors
+b0 = normal(0, 10)
+b1 = normal(0, 10)
+sd = cauchy(0, 3, truncation = c(0, Inf))
+
+# linear predictor
+mu = b0 + b1 * df.attitude$complaints
+
+# observation model (likelihood)
+distribution(df.attitude$rating) = normal(mu, sd)
+
+# define the model
+m = model(b0, b1, sd)
+```
+
+Visualize the model as graph: 
+
+```{r}
+# plotting
+plot(m)
+```
+
+Draw samples from the posterior distribution: 
+
+```{r, message=FALSE, cache=TRUE}
+set.seed(1)
+
+# sampling
+draws = mcmc(m, n_samples = 1000)
+
+# tidy up the draws
+df.draws = tidy_draws(draws) %>% 
+  clean_names()
+```
+
+#### Visualize the priors
+
+These are the priors I used for the intercept, regression weights, and the standard deviation of the Gaussian likelihood function:  
+
+```{r}
+# Gaussian
+ggplot(tibble(x = c(-30, 30)),
+       aes(x = x)) +
+  stat_function(fun = "dnorm", 
+                size = 2,
+                args = list(sd = 10))
+
+# Cauchy
+ggplot(tibble(x = c(0, 30)),
+       aes(x = x)) +
+  stat_function(fun = "dcauchy", 
+                size = 2,
+                args = list(location = 0,
+                            scale = 3))
+```
+
+#### Visualize the posteriors
+
+This is what the posterior looks like for the three parameters in the model: 
+
+```{r}
+df.draws %>% 
+  select(draw:sd) %>% 
+  pivot_longer(cols = -draw,
+               names_to = "index",
+               values_to = "value") %>% 
+  ggplot(data = .,
+         mapping = aes(x = value)) + 
+  stat_density(geom = "line") + 
+  facet_grid(rows = vars(index),
+             scales = "free_y",
+             switch = "y") + 
+  annotate("segment", x = -Inf, xend = Inf, y = -Inf, yend = -Inf) + 
+  annotate("segment", x = -Inf, xend = -Inf, y = -Inf, yend = Inf) + 
+  theme(legend.position = "none",
+        strip.background = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.line = element_blank(),
+        strip.text.x = element_blank())
+```
+
+#### Visualize model predictions 
+
+Let's take some samples from the posterior to visualize the model predictions: 
+
+```{r}
+ggplot(data = df.attitude,
+       mapping = aes(x = complaints, 
+                     y = rating)) + 
+  geom_abline(data = df.draws %>% 
+                sample_n(size = 50),
+              mapping = aes(intercept = b0, 
+                            slope = b1),
+              alpha = 0.3,
+              color = "lightblue") + 
+  geom_point() 
+```
+
+#### Posterior predictive check 
+
+Let's make an animation that illustrates what predicted data sets (based on samples from the posterior) would look like: 
+
+```{r, message=FALSE}
+p = df.draws %>% 
+  sample_n(size = 10) %>%  
+  mutate(complaints = list(seq(min(df.attitude$complaints),
+                               max(df.attitude$complaints),
+                               length.out = nrow(df.attitude)))) %>% 
+  unnest(c(complaints)) %>% 
+  mutate(prediction = b0 + b1 * complaints + rnorm(n(), sd = sd)) %>% 
+  ggplot(aes(x = complaints, y = prediction)) + 
+  geom_point(alpha = 0.8,
+             color = "lightblue") +
+  geom_point(data = df.attitude,
+             aes(y = rating,
+                 x = complaints)) +
+  coord_cartesian(xlim = c(20, 100),
+                  ylim = c(20, 100)) +
+  transition_manual(draw)
+
+animate(p,
+        nframes = 60,
+        width = 800,
+        height = 600,
+        res = 96,
+        type = "cairo")
+
+# anim_save("posterior_predictive.gif")
+```
+
+#### Prior predictive check 
+
+And let's illustrate what data we would have expected to see just based on the information that we encoded in our priors. 
+
+```{r, message=FALSE}
+sample_size = 10
+
+p = tibble(b0 = rnorm(sample_size, mean = 0, sd = 10),
+           b1 = rnorm(sample_size, mean = 0, sd = 10),
+           sd = rhcauchy(sample_size, sigma = 3),
+           draw = 1:sample_size) %>% 
+  mutate(complaints = list(runif(nrow(df.attitude),
+                                 min = min(df.attitude$complaints),
+                                 max = max(df.attitude$complaints)))) %>% 
+  unnest(c(complaints)) %>% 
+  mutate(prediction = b0 + b1 * complaints + rnorm(n(), sd = sd)) %>% 
+  ggplot(aes(x = complaints, y = prediction)) + 
+  geom_point(alpha = 0.8,
+             color = "lightblue") +
+  geom_point(data = df.attitude,
+             aes(y = rating,
+                 x = complaints)) +
+  transition_manual(draw)
+
+animate(p,
+        nframes = 60,
+        width = 800,
+        height = 600,
+        res = 96,
+        type = "cairo")
+
+# anim_save("prior_predictive.gif")
+```
+
 ## Session info 
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r bda1-09}
+```{r}
 sessionInfo()
 ```

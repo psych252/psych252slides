@@ -11,19 +11,12 @@ output:
     pandoc_args: ["--number-offset=21"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
-```{r bda2-01, eval=FALSE, echo=FALSE, include=FALSE}
+```{r, eval=FALSE, echo=FALSE, include=FALSE}
 install.packages(c("tidybayes", "extraDistr"))
 devtools::install_github("greta-dev/greta")
 ```
 
 # Bayesian data analysis 2
-
 
 ## Learning goals 
 
@@ -37,7 +30,7 @@ devtools::install_github("greta-dev/greta")
 
 ## Load packages and set plotting theme  
 
-```{r bda2-02, message=FALSE}
+```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
 library("janitor")    # for cleaning column names
 library("greta")      # for writing Bayesian models
@@ -48,16 +41,20 @@ library("extraDistr") # additional probability distributions
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
-```{r bda2-03}
+```{r}
 theme_set(theme_classic() + #set the theme 
     theme(text = element_text(size = 20))) #set the default text size
+
+# these options here change the formatting of how comments are rendered
+opts_chunk$set(comment = "",
+               fig.show = "hold")
 ```
 
 ## Distributions 
 
 ### Normal vs Student-t distribution
 
-```{r bda2-04, fig.cap="Comparison between the normal distribution and the student-t distribution."}
+```{r, fig.cap="Comparison between the normal distribution and the student-t distribution."}
 tibble(x = c(-5, 5)) %>% 
   ggplot(aes(x = x)) + 
   stat_function(fun = "dnorm",
@@ -71,7 +68,7 @@ tibble(x = c(-5, 5)) %>%
 
 ### Beta distributions
 
-```{r bda2-05, fig.cap="Beta distributions", fig.height=4, fig.width=8}
+```{r, fig.cap="Beta distributions", fig.height=4, fig.width=8}
 
 fun.draw_beta = function(shape1, shape2){
   ggplot(data = tibble(x = c(0, 1)),
@@ -104,7 +101,7 @@ wrap_plots(p.list, ncol = 3)
 
 ### Normal distributions 
 
-```{r bda2-06, fig.cap="Normal distributions with different standard deviation."}
+```{r, fig.cap="Normal distributions with different standard deviation."}
 tibble(x = c(-10, 10)) %>% 
   ggplot(aes(x = x)) + 
   stat_function(fun = "dnorm",
@@ -119,7 +116,7 @@ tibble(x = c(-10, 10)) %>%
 
 ### Distributions for non-negative parameters 
 
-```{r bda2-07, fig.cap="Cauchy and Gamma distribution."}
+```{r, fig.cap="Cauchy and Gamma distribution."}
 tibble(x = c(0, 10)) %>% 
   ggplot(aes(x = x)) + 
   stat_function(fun = "dcauchy",
@@ -138,7 +135,7 @@ tibble(x = c(0, 10)) %>%
 
 Example for how we can compute probabilities based on random samples generated from a distribution. 
 
-```{r bda2-08}
+```{r}
 # generate samples 
 df.samples = tibble(x = rnorm(n = 10000, mean = 1, sd = 2)) 
 
@@ -167,14 +164,14 @@ You can find out more about how get started with "greta" here: [https://greta-st
 
 ### Attitude data set 
 
-```{r bda2-09}
+```{r}
 # load the attitude data set 
 df.attitude = attitude
 ```
 
 Visualize relationship between how well complaints are handled and the overall rating of an employee
 
-```{r bda2-10}
+```{r}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
@@ -183,7 +180,7 @@ ggplot(data = df.attitude,
 
 ### Frequentist analysis 
 
-```{r bda2-11}
+```{r}
 # fit model 
 fit = lm(formula = rating ~ 1 + complaints, 
          data = df.attitude)
@@ -194,7 +191,7 @@ fit %>% summary()
 
 Visualize the model's predictions
 
-```{r bda2-12}
+```{r}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
@@ -207,7 +204,7 @@ ggplot(data = df.attitude,
 
 #### Fit the model
 
-```{r bda2-13}
+```{r}
 # variables & priors
 b0 = normal(0, 10)
 b1 = normal(0, 10)
@@ -225,14 +222,14 @@ m = model(b0, b1, sd)
 
 Visualize the model as graph: 
 
-```{r bda2-14}
+```{r}
 # plotting
 plot(m)
 ```
 
 Draw samples from the posterior distribution: 
 
-```{r bda2-15, message=FALSE, cache=TRUE}
+```{r, message=FALSE, cache=TRUE}
 # sampling
 draws = mcmc(m, n_samples = 1000)
 
@@ -245,7 +242,7 @@ df.draws = tidy_draws(draws) %>%
 
 These are the priors I used for the intercept, regression weights, and the standard deviation of the Gaussian likelihood function:  
 
-```{r bda2-16}
+```{r}
 # Gaussian
 ggplot(tibble(x = c(-30, 30)),
        aes(x = x)) +
@@ -266,7 +263,7 @@ ggplot(tibble(x = c(0, 30)),
 
 This is what the posterior looks like for the three parameters in the model: 
 
-```{r bda2-17}
+```{r}
 df.draws %>% 
   select(draw:sd) %>% 
   pivot_longer(cols = -draw,
@@ -294,7 +291,7 @@ df.draws %>%
 
 Let's take some samples from the posterior to visualize the model predictions: 
 
-```{r bda2-18}
+```{r}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints, 
                      y = rating)) + 
@@ -311,7 +308,7 @@ ggplot(data = df.attitude,
 
 Let's make an animation that illustrates what predicted data sets (based on samples from the posterior) would look like: 
 
-```{r bda2-19, message=FALSE}
+```{r, message=FALSE}
 p = df.draws %>% 
   sample_n(size = 10) %>%  
   mutate(complaints = list(seq(min(df.attitude$complaints),
@@ -338,7 +335,7 @@ animate(p, nframes = 60, width = 800, height = 600, res = 96, type = "cairo")
 
 And let's illustrate what data we would have expected to see just based on the information that we encoded in our priors. 
 
-```{r bda2-20, message=FALSE}
+```{r, message=FALSE}
 sample_size = 10
 
 p = tibble(b0 = rnorm(sample_size, mean = 0, sd = 10),
@@ -367,7 +364,7 @@ animate(p, nframes = 60, width = 800, height = 600, res = 96, type = "cairo")
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r bda2-21}
+```{r}
 sessionInfo()
 ```
 
