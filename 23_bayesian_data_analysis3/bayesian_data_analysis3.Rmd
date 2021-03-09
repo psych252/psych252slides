@@ -1,27 +1,17 @@
 ---
-title: "Class 23"
+title: "Class 22"
 author: "Tobias Gerstenberg"
-date: ""
+date: "March 8th, 2021"
 output:
   bookdown::html_document2:
     toc: true
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=22"]
+    pandoc_args: ["--number-offset=21"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "#>",
-                      fig.show = "hold")
-```
-
-# Bayesian data analysis 3
-
-```{r bda3-01, echo=FALSE, eval=FALSE, include=FALSE}
-install.packages(c("brms", "bayesplot", "rstanarm"))
-```
+# Bayesian data analysis 2
 
 ## Learning goals 
 
@@ -55,6 +45,11 @@ library("tidyverse")   # for wrangling, plotting, etc.
 ```{r bda3-03}
 theme_set(theme_classic() + # set the theme 
             theme(text = element_text(size = 20))) # set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+
 ```
 
 ## Load data set 

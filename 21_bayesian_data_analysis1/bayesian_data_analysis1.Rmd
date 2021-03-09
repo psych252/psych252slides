@@ -38,6 +38,7 @@ library("tidybayes")  # tidying up results from Bayesian models
 library("greta")      # for writing Bayesian models
 library("gganimate")  # for animations
 library("extraDistr") # additional probability distributions
+library("broom")      # for tidy regression results
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
 
@@ -329,17 +330,24 @@ ggplot(data = df.attitude,
 
 ```{r}
 # fit model 
-fit = lm(formula = rating ~ 1 + complaints, 
-         data = df.attitude)
+fit.lm = lm(formula = rating ~ 1 + complaints, 
+            data = df.attitude)
 
 # print summary
-fit %>% 
+fit.lm %>% 
   summary()
+
+fit.brm = brm(formula = rating ~ 1 + complaints, 
+              data = df.attitude)
+
+fit.brm %>% 
+  plot(combo = c("intervals", "dens"),
+       N = 3)
 ```
 
 Visualize the model's predictions
 
-```{r}
+```{r, message=FALSE}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
@@ -438,6 +446,20 @@ df.draws %>%
         axis.line = element_blank(),
         strip.text.x = element_blank())
 ```
+#### Credible interval vs. confidence interval 
+
+```{r}
+fit.lm %>% 
+  tidy(conf.int = T) %>% 
+  ggplot(mapping = aes(y = term,
+                       x = estimate,
+                       xmin = conf.low,
+                       xmax = conf.high)) +
+  geom_pointrange()
+
+```
+
+
 
 #### Visualize model predictions 
 
@@ -448,7 +470,7 @@ ggplot(data = df.attitude,
        mapping = aes(x = complaints, 
                      y = rating)) + 
   geom_abline(data = df.draws %>% 
-                sample_n(size = 50),
+                slice_sample(n = 50),
               mapping = aes(intercept = b0, 
                             slope = b1),
               alpha = 0.3,
@@ -462,7 +484,7 @@ Let's make an animation that illustrates what predicted data sets (based on samp
 
 ```{r, message=FALSE}
 p = df.draws %>% 
-  sample_n(size = 10) %>%  
+  slice_sample(n = 10) %>%  
   mutate(complaints = list(seq(min(df.attitude$complaints),
                                max(df.attitude$complaints),
                                length.out = nrow(df.attitude)))) %>% 
