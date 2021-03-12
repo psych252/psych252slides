@@ -13,12 +13,12 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-# Generalized linear model 
-
 ```{r, include=FALSE, eval=FALSE}
 # new packages
 install.packages(c("titanic", "effects", "nlme")
 ```
+
+# Generalized linear model 
 
 ## Learning goals 
 

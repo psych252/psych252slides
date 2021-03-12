@@ -13,11 +13,11 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-# Linear mixed effects models 1
-
 ```{r, include=FALSE, eval=FALSE}
 install.packages(c("lme4", "lmerTest", "pbkrtest"))
 ```
+
+# Linear mixed effects models 1
 
 ## Learning goals 
 

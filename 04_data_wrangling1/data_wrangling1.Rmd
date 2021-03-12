@@ -11,10 +11,8 @@ output:
     pandoc_args: ["--number-offset=3"]
 ---
 
-```{r setup, include=FALSE}
-# these options here change the formatting of how comments are rendered
-knitr::opts_chunk$set(comment = "",
-                      fig.show = "hold")
+```{r install-packages, eval=FALSE, include=FALSE}
+install.packages(c("skimr", "visdat", "summarytools", "DT"))
 ```
 
 # Data wrangling 1 
@@ -28,13 +26,6 @@ In this lecture, we will take a look at how to wrangle data using the [dplyr](ht
 - See different ways for getting a sense of one's data. 
 - Master key data manipulation verbs from the `dplyr` package (incl. `filter()`, `arrange()`, `rename()`, `relocate()`, `select()`, `mutate()`) as well as the helper functions `across()` and `where()`.
 
-## Install packages 
-
-```{r install-packages, eval=FALSE}
-install.packages(c("skimr", "visdat", "summarytools", "DT"))
-```
-
-
 ## Load packages 
 
 Let's first load the packages that we need for this chapter. 
@@ -46,6 +37,9 @@ library("visdat")       # for visualizing data
 library("summarytools") # for visualizing data 
 library("DT")           # for visualizing data 
 library("tidyverse")    # for data wrangling
+
+opts_chunk$set(comment = "",
+                      fig.show = "hold")
 ```
 
 ## Some R basics 
@@ -920,6 +914,6 @@ Compute the body mass index for `masculine` characters who are `human`.
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
-```{r data-wrangling1-71}
+```{r}
 sessionInfo()
 ```

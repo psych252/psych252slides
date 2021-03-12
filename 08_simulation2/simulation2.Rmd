@@ -11,6 +11,11 @@ output:
     pandoc_args: ["--number-offset=7"]
 ---
 
+```{r, include=FALSE, eval=FALSE}
+# run this code chunk once to make sure you have all the packages
+install.packages(c("janitor"))
+```
+
 # Simulation 2 
 
 In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
@@ -21,11 +26,6 @@ In which we figure out some key statistical concepts through simulation and plot
 - Bootstrapping 
 
 ## Load packages and set plotting theme  
-
-```{r, include=FALSE, eval=FALSE}
-# run this code chunk once to make sure you have all the packages
-install.packages(c("janitor"))
-```
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 

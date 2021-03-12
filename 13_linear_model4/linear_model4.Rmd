@@ -13,11 +13,11 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
-# Linear model 4
-
 ```{r, include=FALSE, eval=FALSE}
 install.packages("afex")
 ```
+
+# Linear model 4
 
 ## Load packages and set plotting theme  
 

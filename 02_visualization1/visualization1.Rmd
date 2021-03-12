@@ -39,7 +39,7 @@ library("tidyverse") # for plotting (and many more cool things we'll discover la
 
 # these options here change the formatting of how comments are rendered
 # in RMarkdown 
-opts_chunk$set(comment = "#>",
+opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 

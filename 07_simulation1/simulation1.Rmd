@@ -11,14 +11,14 @@ output:
     pandoc_args: ["--number-offset=6"]
 ---
 
-# Simulation 1 
-
-## Load packages and set plotting theme  
-
 ```{r, include=FALSE, eval=FALSE}
 # run this code chunk once to make sure you have all the packages
 install.packages(c("kableExtra", "MASS"))
 ```
+
+# Simulation 1 
+
+## Load packages and set plotting theme  
 
 ```{r, message=FALSE}
 library("knitr")

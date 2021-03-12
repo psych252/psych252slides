@@ -11,15 +11,13 @@ output:
     pandoc_args: ["--number-offset=5"]
 ---
 
-# Probability and causality
-
-## Install and load packages, load data, set theme
-
-Let's first install the new packages that you might not have yet. 
-
-```{r, eval=FALSE}
+```{r, eval=FALSE, include=FALSE}
 install.packages(c("arrangements", "kableExtra", "DiagrammeR"))
 ```
+
+# Probability and causality
+
+## Load packages, load data, set theme
 
 Let's load the packages that we need for this chapter. 
 

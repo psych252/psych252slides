@@ -13,6 +13,10 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
+```{r, include=FALSE, eval=FALSE}
+install.packages(c("lsr", "pwr"))
+```
+
 # Power analysis
 
 ## Learning goals 
@@ -24,10 +28,6 @@ nocite: '@*'
 - Determining sample size via simulation.
   - Understanding `map()` and its children. 
   - Understanding `nest()` and `unnest()`.
-
-```{r, include=FALSE, eval=FALSE}
-install.packages(c("lsr", "pwr"))
-```
 
 ## Load packages and set plotting theme  
 

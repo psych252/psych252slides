@@ -13,6 +13,10 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
+```{r, include=FALSE, eval=FALSE}
+install.packages(c("corrr", "GGally"))
+```
+
 # Linear model 2
 
 ## Learning goals
@@ -26,10 +30,6 @@ nocite: '@*'
 - One categorical predictor. 
 - Both continuous and categorical predictors. 
 - Interpreting interactions. 
-
-```{r, include=FALSE, eval=FALSE}
-install.packages(c("corrr", "GGally"))
-```
 
 ## Load packages and set plotting theme  
 

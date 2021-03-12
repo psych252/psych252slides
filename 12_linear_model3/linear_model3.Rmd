@@ -13,6 +13,10 @@ bibliography: [packages.bib]
 nocite: '@*'
 ---
 
+```{r, include=FALSE, eval=FALSE}
+install.packages(c("afex", "car"))
+```
+
 # Linear model 3
 
 ## Learning goals 
@@ -22,10 +26,6 @@ nocite: '@*'
   - dummy-coding vs. effect-coding
   - planned contrasts 
 - ANOVA with unbalanced designs
-
-```{r, include=FALSE, eval=FALSE}
-install.packages(c("afex", "car"))
-```
 
 ## Load packages and set plotting theme  
 

@@ -15,8 +15,6 @@ bibliography: [references.bib]
 ```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
 install.packages(c("mediation", "multilevel", "rsvg", "DiagrammeRsvg"))
 ```
-
-
 # Mediation & Moderation
 
 These notes are adapted from this tutorial: [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)

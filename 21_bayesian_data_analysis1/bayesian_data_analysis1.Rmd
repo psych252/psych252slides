@@ -336,13 +336,6 @@ fit.lm = lm(formula = rating ~ 1 + complaints,
 # print summary
 fit.lm %>% 
   summary()
-
-fit.brm = brm(formula = rating ~ 1 + complaints, 
-              data = df.attitude)
-
-fit.brm %>% 
-  plot(combo = c("intervals", "dens"),
-       N = 3)
 ```
 
 Visualize the model's predictions
