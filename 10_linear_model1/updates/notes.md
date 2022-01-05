@@ -1,0 +1,1 @@
+- https://joshualoftus.com/posts/2020-11-23-least-squares-as-springs/
