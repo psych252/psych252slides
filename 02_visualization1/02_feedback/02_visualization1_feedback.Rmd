@@ -1,54 +1,31 @@
 ---
-title: "02_Visualization1"
+title: "02_visualization1"
 author: "Tobias Gerstenberg"
-date: "1/13/2021"
 output: 
   html_document:
-    toc: true
-    toc_depth: 4
     theme: cosmo
     highlight: tango
 ---
 
-```{r setup, include=FALSE}
+```{r include=FALSE}
 library("knitr")
 library("DT")
 library("janitor")
 library("tidyverse")
 
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
 
-Note: I forgot to reset the polls from the first class, so these results here are a mix from class 1 and 2. Apologies!
+# Pace
 
-## Student feedback 
-
-> Appreciated that the TAs popped in our breakout room and checked if we needed help.
-
-> Really liked working through the problem in the breakout group!
-
-> Some interface things with R Studio could be explained better. 
-
-Thanks! It would be helpful to hear more specifically what could be improved. 
-
-```{r echo=FALSE, message=FALSE}
-read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
-  datatable()
-```
-
-### PollEverywhere results 
-
-```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
-df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
-  rename(response = `Results Summary`) %>% 
-  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+```{r, echo=FALSE}
+df.pace = read_csv("data/How was the pace of today's class-.csv",
+                   skip = 1,
+                   show_col_types = FALSE) %>% 
   clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
@@ -61,8 +38,12 @@ ggplot(data = df.pace,
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+# Happiness
+
+```{r, echo=FALSE}
+df.happy = read_csv("data/How happy were you with today's class overall-.csv",
+                    skip = 1,
+                    show_col_types = FALSE) %>% 
   clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
@@ -71,7 +52,7 @@ df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>%
   count(response,
         .drop = F)
 
-ggplot(data = df.overall,
+ggplot(data = df.happy,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
@@ -80,7 +61,27 @@ ggplot(data = df.overall,
   theme(title = element_text(size = 18))
 ```
 
-## What to do next time
+# What did you like? What can be improved? 
 
-- make clear that students need to have RStudio and R installed before class, and that they should try to knit the file and report on Piazza if they have any problems
+> stay on the new code longer before scrolling for those who might be typing out instead of pasting
+
+> I liked diving in! Maybe slowing down a bit would be helpful for me, but I think that might be the case because I don't have a lot of R experience
+
+> 	I think it would be more convenient if we can download class materials using Github fetch, which will keep our local class folder more organized. Thanks!
+
+> 	apparently i had some package error so i was not able to participate. I thought i had downloaded everything prior to and even attended section, so i don't know if there was more I could have done to prepare, I didn't know there was an error
+
+> I really liked the interactiveness from the breakout rooms working on a task together
+
+```{r echo=FALSE, message=FALSE}
+read_csv("data/What did you like about today's class- What could be improved next time-.csv",
+         skip = 1,
+         show_col_types = FALSE) %>% 
+  datatable()
+```
+
+# What to do next time
+
+- go slower in this first session in R 
+- try not to jump around between different code sections as much 
 

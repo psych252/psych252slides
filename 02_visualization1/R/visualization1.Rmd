@@ -110,7 +110,8 @@ You may want to write it this way instead:
 
 ```{r, eval=FALSE}
 ggplot(data = diamonds, 
-       mapping = aes(x = cut, y = price)) +
+       mapping = aes(x = cut,
+                     y = price)) +
   # display the means
   stat_summary(fun = "mean",
                geom = "bar",
@@ -160,7 +161,7 @@ R help files can sometimes look a little cryptic. Most R help files have the fol
 
 __Title__: A one-sentence overview of the function.
 
-__Description__: An introduction to the high-level objectives of the function, typically about one paragraph long.
+__Description__: An introduction to the high-level objectives of the function.
 
 __Usage__: A description of the syntax of the function (in other words, how the function is called). This is where you find all the arguments that you can supply to the function, as well as any default values of these arguments.
 
@@ -420,7 +421,7 @@ ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
-               geom = "pointrange") 
+               geom = "pointrange")
 ```
 
 Here we have it. The average price of our diamonds for different levels of `clarity` together with bootstrapped 95% confidence intervals. How do we know that we have 95% confidence intervals? That's what `mean_cl_boot()` computes as a default. Let's take a look at that function:
@@ -436,9 +437,9 @@ Note that I had to use the `fun.data = ` argument here instead of `fun = ` becau
 The order in which we add geoms to a ggplot matters! Generally, we want to plot error bars before the points that represent the means. To illustrate, let's set the color in which we show the means to "red".
 
 ```{r good-figure, fig.cap='This figure looks good. Error bars and means are drawn in the correct order.'}
-ggplot(df.diamonds,
-       aes(x = clarity,
-           y = price)) +
+ggplot(data = df.diamonds,
+       mapping = aes(x = clarity,
+                     y = price)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange") +
   stat_summary(fun = "mean",
