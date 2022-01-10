@@ -34,7 +34,6 @@ Let's first load the packages that we need for this chapter.
 library("knitr")        # for rendering the RMarkdown file
 library("skimr")        # for visualizing data 
 library("visdat")       # for visualizing data 
-library("summarytools") # for visualizing data 
 library("DT")           # for visualizing data 
 library("tidyverse")    # for data wrangling
 

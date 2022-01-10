@@ -361,6 +361,14 @@ ggplot(data = df.plot,
             mapping = aes(label = city),
             hjust = 0,
             size = 5) + 
+  # set the limits for the coordinates
+  coord_cartesian(xlim = c(1999, 2015),
+                  clip = "off",
+                  expand = F) + 
+  # set the x-axis labels
+  scale_x_continuous(breaks = seq(from = 2000,
+                                  to = 2015,
+                                  by = 5)) +
   # set the y-axis labels
   scale_y_continuous(breaks = seq(from = 100000,
                                   to = 250000,
@@ -370,14 +378,6 @@ ggplot(data = df.plot,
                                         to = 250,
                                         by = 50),
                                     "K")) + 
-  # set the x-axis labels
-  scale_x_continuous(breaks = seq(from = 2000,
-                                  to = 2015,
-                                  by = 5)) +
-  # set the limits for the coordinates
-  coord_cartesian(xlim = c(1999, 2015),
-                  clip = "off",
-                  expand = F) + 
   # set the plot title and axes titles
   labs(title = "Change of median house sale price in Texas",
        x = "Year",
@@ -417,6 +417,10 @@ ggplot(data = df.diamonds,
                color = "black",
                fill = "lightblue",
                width = 0.85) + 
+  # adjust the range of both axes
+  coord_cartesian(xlim = c(0.25, 5.75),
+                  ylim = c(0, 5000),
+                  expand = F) + 
   # make error bars thicker
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
@@ -424,10 +428,6 @@ ggplot(data = df.diamonds,
   # adjust what to show on the y-axis
   scale_y_continuous(breaks = seq(from = 0, to = 4000, by = 2000),
                      labels = seq(from = 0, to = 4000, by = 2000)) + 
-  # adjust the range of both axes
-  coord_cartesian(xlim = c(0.25, 5.75),
-                  ylim = c(0, 5000),
-                  expand = F) + 
   # add a title, subtitle, and changed axis labels 
   labs(title = "Price as a function of quality of cut", 
        subtitle = "Note: The price is in US dollars",
@@ -470,9 +470,9 @@ ggplot(data = data,
   geom_text() + 
   annotate() + 
   # adjust axes and coordinates 
+  coord_cartesian() + 
   scale_x_continuous() + 
   scale_y_continuous() + 
-  coord_cartesian() + 
   # define plot title, and axis titles 
   labs(title = "Title",
        x = "Cause",
@@ -480,10 +480,11 @@ ggplot(data = data,
   # change global aspects of the plot 
   theme(text = element_text(size = 20),
         plot.margin = margin(t = 1, b = 1, l = 0.5, r = 0.5, unit = "cm")) +
-  # save the plot 
-  ggsave(filename = "super_nice_plot.pdf",
-         width = 8,
-         height = 6)
+
+# save the plot 
+ggsave(filename = "super_nice_plot.pdf",
+       width = 8,
+       height = 6)
 ```
 
 ### Changing the order of things
