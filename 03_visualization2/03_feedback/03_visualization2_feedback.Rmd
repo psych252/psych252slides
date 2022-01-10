@@ -1,51 +1,31 @@
 ---
-title: "03_Visualization2"
+title: "03_visualization2"
 author: "Tobias Gerstenberg"
-date: "1/15/2021"
 output: 
   html_document:
-    toc: true
-    toc_depth: 4
     theme: cosmo
     highlight: tango
 ---
 
-```{r setup, include=FALSE}
+```{r include=FALSE}
 library("knitr")
 library("DT")
 library("janitor")
 library("tidyverse")
 
 opts_chunk$set(echo = TRUE)
-theme_set(
-  theme_classic() + 
-    theme(
-      text = element_text(size = 20),
-      panel.grid.major.y = element_line(color = "gray90")
-    ) 
-)
+
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
 ```
 
+# Pace
 
-## Student feedback 
-
-> A little fast and unsure if this is normal for the class. If we are finding the pace fast, is it useful to look over the Rmd notes and try the practice problems ahead of time? Or will we then be too ahead of class?
-
-> I loved my breakout group and also appreciated the depth of explanation when going over the different ways to visualize data. It felt a little rushed towards the end tho
-
-> After scrolling to a line of code, give us 7 seconds to catch up to the same line of code.
-
-```{r echo=FALSE, message=FALSE}
-read_csv("3-what-did-you-like-about-today-s-class-what-could.csv") %>% 
-  datatable()
-```
-
-### PollEverywhere results 
-
-```{r echo=FALSE, message=FALSE, results='hide', warning=FALSE}
-df.pace = read_csv("2-how-was-the-pace-of-today-s-class.csv") %>% 
-  rename(response = `Results Summary`) %>% 
-  filter(row_number() > which(response == "Individual Results") + 1) %>% 
+```{r, echo=FALSE}
+df.pace = read_csv("data/How was the pace of today's class-.csv",
+                   skip = 1,
+                   show_col_types = FALSE) %>% 
   clean_names() %>%  
   mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
                            labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
@@ -58,8 +38,12 @@ ggplot(data = df.pace,
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
 
-```{r echo=FALSE, message=FALSE, results='hide'}
-df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>% 
+# Happiness
+
+```{r, echo=FALSE}
+df.happy = read_csv("data/How happy were you with today's class overall-.csv",
+                    skip = 1,
+                    show_col_types = FALSE) %>% 
   clean_names() %>% 
   filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
   mutate(response = as.numeric(response),
@@ -68,7 +52,7 @@ df.overall = read_csv("1-how-happy-were-you-with-today-s-class-overall.csv") %>%
   count(response,
         .drop = F)
 
-ggplot(data = df.overall,
+ggplot(data = df.happy,
        mapping = aes(x = response, y = n)) + 
   geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
   scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
@@ -77,7 +61,24 @@ ggplot(data = df.overall,
   theme(title = element_text(size = 18))
 ```
 
-## What to do next time
+# What did you like? What can be improved? 
 
-- 
+> liked that we dived into actual material, thought it was well-paced. if you could post the rmds with solutions after class (which I think you said you would) that would be super helpful to go back to when we forget something
+
+> "Science is what we understand well enough to explain to a computer. Art is everything else we do." — Donald Knuth
+
+> Really like the breakout discussion & practice. Learned good stuffs.
+
+> I liked everything. Would be great to have a cheatsheet that we can reference for some common graph types.
+
+```{r echo=FALSE, message=FALSE}
+read_csv("data/What did you like about today's class- What could be improved next time-.csv",
+         skip = 1,
+         show_col_types = FALSE) %>% 
+  datatable()
+```
+
+# What to do next time
+
+- have a cheatsheet with common graph types 
 

@@ -1,7 +1,6 @@
 ---
 title: "Visualization I Solutions"
 author: "Tobias Gerstenberg"
-date: "January 13th, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -28,24 +27,31 @@ theme_set(theme_classic() + #set the theme
     theme(text = element_text(size = 20))) #set the default text size
 ```
 
+Let's load the diamonds data set 
+
+
+```{r}
+df.diamonds = diamonds 
+```
+
 ## Practice plot 1
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot1).
 
 ```{r fig.align="center", fig.cap="Practice plot 1.", fig.height=6, fig.width=8, out.width="95%"}
-ggplot(data = diamonds,
+ggplot(data = df.diamonds,
        mapping = aes(x = depth,
                      y = table)) +
   geom_point()
 ```
 
 ```{r practice-plot1, out.width="90%", fig.align="center", fig.cap="Practice plot 1."}
-include_graphics("figures/practice_plot1.png")
+include_graphics("figures/vis1_practice_plot1.png")
 ```
 Recreate the plot shown in Figure \@ref(fig:practice-plot1a).
 
 ```{r fig.align="center", fig.cap="Practice plot 1 (advanced).", fig.height=6, fig.width=8, out.width="95%"}
-ggplot(data = diamonds,
+ggplot(data = df.diamonds,
        mapping = aes(x = depth,
                      y = table)) +
   geom_point(alpha = 0.1) + 
@@ -53,7 +59,7 @@ ggplot(data = diamonds,
        y = "Table\n(width of top of diamond relative to widest point)")
 ```
 ```{r practice-plot1a, out.width="90%", fig.align="center", fig.cap="Practice plot 1 (advanced)."}
-include_graphics("figures/practice_plot1a.png")
+include_graphics("figures/vis1_practice_plot1a.png")
 ```
 
 ## Practice plot 2
@@ -61,7 +67,7 @@ include_graphics("figures/practice_plot1a.png")
 Recreate the plot shown in Figure \@ref(fig:practice-plot2).
 
 ```{r}
-ggplot(data = diamonds,
+ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
   stat_summary(fun = "mean",
@@ -71,12 +77,12 @@ ggplot(data = diamonds,
 ```
 
 ```{r practice-plot2, out.width="90%", fig.align="center", fig.cap="Practice plot 2."}
-include_graphics("figures/practice_plot2.png")
+include_graphics("figures/vis1_practice_plot2.png")
 ```
 Recreate the plot shown in Figure \@ref(fig:practice-plot2a).
 
 ```{r}
-ggplot(data = diamonds,
+ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
   stat_summary(fun = "mean",
@@ -90,7 +96,7 @@ ggplot(data = diamonds,
 ```
 
 ```{r practice-plot2a, out.width="90%", fig.align="center", fig.cap="Practice plot 2 (advanced).", echo=F}
-include_graphics("figures/practice_plot2a.png")
+include_graphics("figures/vis1_practice_plot2a.png")
 ```
 
 ## Practice plot 3
@@ -98,7 +104,7 @@ include_graphics("figures/practice_plot2a.png")
 Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
 ```{r}
-ggplot(data = diamonds, 
+ggplot(data = df.diamonds, 
        mapping = aes(x = color,
                      y = price,
                      group = clarity,
@@ -112,12 +118,12 @@ ggplot(data = diamonds,
 ```
 
 ```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3.", echo=F}
-include_graphics("figures/practice_plot3.png")
+include_graphics("figures/vis1_practice_plot3.png")
 ```
 Recreate the plot shown in Figure \@ref(fig:practice-plot3a).
 
 ```{r fig.height=6, fig.width=14}
-ggplot(data = diamonds, 
+ggplot(data = df.diamonds, 
        mapping = aes(x = color,
                      y = price,
                      group = clarity,
@@ -140,7 +146,7 @@ ggplot(data = diamonds,
 ```
 
 ```{r practice-plot3a, out.width="90%", fig.align="center", fig.cap="Practice plot 3 (advanced).", echo=F}
-include_graphics("figures/practice_plot3a.png")
+include_graphics("figures/vis1_practice_plot3a.png")
 ```
 
 ## Practice plot 4
@@ -148,7 +154,7 @@ include_graphics("figures/practice_plot3a.png")
 Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
 ```{r, warning=F}
-ggplot(data = diamonds,
+ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
                      fill = cut)) +
@@ -166,6 +172,6 @@ ggplot(data = diamonds,
 ```
 
 ```{r practice-plot4, out.width="90%", fig.align="center", fig.cap="Practice plot 4.", echo=F}
-include_graphics("figures/practice_plot4.png")
+include_graphics("figures/vis1_practice_plot4.png")
 ```
 
