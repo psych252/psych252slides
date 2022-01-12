@@ -633,10 +633,10 @@ You can use `,` and `&` interchangeably in `filter()`. Make sure to use parenthe
 
 ```{r}
 df.starwars %>% 
-  filter((skin_color %in% c("dark", "pale") | gender == "hermaphrodite") & height > 170)
+  filter((skin_color %in% c("dark", "pale") | sex == "hermaphroditic") & height > 170)
 ```
 
-The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or whose gender is `"hermaphrodite"`, and whose height is at least `170` cm. The `%in%` operator is useful when there are multiple options. Instead of `skin_color %in% c("dark", "pale")`, I could have also written `skin_color == "dark" | skin_color == "pale"` but this gets cumbersome as the number of options increases. 
+The starwars characters that have either a `"dark"` or a `"pale"` skin tone, or whose sex is `"hermaphroditic"`, and whose height is at least `170` cm. The `%in%` operator is useful when there are multiple options. Instead of `skin_color %in% c("dark", "pale")`, I could have also written `skin_color == "dark" | skin_color == "pale"` but this gets cumbersome as the number of options increases. 
 
 ### `arrange()`
 
