@@ -1,7 +1,6 @@
 ---
 title: "Class 4"
 author: "Tobias Gerstenberg"
-date: "January 20th, 2021"
 output: 
   bookdown::html_document2:
     toc: true
@@ -79,7 +78,7 @@ df.starwars %>%
 
 ## Practice 3 
 
-Compute the body mass index for `masculine` characters who are `human`.
+Compute the body mass index for `masculine` characters who are `Human`.
 
 - select only the columns you need 
 - filter out only the rows you need 

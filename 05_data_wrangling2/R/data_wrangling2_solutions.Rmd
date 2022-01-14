@@ -1,7 +1,6 @@
 ---
 title: "Class 5"
 author: "Tobias Gerstenberg"
-date: "January 22nd, 2021"
 output:
   bookdown::html_document2:
     toc: true
@@ -26,10 +25,8 @@ library("tidyverse") # for data wrangling
 
 ```{r}
 opts_chunk$set(comment = "")
-
 options(dplyr.summarise.inform = F)
 ```
-
 
 And let's load the data set into the environment
 
