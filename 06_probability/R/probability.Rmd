@@ -385,7 +385,7 @@ https://pubmed.ncbi.nlm.nih.gov/34242764/#:~:text=The%20overall%20sensitivity%20
 
 ```{r}
 # prior probability of the disease
-p.D = 0.5 
+p.D = 0.1 
 
 # sensitivity covid rapid test
 p.T_given_D = 0.653
