@@ -1,0 +1,419 @@
+---
+title: "Class 9"
+author: "Tobias Gerstenberg"
+date: "January 24th, 2022"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=8"]
+---
+
+# Modeling data
+
+## Load packages and set plotting theme  
+
+```{r, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r}
+theme_set(theme_classic() + #set the theme 
+            theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+```
+
+## Modeling data 
+
+### Simplicity vs. accuracy trade-off 
+
+```{r, warning=F, fig.cap="Tradeoff between fit and model simplicity."}
+# make example reproducible 
+set.seed(1)
+
+n_samples = 20 # sample size 
+n_parameters = 2 # number of parameters in the polynomial regression
+
+# generate data 
+df.data = tibble(x = runif(n_samples, min = 0, max = 10), 
+                 y = 10 + 3 * x + 3 * x^2 + rnorm(n_samples, sd = 20))
+ 
+# plot a fit to the data
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.data$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, degree = n_parameters, raw = TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+```
+
+```{r, fig.cap="Figure that I used to illustrate that fitting more data points with fewer parameter is more impressive."}
+# make example reproducible 
+set.seed(1)
+# n_samples = 20
+n_samples = 3
+
+df.pre = tibble(x = runif(n_samples, min = 0, max = 10), 
+                y = 2 * x + rnorm(n_samples, sd = 1))
+
+# plot a fit to the data
+ggplot(data = df.pre,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 3) +
+  # geom_hline(yintercept = mean(df.pre$y), color = "blue") +
+  geom_smooth(method = "lm", se = F,
+              formula = y ~ poly(x, 1, raw = TRUE)) +
+  theme(axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
+```
+
+### Sampling distributions for median and mean 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+sample_size = 40 # size of each sample
+sample_n = 1000 # number of samples 
+
+# draw sample
+fun.draw_sample = function(sample_size, distribution){
+  x = 50 + rnorm(sample_size)
+  return(x)
+}
+
+# generate many samples 
+samples = replicate(n = sample_n,
+                    fun.draw_sample(sample_size, df.population))
+
+# set up a data frame with samples 
+df.sampling_distribution = matrix(samples, ncol = sample_n) %>%
+  as_tibble(.name_repair = ~ str_c(1:sample_n)) %>%
+  pivot_longer(cols = everything(),
+               names_to = "sample",
+               values_to = "number") %>% 
+  mutate(sample = as.numeric(sample)) %>% 
+  group_by(sample) %>% 
+  mutate(draw = 1:n()) %>% 
+  select(sample, draw, number) %>% 
+  ungroup()
+
+# turn the data frame into long format and calculate the mean and median of each sample
+df.sampling_distribution_summaries = df.sampling_distribution %>% 
+  group_by(sample) %>% 
+  summarize(mean = mean(number),
+            median = median(number)) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -sample,
+               names_to = "index",
+               values_to = "value")
+```
+
+And plot it: 
+
+```{r}
+# plot a histogram of the means with density overlaid 
+
+ggplot(data = df.sampling_distribution_summaries,
+       mapping = aes(x = value, color = index)) + 
+  stat_density(bw = 0.1,
+               size = 2,
+               geom = "line") + 
+  scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
+```
+
+### Residuals need to be normally distributed, not the data itself
+
+```{r}
+set.seed(1)
+
+n_participants = 1000
+
+df.normal = tibble(participant = 1:n_participants,
+                   condition = rep(c("control", "experimental"), each = n_participants/2)) %>% 
+  mutate(score = ifelse(condition == "control",
+                        rnorm(n = n_participants, mean = 5, sd = 2),
+                        rnorm(n = n_participants, mean = 15, sd = 3)))
+
+# distribution of the data 
+ggplot(data = df.normal,
+       mapping = aes(x = score)) + 
+  geom_density() +
+  geom_density(mapping = aes(group = condition,
+                             color = condition))
+  
+
+# distribution of the residuals after having fitted a linear model 
+# we'll learn how to do this later   
+
+fit = lm(formula = score ~ 1 + condition,
+         data = df.normal)
+
+
+ggplot(data = tibble(residuals = fit$residuals),
+                     mapping = aes(x = residuals)) + 
+  geom_density()
+  
+```
+
+
+## Hypothesis testing: "One-sample t-test" 
+
+```{r, warning=F}
+df.internet = read_table2(file = "data/internet_access.txt") %>% 
+  clean_names()
+```
+
+```{r, fig.cap="Selection of the data."}
+df.internet %>% 
+  mutate(i = 1:n()) %>% 
+  select(i, internet, everything()) %>% 
+  head(10) %>% 
+  kable(digits = 1) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+```
+
+
+```{r, fig.cap="Sum of squared errors, proportional reduction in error (PRE), F statistic, p-value."}
+# parameters per model 
+pa = 1
+pc = 0 
+
+df.model = df.internet %>%
+  select(internet, state) %>% 
+  mutate(i = 1:n(),
+         compact_b = 75,
+         augmented_b = mean(internet),
+         compact_se = (internet-compact_b)^2,
+         augmented_se = (internet-augmented_b)^2) %>% 
+  select(i, state, internet, contains("compact"), contains("augmented"))
+  
+df.model %>% 
+  summarize(augmented_sse = sum(augmented_se),
+            compact_sse = sum(compact_se),
+            pre = 1 - augmented_sse/compact_sse,
+            f = (pre/(pa-pc))/((1-pre)/(nrow(df.model)-pa)),
+            p_value = 1-pf(f, pa-pc, nrow(df.model)-1),
+            mean = mean(internet),
+            sd = sd(internet)) %>% 
+              kable() %>% 
+              kable_styling(bootstrap_options = "striped",
+                          full_width = F)
+```
+
+
+```{r, fig.cap="F-distribution"}
+df1 = 1
+df2 = 49
+
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = "df",
+                geom = "area",
+                fill = "red",
+                alpha = 0.5,
+                args = list(df1 = df1,
+                            df2 = df2),
+                size = 1,
+                xlim = c(qf(0.95, df1 = df1, df2 = df2), 10)) +
+  stat_function(fun = ~ df(x = .,
+                           df1 = df1,
+                           df2 = df2),
+                size = 0.5) + 
+  scale_y_continuous(expand = expansion(add = c(0.001, 0.1))) +
+  labs(y = "Density",
+       x = "Proportional reduction in error")
+```
+
+We've implemented a one sample t-test (compare the p-value here to the one I computed above using PRE and the F statistic).
+
+```{r}
+t.test(df.internet$internet, mu = 75)
+```
+
+## Building a sampling distribution of PRE 
+
+Here is the general procedure for building a sampling distribution of the proportional reduction in error (PRE). In this instance, I compare the following two models 
+
+- Model C (compact): $Y_i = 75 + \epsilon_i$
+- Model A (augmented): $Y_i = \overline Y + \epsilon_i$
+
+whereby I assume that $\epsilon_i \sim \mathcal{N}(0, \sigma)$.
+
+For this example, I assume that I know the population distribution. I first draw a sample from that distribution, and then calculate PRE. 
+
+```{r}
+# make example reproducible
+set.seed(1)
+
+# set the sample size 
+sample_size = 50 
+
+# draw sample from the population distribution (I've fixed sigma -- the standard deviation
+# of the population distribution to be 5)
+df.sample = tibble(observation = 1:sample_size,
+                   value = 75 + rnorm(sample_size, mean = 0, sd = 5))
+
+# calculate SSE for each model, and then PRE based on that 
+df.summary = df.sample %>% 
+  mutate(compact = 75,
+         augmented = mean(value)) %>% 
+  summarize(sse_compact = sum((value - compact)^2),
+            sse_augmented = sum((value - augmented)^2),
+            pre = 1 - (sse_augmented/sse_compact))
+```
+
+To generate the sampling distribution, I assume that the null hypothesis is true, and then take a look at what values for PRE we could expect by chance for our given sample size. 
+
+```{r, warning=F, message=F}
+# simulation parameters
+n_samples = 1000
+sample_size = 50 
+mu = 75 # true mean of the distribution 
+sigma = 5 # true standard deviation of the errors 
+
+# function to draw samples from the population distribution 
+fun.draw_sample = function(sample_size, mu, sigma){
+  sample = mu + rnorm(sample_size,
+                      mean = 0,
+                      sd = sigma)
+  return(sample)
+}
+
+# draw samples
+samples = n_samples %>% 
+  replicate(fun.draw_sample(sample_size, mu, sigma)) %>% 
+  t() # transpose the resulting matrix (i.e. flip rows and columns)
+
+# put samples in data frame and compute PRE 
+df.samples = samples %>% 
+  as_tibble(.name_repair = ~ str_c(1:ncol(samples))) %>% 
+  mutate(sample = 1:n()) %>% 
+  pivot_longer(cols = -sample,
+               names_to = "index",
+               values_to = "value") %>% 
+  mutate(compact = mu) %>% 
+  group_by(sample) %>% 
+  mutate(augmented = mean(value)) %>% 
+  summarize(sse_compact = sum((value - compact)^2),
+            sse_augmented = sum((value - augmented)^2),
+            pre = 1 - sse_augmented/sse_compact)
+            
+
+# plot the sampling distribution for PRE 
+ggplot(data = df.samples,
+       mapping = aes(x = pre)) +
+  stat_density(geom = "line") + 
+  labs(x = "Proportional reduction in error")
+
+# calculate the p-value for our sample 
+df.samples %>% 
+  summarize(p_value = sum(pre >= df.summary$pre)/n())
+
+```
+
+Some code I wrote to show a subset of the samples. 
+
+```{r, warning=F, message=F}
+samples %>% 
+  as_tibble(.name_repair = "unique") %>% 
+  mutate(sample = 1:n()) %>% 
+  pivot_longer(cols = -sample,
+               names_to = "index",
+               values_to = "value") %>% 
+  mutate(compact = mu) %>% 
+  group_by(sample) %>% 
+  mutate(augmented = mean(value)) %>% 
+  ungroup() %>% 
+  mutate(index = str_extract(index, pattern = "\\-*\\d+\\.*\\d*"),
+         index = as.numeric(index)) %>% 
+  filter(index < 6) %>% 
+  arrange(sample, index) %>% 
+    head(15) %>% 
+    kable(digits = 2) %>% 
+    kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+## Misc
+
+Some code to plot probability distributions together with values of interest highlighted. 
+
+```{r}
+value_mean = 3.73
+value_sd = 2.05/sqrt(40)
+q_low = qnorm(0.025, mean = value_mean, sd = value_sd)
+q_high = qnorm(0.975, mean = value_mean, sd = value_sd)
+qnorm(0.975) * value_sd
+
+# density function
+
+ggplot(data = tibble(x = c(2.73, 4.73)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dnorm(.,
+                              mean = value_mean,
+                              sd = value_sd),
+                size = 2) + 
+  geom_vline(xintercept = c(q_low, q_high),
+             linetype = 2)
+
+
+# quantile function 
+df.paths = tibble(x = c(rep(c(0.025, 0.975), each = 2),
+                        -Inf, 0.025, -Inf, 0.975),
+                  y = c(2.9, q_low,
+                        2.9, q_high,
+                        q_low, q_low,
+                        q_high, q_high),
+                  group = rep(1:4, each = 2))
+
+ggplot(data = tibble(x = c(0, 1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ qnorm(.,
+                              mean = value_mean,
+                              sd = value_sd)) + 
+  geom_path(data = df.paths,
+            mapping = aes(x = x,
+                          y = y,
+                          group = group),
+            color = "blue",
+            size = 2,
+            lineend = "round") + 
+  coord_cartesian(xlim = c(-0.05, 1.05),
+                  ylim = c(2.9, 4.5),
+                  expand = F)
+
+```
+
+
+## Additional resources 
+
+### Reading 
+
+- Judd, C. M., McClelland, G. H., & Ryan, C. S. (2011). Data analysis: A model comparison approach. Routledge. --> Chapters 1--4
+
+### Datacamp 
+
+- [Foundations of Inference](https://www.datacamp.com/courses/foundations-of-inference)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r}
+sessionInfo()
+```

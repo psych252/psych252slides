@@ -186,7 +186,7 @@ ggplot(data = df.plot,
   scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
 
-Even though our population distribution was far from normal (and much more heavy-metal like), the means of the sampling  distribution are normally distributed. 
+Even though our population distribution was far from normal (and much more heavy-metal like), the means of the sampling distribution are normally distributed. 
 
 And here are the mean and standard deviation of the sampling distribution: 
 
@@ -268,9 +268,15 @@ ggplot(data = df.bootstrap,
                  color = "black",
                  fill = "lightblue",
                  binwidth = 0.05) + 
-  stat_density(geom = "line",
-               size = 1.5,
-               bw = 0.1) +
+  # stat_density(geom = "line",
+  #              size = 1.5,
+  #              bw = 0.1,
+  #              color = "blue",
+  #              linetype = 2) +
+  stat_function(fun = ~ dnorm(.,
+                              mean = mean(df.sample$number),
+                              sd = sd(df.sample$number / sqrt(nrow(df.sample)))),
+                size = 2) +
   labs(x = "mean") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
@@ -537,7 +543,7 @@ If we assume normally distributed data (and a large enough sample size), then we
 
 For smaller sample sizes, we can use the $t$-distribution instead with $n-1$ degrees of freedom. For larger $n$ the $t$-distribution closely approximates the normal distribution. 
 
-So let's run a a simulation to check whether the definition of the confidence interval seems right. We will use our heavy metal distribution from above, take samples from the distribution, calculate the mean and confidende interval, and check how often the true mean of the population ($M = 3.5$) is contained within the confidence interval. 
+So let's run a a simulation to check whether the definition of the confidence interval seems right. We will use our heavy metal distribution from above, take samples from the distribution, calculate the mean and confidence interval, and check how often the true mean of the population ($M = 3.5$) is contained within the confidence interval. 
 
 ```{r}
 # make example reproducible 
