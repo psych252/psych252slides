@@ -1092,3 +1092,40 @@ ggplot(data = df.fit,
                 size = 1)
 ```
 
+# density and cumulative probability distribution for unifrom distribution
+
+```{r}
+ggplot(data = tibble(x = c(0, 0.2)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ dunif(., min = 0, max = 0.2)) + 
+  coord_cartesian(expand = F)
+
+ggplot(data = tibble(x = c(0, 0.2)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ punif(., min = 0, max = 0.2)) + 
+  coord_cartesian(expand = F)
+```
+
+# F-distributions with different parameters 
+
+```{r}
+pc = 1
+pa = 2
+n = 20
+
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ df(., df1 = pa-pc, df2 = n-pa)) +
+  scale_y_continuous(limits = c(0, 1.5))
+
+pc = 1
+pa = 8
+n = 20
+
+ggplot(data = tibble(x = c(0, 10)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ df(., df1 = pa-pc, df2 = n-pa)) +
+  scale_y_continuous(limits = c(0, 1.5))
+
+```
+
