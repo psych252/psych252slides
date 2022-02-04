@@ -60,7 +60,89 @@ df.poker = read_csv("data/poker.csv") %>%
                         labels = c("fixed", "none")),
          participant = 1:n()) %>% 
   select(participant, everything())
+
+# creating an unbalanced data set by removing the first 10 participants 
+df.poker.unbalanced = df.poker %>% 
+  filter(!participant %in% 1:10)
 ```
+
+## ANOVA with unbalanced design
+
+For the standard `anova()` function, the order of the independent predictors matters when the design is unbalanced. 
+
+There are two reasons for why this happens. 
+
+1) In an unbalanced design, the predictors in the model aren't uncorrelated anymore. 
+2) The standard `anova()` function computes Type I (sequential) sums of squares. 
+
+Sequential sums of squares means that the predictors are added to the model in the order in which the are specified. 
+
+```{r}
+# one order 
+lm(formula = balance ~ skill + hand, 
+         data = df.poker.unbalanced) %>% 
+  anova()
+
+# another order 
+lm(formula = balance ~ hand + skill, 
+         data = df.poker.unbalanced) %>% 
+  anova()
+```
+We should compute an ANOVA with type 3 sums of squares, and set the contrast to sum contrasts. I like to use the `joint_tests()` function from the "emmeans" package for doing so. It does both of these things for us. 
+
+```{r}
+# one order
+lm(formula = balance ~ hand * skill,
+   data = df.poker.unbalanced) %>% 
+  joint_tests()
+
+# another order
+lm(formula = balance ~ skill + hand,
+   data = df.poker.unbalanced) %>% 
+  joint_tests()
+```
+
+Now, the order of the independent variables doesn't matter anymore. 
+
+Alternatively,we can also use the `aov_ez()` function from the `afex` package. 
+
+```{r}
+lm(formula = balance ~ skill * hand,
+   data = df.poker.unbalanced) %>% 
+  joint_tests()
+
+fit = aov_ez(id = "participant",
+             dv = "balance",
+             data = df.poker.unbalanced,
+             between = c("hand", "skill"))
+fit$Anova
+```
+
+## Interpreting parameters (very important!)
+
+```{r}
+fit = lm(formula = balance ~ skill * hand,
+         data = df.poker)
+
+fit %>% 
+  summary()
+```
+
+> Important: The t-statistic for `skillexpert` is not telling us that there is a main effect of skill. Instead, it shows the difference between `skill = average` and `skill = expert` when all other predictors in the model are 0!!
+
+Here, this parameter just captures whether there is a significant difference between average and skilled players **when they have a bad hand** (because that's the reference category here). Let's check that this is true. 
+
+```{r}
+df.poker %>% 
+  group_by(skill, hand) %>% 
+  summarize(mean = mean(balance)) %>% 
+  filter(hand == "bad") %>% 
+  pivot_wider(names_from = skill,
+              values_from = mean) %>% 
+  mutate(difference = expert - average)
+```
+
+We see here that the difference in balance between the average and expert players when they have a bad hand is 2.7098. This is the same value as the `skillexpert` parameter in the `summary()` table above, and the corresponding significance test captures whether this difference is significantly different from 0. It doesn't capture, whether there is an effect of skill overall! To test this, we need to do an analysis of variance (using the `Anova(type = 3)` function).
 
 ## Linear contrasts 
 
@@ -203,7 +285,9 @@ fit_c = lm(formula = performance ~ 1,
            data = df.development)
 
 df.plot = df.development %>% 
-  mutate(group_jitter = 1 + runif(n(), min = -0.25, max = 0.25))
+  mutate(group_jitter = 1 + runif(n(),
+                                  min = -0.25,
+                                  max = 0.25))
 
 df.augment = fit_c %>% 
   augment() %>% 
@@ -292,8 +376,11 @@ Results figure
 
 ```{r}
 df.development %>% 
-  ggplot(aes(x = group, y = performance)) + 
-  geom_point(alpha = 0.3, position = position_jitter(width = 0.1, height = 0)) +
+  ggplot(mapping = aes(x = group,
+                       y = performance)) + 
+  geom_point(alpha = 0.3, 
+             position = position_jitter(width = 0.1,
+                                        height = 0)) +
   stat_summary(fun.data = "mean_cl_boot",
                shape = 21, 
                fill = "white",
@@ -389,7 +476,7 @@ df.poker %>%
                 full_width = F)
 ```
 
-### Understanding effect coding 
+### Understanding sum coding 
 
 ```{r}
 fit = lm(formula = balance ~ 1 + hand,
