@@ -31,7 +31,6 @@ library("kableExtra") # for making nice tables
 library("broom")      # for tidying up model fits
 library("magrittr")   # for going all in with the pipe
 library("effectsize") # for computing effect size measures
-library("car")        # for Anova()
 library("pwr")        # for power calculations
 library("tidyverse")  # for wrangling, plotting, etc. 
 ```
@@ -493,7 +492,8 @@ n_simulations = 10
 df.power = expand_grid(n = seq(10, 40, 2),
                        simulation = 1:n_simulations,
                        p = 0.75) %>%
-  mutate(index = 1:n()) # add an index column
+  mutate(index = 1:n(),
+         .before = n) # add an index column
 
 df.power
 ```
@@ -503,9 +503,11 @@ The `expand_grid()` function creates a data frame that contains all the combinat
 Now, let's generate data according to our hypothesis. 
 
 ```{r}
+set.seed(1)
+
 df.power = df.power %>% 
   group_by(index, n, simulation) %>% 
-  mutate(response = rbinom(n = n(),
+  mutate(response = rbinom(n = 1,
                            size = n,
                            prob = p))
 
@@ -516,13 +518,12 @@ The `response` variable now contains samples from the sample size `n` according 
 
 ```{r}
 df.power = df.power %>% # generate random data
-  group_by(index, simulation, p) %>% 
-  nest() %>% # put data in list column
-  mutate(fit = map(.x = data, 
-                   .f = ~ binom.test(x = .$response, # define formula
-                                     n = .$n,
-                                     p = 0.5,
-                                     alternative = "two.sided")))
+  mutate(fit = map2(.x = response,
+                    .y = n,
+                    .f = ~ binom.test(x = .x, # define formula
+                                      n = .y,
+                                      p = 0.5,
+                                      alternative = "two.sided")))
 df.power
 ```
 
@@ -534,7 +535,7 @@ df.power = df.power %>%
                     .f = ~ tidy(.))) %>% 
   select(simulation, p, index, coef) %>% 
   unnest(cols = coef) %>% 
-  rename(n = parameter)
+  select(index, n, simulation, p.value)
 df.power
 ```
 
@@ -561,7 +562,8 @@ ggplot(data = df.plot,
              linetype = 2,
              color = "gray50",
              size = 0.1) + 
-  geom_smooth(method = "loess") +
+  geom_smooth(method = "loess",
+              formula = "y ~ x") +
   geom_point()
 ```
 
@@ -569,7 +571,35 @@ As expected, the power increases with the sample size n.
 
 ###### All in one 
 
-Now let's run the same simulation again, with a larger sample size, and also for two different alternative hypotheses: p1 = 0.75, and p2 = 0.9. 
+Here is a slightly different way to run the same simulation we just did before in one go: 
+
+```{r}
+# make reproducible 
+set.seed(1)
+
+# number of simulations
+n_simulations = 5
+
+# run simulation 
+expand_grid(n = seq(10, 40, 2),
+            simulation = 1:n_simulations,
+            p = 0.75) %>% 
+  mutate(index = 1:n(),
+         .before = n) %>% 
+  group_by(index, n, p, simulation) %>% 
+  mutate(response = rbinom(n = 1,
+                           size = n,
+                           prob = p),
+         p.value = binom.test(x = response,
+                              n = n,
+                              p = 0.5,
+                              alternative = "two.sided")$p.value) %>% 
+  group_by(n, p) %>% 
+  summarize(power = sum(p.value < 0.05) / n()) %>% 
+  ungroup()
+```
+
+And another time with a larger sample size, and also for two different alternative hypotheses: p1 = 0.75, and p2 = 0.9. 
 
 ```{r, message=FALSE}
 # make reproducible 
@@ -582,23 +612,23 @@ n_simulations = 100
 df.power = expand_grid(n = seq(10, 40, 2),
                        simulation = 1:n_simulations,
                        p = c(0.75, 0.9)) %>% # added another hypothesis here 
-  mutate(index = 1:n()) %>% 
-  group_by(index, n, simulation) %>% 
-  mutate(response = rbinom(n = n(),
+  mutate(index = 1:n(),
+         .before = n) %>% 
+  group_by(index, n, simulation) %>%
+  mutate(response = rbinom(n = 1,
                            size = n,
                            prob = p)) %>% 
-  group_by(index, simulation, p) %>% 
-  nest() %>% 
-  mutate(fit = map(.x = data, 
-                   .f = ~ binom.test(x = .$response,
-                                     n = .$n,
-                                     p = 0.5,
-                                     alternative = "two.sided"))) %>% 
+  ungroup() %>% 
+  mutate(fit = map2(.x = response,
+                    .y = n,
+                    .f = ~ binom.test(x = .x,
+                                      n = .y,
+                                      p = 0.5,
+                                      alternative = "two.sided"))) %>% 
   mutate(coef = map(.x = fit,
                     .f = ~ tidy(.))) %>% 
-  select(simulation, p, index, coef) %>% 
   unnest(cols = coef) %>% 
-  rename(n = parameter) %>% 
+  select(index, n, p, p.value) %>% 
   group_by(n, p) %>% 
   summarize(power = sum(p.value < 0.05) / n()) %>% 
   ungroup()
@@ -614,48 +644,12 @@ ggplot(data = df.power,
              color = "gray50",
              size = 0.1) + 
   geom_smooth(method = "loess",
+              formula = "y ~ x",
               color = "black") +
   geom_point(shape = 21) +
   labs(fill = "alternative") +
   guides(fill = guide_legend(reverse = T))
 ```
-
-```{r}
-# make reproducible 
-set.seed(1)
-
-# number of simulations
-n_simulations = 5
-
-# run simulation 
-expand_grid(n = seq(10, 40, 2),
-            simulation = 1:n_simulations,
-            p = 0.75) %>% 
-  mutate(index = 1:n(),
-         .before = n) %>% 
-  group_by(index, n, simulation) %>% 
-  mutate(response = rbinom(n = n(),
-                           size = n,
-                           prob = p)) %>% 
-  group_by(index, simulation, p) %>% 
-  nest() %>% 
-  mutate(fit = map(.x = data, 
-                   .f = ~ binom.test(x = .$response,
-                                     n = .$n,
-                                     p = 0.5,
-                                     alternative = "two.sided"))) %>% 
-  mutate(coef = map(.x = fit,
-                    .f = ~ tidy(.))) %>% 
-  select(simulation, p, index, coef) %>% 
-  unnest(cols = coef) %>% 
-  rename(n = parameter) %>% 
-  group_by(n, p) %>% 
-  summarize(power = sum(p.value < 0.05) / n()) %>% 
-  ungroup() %>% 
-    kable(digits = 2) %>%
-  kable_styling()
-```
-
 
 ##### Simulating an independent samples t-test
 
@@ -667,6 +661,7 @@ Let's say that we collected the following pilotdata set:
 
 ```{r}
 set.seed(1)
+
 # parameters
 n = 10 
 mean1 = 10 
@@ -680,17 +675,20 @@ df.ttest = tibble(group1 = rnorm(n = n,
                   group2 = rnorm(n = n,
                                  mean = mean2,
                                  sd = sd2)) %>% 
-  pivot_longer(cols = everything())
+  pivot_longer(cols = everything()) %>% 
+  arrange(name)
 ```
 
 The two groups in our sample don't differ significantly from each other. 
 
 ```{r, message=FALSE}
+# visualize the data 
 ggplot(data = df.ttest,
        mapping = aes(x = name,
                      y = value)) + 
   stat_summary(fun.data = "mean_cl_boot")
 
+# compute a t-test
 t.test(formula = value ~ name, 
          data = df.ttest)
 ```
@@ -744,13 +742,14 @@ sd1 = df.sample$sd[1]
 sd2 = df.sample$sd[2]
 
 # number of simulations
-# n_simulations = 10
-n_simulations = 50
+n_simulations = 10
+# n_simulations = 100
 
 # run simulation 
-df.power2 = expand_grid(n = seq(from = 10, to = 60, by = 2),
+df.power2 = expand_grid(n = seq(from = 10, to = 60, by = 5),
                         simulation = 1:n_simulations) %>%
-  mutate(index = 1:n()) %>% 
+  mutate(index = 1:n(),
+         .before = n) %>% 
   group_by(index, n, simulation) %>% 
   mutate(data = list(tibble(group1 = rnorm(n = n,
                                            mean = mean1,
@@ -759,9 +758,15 @@ df.power2 = expand_grid(n = seq(from = 10, to = 60, by = 2),
                                            mean = mean2,
                                            sd = sd2)) %>% 
                        pivot_longer(cols = everything()))) %>% 
-  mutate(p.value = map(.x = data,
-                       .f = ~ t.test(formula = value ~ name,
-                                     data = .x)$p.value)) %>%
+  mutate(fit = map(.x = data,
+                   .f = ~ lm(formula = value ~ 1 + name,
+                             data = .)),
+         parameters = map(.x = fit,
+                          .f = ~ tidy(.))) %>%
+  select(index, n, simulation,  parameters) %>% 
+  unnest(cols = parameters) %>% 
+  filter(term != "(Intercept)") %>% 
+  select(index, n, simulation, p.value) %>% 
   group_by(n) %>% 
   summarize(power = sum(p.value < 0.05) / n()) %>% 
   ungroup()
@@ -775,7 +780,8 @@ ggplot(data = df.power2,
              color = "gray50",
              size = 0.1) + 
   geom_smooth(method = "loess",
-              color = "black") +
+              color = "black",
+              formula = "y ~ x") +
   geom_point(shape = 21) + 
   scale_x_continuous(breaks = seq(10, 60, 10),
                      labels = seq(10, 60, 10)) + 
