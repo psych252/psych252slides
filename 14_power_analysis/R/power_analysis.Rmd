@@ -657,7 +657,7 @@ Let's simulate data for an independent samples t-test. To do so, we need to make
 
 The procedure will be very similar to the Binomial test above. The only thing that changes really is how we generate the data (and then some small wrangling differences). 
 
-Let's say that we collected the following pilotdata set: 
+Let's say that we collected the following pilot data set: 
 
 ```{r}
 set.seed(1)
