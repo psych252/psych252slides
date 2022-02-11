@@ -17,13 +17,6 @@ output:
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown
-library("kableExtra") # for making nice tables
-library("janitor")    # for cleaning column names
-library("broom")      # for tidying up linear models
-library("pwr")        # for power analysis
-library("tictoc")     # for timing things
-library("emmeans")    # for estimated marginal means
-library("patchwork")  # for figure panels
 library("modelr")     # for cross-validation
 library("tidyverse")  # for wrangling, plotting, etc.
 ```
@@ -76,8 +69,8 @@ ggplot(data = df.data,
 ```{r}
 df.cross = df.data %>% 
   # crossv_mc(n = 50, test = 0.1) %>%
-  # crossv_kfold(k = 2) %>%
-  crossv_loo() %>%
+  crossv_kfold(k = 3) %>%
+  # crossv_loo() %>%
   mutate(model_simple = map(.x = train,
                             .f = ~ lm(y ~ 1 + x, data = .)),
          model_correct = map(.x = train,
