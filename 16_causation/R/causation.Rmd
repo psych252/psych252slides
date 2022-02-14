@@ -405,15 +405,9 @@ b_xy = 2
 b_zy = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(z = fun_error(n, sd),
-            x = b_zx * z + fun_error(n, sd),
-            y = b_zy * z + b_xy * x + fun_error(n, sd))
+df = tibble(z = rnorm(n = n, sd = sd),
+            x = b_zx * z + rnorm(n = n, sd = sd),
+            y = b_zy * z + b_xy * x + rnorm(n = n, sd = sd))
 
 # without control
 lm(formula = y ~ x,
@@ -529,15 +523,9 @@ b_zx = 2
 b_zy = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(z = fun_error(n, sd),
-            x = b_zx * z + fun_error(n, sd),
-            y = b_zy * z + fun_error(n, sd))
+df = tibble(z = rnorm(n = n, sd = sd),
+            x = b_zx * z + rnorm(n = n, sd = sd),
+            y = b_zy * z + rnorm(n = n, sd = sd))
 
 # without control
 lm(formula = y ~ x,
@@ -602,20 +590,15 @@ g
 
 ```{r}
 set.seed(1)
+
 n = 1000
 b_xz = 2
 b_yz = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(x = fun_error(n, sd),
-            y = fun_error(n, sd),
-            z = x * b_xz + y * b_yz + fun_error(n, sd))
+df = tibble(x = rnorm(n = n, sd = sd),
+            y = rnorm(n = n, sd = sd),
+            z = x * b_xz + y * b_yz + rnorm(n = n, sd = sd))
 
 # without control
 lm(formula = y ~ x,
@@ -729,15 +712,9 @@ b_xz = 2
 b_zy = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(x = fun_error(n, sd),
-            z = x * b_xz + fun_error(n, sd),
-            y = z * b_zy + fun_error(n, sd))
+df = tibble(x = rnorm(n = n, sd = sd),
+            z = x * b_xz + rnorm(n = n, sd = sd),
+            y = z * b_zy + rnorm(n = n, sd = sd))
 
 # without control
 lm(formula = y ~ x,
@@ -805,15 +782,9 @@ b_xy = 2
 b_yz = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(x = fun_error(n, sd),
-            y = x * b_xy + fun_error(n, sd),
-            z = y * b_yz + fun_error(n, sd),)
+df = tibble(x = rnorm(n = n, sd = sd),
+            y = x * b_xy + rnorm(n = n, sd = sd),
+            z = y * b_yz + rnorm(n = n, sd = sd),)
 
 # without control
 lm(formula = y ~ x,
@@ -885,16 +856,10 @@ b_uy = 2
 b_zx = 2
 sd = 1
 
-fun_error = function(n, sd){
-  rnorm(n = n,
-        mean = 0,
-        sd = sd)
-}
-
-df = tibble(u = fun_error(n, sd),
-            z = fun_error(n, sd),
-            x = u * b_ux + z * b_zx + fun_error(n, sd),
-            y = u * b_uy + x * b_xy + fun_error(n, sd))
+df = tibble(u = rnorm(n = n, sd = sd),
+            z = rnorm(n = n, sd = sd),
+            x = u * b_ux + z * b_zx + rnorm(n = n, sd = sd),
+            y = u * b_uy + x * b_xy + rnorm(n = n, sd = sd))
 
 # without control
 lm(formula = y ~ x,
@@ -1035,7 +1000,7 @@ fit.mediation = mediate(model.m = fit.m_x,
                         boot = T)
 
 # summarize results
-fit.mediation %>% summary()
+summary(fit.mediation)
 ```
 
 - ACME = Average causal mediation effect 
@@ -1045,7 +1010,7 @@ fit.mediation %>% summary()
 Plot the results: 
 
 ```{r}
-fit.mediation %>% plot()
+plot(fit.mediation)
 ```
 
 #### Interpretation 
