@@ -1,5 +1,5 @@
 ---
-title: "17_linear_models1"
+title: "17_linear_models_mixed_effects_models1"
 author: "Tobias Gerstenberg"
 output: 
   html_document:
@@ -62,7 +62,7 @@ ggplot(data = df.happy,
   theme(title = element_text(size = 18))
 ```
 
-# What did you like? What can be improved? 
+# What did you like? What can be improved?
 
 > Would be nice to look at more concrete examples! But conceptually, it's a nice introduction! Thanks Tobi!
 

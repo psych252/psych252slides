@@ -497,6 +497,7 @@ lmer(formula = reaction ~ 1 + days + (1 + days | subject),
      data = df.sleep) %>% 
   check_model()
 ```
+
 ## Simulating a linear mixed effects model 
 
 To generate some data for a linear mixed effects model with random intercepts, we do pretty much what we are used to doing when we generated data for a linear model. However, this time, we have an additional parameter that captures the variance in the intercepts between participants. So, we draw a separate (offset from the global) intercept for each participant from this distribution.  
@@ -512,27 +513,17 @@ b1 = 2
 sd_residual = 1
 sd_participant = 0.5 
 
-# randomly draw intercepts for each participant
-intercepts = rnorm(sample_size, sd = sd_participant)
-
 # generate the data 
-df.mixed = tibble(condition = rep(0:1, each = sample_size), 
-                  participant = rep(1:sample_size, 2)) %>% 
-  group_by(condition) %>% 
+df.mixed = tibble(participant = rep(1:sample_size, 2),
+                  condition = rep(0:1, each = sample_size)) %>% 
+  group_by(participant) %>% 
+  mutate(intercepts = rnorm(n = 1, sd = sd_participant)) %>% 
+  ungroup() %>% 
   mutate(value = b0 + b1 * condition + intercepts + rnorm(n(), sd = sd_residual)) %>% 
-  ungroup %>% 
-  mutate(condition = as.factor(condition),
-         participant = as.factor(participant))
+  arrange(participant, condition)
+
+df.mixed
 ```
-
-Let's take a look at the simulated data set: 
-
-```{r}
-df.mixed %>% 
-  select(participant, condition, value) %>% 
-  arrange(participant)
-```
-
 
 Let's fit a model to this data now and take a look at the summary output: 
 
@@ -616,8 +607,7 @@ fit.outlier = lmer(formula = value ~ 1 + condition + (1 | participant),
 
 summary(fit.outlier)
 ```
-
-The variance for the participants' intercepts has increased dramatically! 
+The variance of the participants' intercepts has increased dramatically! 
 
 Let's visualize the data together with the model's predictions: 
 
