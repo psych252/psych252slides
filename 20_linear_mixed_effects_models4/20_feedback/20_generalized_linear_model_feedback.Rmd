@@ -1,0 +1,91 @@
+---
+title: "20 Generalized linear model"
+author: "Tobias Gerstenberg"
+date: "2/26/2020"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+library("knitr")
+library("DT")
+library("tidyverse")
+opts_chunk$set(echo = TRUE)
+theme_set(
+  theme_classic() + 
+    theme(
+      text = element_text(size = 20),
+      panel.grid.major.y = element_line(color = "gray90")
+    ) 
+)
+```
+
+> Thank you for providing interpretations on the graphs as well as the issues that were problematic with them. It was a bit difficult to make jump into log odds without doing the math ourselves, but the slides lay it out well. I would still incorporate more time to talk to a neighbor for example when interpreting log odds.
+
+> The classes on linear mixed effects and this class were great! I was able to understand things that I hadn't understood before. I particularly appreciated the material on how to interpret the coefficients of logistic regression! Thanks for these great classes, Tobi!
+
+> I'd like to hear more explanations about how the concepts we learn are related to each other. For example, how is partial pooling related to linear mixed effects model?
+
+> One thing in general that I feel like I still don't have a good sense of us how to model likert style data. I don't really have an idea of what a good strategy would be.
+
+> I really appreciate learning about the mixed models and multilevel modeling, it is super helpful for research! __One thing that could be helpful in improving is giving a high-level definition of new concepts before jumping into the stats breakdown__. For example, "we use a logit transform to do X" before all of the complicated formulas appear, I got really lost there. (And also with concepts like AIC/BIC)
+
+> Clear explanations on logistic regression. __Moving forward I really hope to know how we can address non-normality of residuals in our linear models.__
+
+> I'm honestly a bit lost...
+
+## Student feedback 
+
+```{r echo=FALSE, message=FALSE}
+read_csv("what-did-you-like-about-20.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  select(response) %>% 
+  datatable()
+```
+
+### PollEverywhere results 
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.pace = read.csv("how-was-the-pace-of-20.csv", header = F) %>%
+  filter(row_number() > which(.$V2 == "Created At")) %>% 
+  set_names(c("response", "date")) %>% 
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  scale_y_continuous(breaks = seq(0, 30, 2), labels = seq(0, 30, 2)) + 
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
+
+```{r echo=FALSE, message=FALSE, results='hide'}
+df.overall = read_csv("how-happy-were-you-with-20.csv") %>% 
+  set_names(c("response", "date")) %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response) %>% 
+  complete(response, fill = list(n = 0))
+
+ggplot(data = df.overall,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  scale_y_continuous(breaks = seq(0, 30, 2), labels = seq(0, 30, 2)) + 
+  theme(title = element_text(size = 18))
+```
+
+## What to do next time
+
+- try and have more interactivity in class again (e.g. talk to your neighbor exercises)
+- go slower through the parts about the transformation to log odds 
+- try to give high-level definitions of new concepts before then going into more detail in explaining them 

@@ -298,16 +298,19 @@ set.seed(1)
 x1 = rnorm(100, 10, 1)
 x2 = rnorm(100, 15, 1) 
 x1x2 = x1*x2
+
 x1c = x1 - mean(x1)
 x2c = x2 - mean(x2)
 x1x2c = x1c * x2c
 df.data = tibble(x1, x2, x1x2, x1c, x2c, x1x2c)
 
-
 df.data %>% 
   correlate() %>% 
   shave() %>% 
-  fashion()
+  fashion() %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
 ```
 
 ```{r}

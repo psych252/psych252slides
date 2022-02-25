@@ -1,0 +1,656 @@
+---
+title: "Class 21"
+author: "Tobias Gerstenberg"
+date: "February 25th, 2022"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=20"]
+---
+
+```{r, include=FALSE, eval=FALSE}
+# new packages
+install.packages(c("titanic", "effects", "nlme")
+```
+
+# Generalized linear model 
+
+## Learning goals 
+
+- Logistic regression. 
+- Logit transform. 
+- Fitting a logistic regression in R.
+- Visualizing and interpreting model predictions. 
+- Simulating data from a logistic regression. 
+- Assessing model fit. 
+- Testing hypotheses. 
+- Reporting results.
+- Mixed effects logistic regression.
+
+## Load packages and set plotting theme  
+
+```{r, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("titanic")    # titanic dataset
+library("kableExtra") # for making nice tables
+library("janitor")    # for cleaning column names
+library("broom")      # for tidying up linear models 
+library("lme4")       # for linear mixed effects models
+library("boot")       # for bootstrapping (also has an inverse logit function)
+library("ggeffects")  # for showing effects in linear, generalized linear, and other models
+library("afex")       # for significance testing of mixed effects models 
+library("emmeans")    # for the joint_tests() function
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r}
+theme_set(theme_classic() + #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+```
+
+## Load data set 
+
+```{r}
+df.titanic = titanic_train %>% 
+  clean_names() %>% 
+  mutate(sex = as.factor(sex))
+```
+
+Let's take a quick look at the data: 
+
+```{r}
+df.titanic %>% 
+  glimpse()
+```
+
+```{r}
+# Table of the first 10 entries
+df.titanic %>% 
+  head(10) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+## Logistic regression 
+
+Let's see if we can predict whether or not a passenger survived based on the price of their ticket. 
+
+Let's run a simple regression first: 
+
+```{r}
+# fit a linear model 
+fit.lm = lm(formula = survived ~ 1 + fare,
+            data = df.titanic)
+
+# summarize the results
+fit.lm %>% 
+  summary()
+```
+
+Look's like `fare` is a significant predictor of whether or not a person survived. Let's visualize the model's predictions:
+
+```{r, message=FALSE}
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived)) + 
+  geom_smooth(method = "lm") + 
+  geom_point() +
+  labs(y = "survived")
+```
+
+This doesn't look good! The model predicts intermediate values of `survived` (which doesn't make sense given that a person either survived or didn't survive). Furthermore, the model predicts values greater than 1 for fares greather than ~ 300.  
+
+Let's run a logistic regression instead. 
+
+```{r}
+# fit a logistic regression 
+fit.glm = glm(formula = survived ~ 1 + fare,
+              family = "binomial",
+              data = df.titanic)
+
+fit.glm %>% 
+  summary()
+```
+
+And let's visualize the predictions of the logistic regression: 
+
+```{r, message=FALSE}
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived)) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial")) +
+  geom_point() +
+  labs(y = "p(survived)")
+```
+
+Much better! Note that we've changed the interpretation of our dependent variable. We are now predicting the _probability that a person survived_ based on their fare. The model now only predicts values between 0 and 1. To achieve this, we apply a logit transform to the outcome variable like so: 
+
+$$
+\ln(\frac{\pi_i}{1-\pi_i}) = b_0 + b_1 \cdot X_i + e_i
+$$
+where $\pi_i$ is the probability of passenger $i$ having survived. Importantly, this affects our interpretation of the model parameters. They are now defined in log-odds, and can apply an inverse logit transformation to turn this back into a probability: 
+
+With
+
+$$
+\pi = P(Y = 1)
+$$
+and the logit transformation 
+
+$$
+\ln(\frac{\pi}{1-\pi}) = V,
+$$
+where $V$ is just a placeholder for our linear model formula, we can go back to $\pi$ through the inverse logit transformation like so: 
+
+$$
+\pi = \frac{e^V}{1 + e^V}
+$$
+In R, we can use `log(x)` to calculate the natural logarithm $\ln(x)$, and `exp(x)` to calculate `e^x`. 
+
+### Interpreting the parameters 
+
+```{r}
+fit.glm %>% 
+  summary()
+```
+
+The estimate for the intercept and fare are in log-odds. 
+
+Let's take a look at the linear model's predictions in log-odds space. 
+
+```{r}
+df.plot = fit.glm %>% 
+  augment() %>% 
+  clean_names()
+
+ggplot(data = df.plot,
+       mapping = aes(x = fare,
+                     y = fitted)) + 
+  geom_line()
+```
+Nice, looks like a good old linear model. But what's the y-axis here? It's in log-odds (buh!). This is difficult to interpret. Let's transform the y-axis back to probabilities to make it easier to see what's going on. 
+
+
+```{r}
+ggplot(data = df.plot,
+       mapping = aes(x = fare,
+                     y = inv.logit(fitted))) + 
+  geom_line()
+```
+Great! Now the y-axis is back in probability space. We used the inverse logit function `inv.logit()` to transfer to log-odds back into probabilities. 
+
+Let's check what the intercept of our model is in probability space: 
+
+```{r}
+fit.glm %>% 
+  pluck(coefficients, 1) %>% 
+  inv.logit()
+```
+
+Here, we see that the intercept is $p = 0.28$. That is, the predicted chance of survival for someone who didn't pay any fare at all is 28% according to the model. Interpreting the slope is a little more tricky. Let's look at a situation first where we have a binary predictor. 
+
+
+#### Logit transform 
+
+Here is a visualization of what the odds and log odds transformation look like.
+
+```{r} 
+# going from probabilities to odds (ranges from 0 to +infinity)
+ggplot(data = tibble(x = seq(0, 1, 0.1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ ./(1 - .),
+                size = 1)
+
+# going from probabilities to log odds (ranges from -infinity to +infinity)
+ggplot(data = tibble(x = seq(0, 1, 0.1)),
+       mapping = aes(x = x)) + 
+  stat_function(fun = ~ log(./(1 - .)),
+                size = 1)
+```
+
+
+### Binary predictor
+
+Let's see whether the probability of survival differed between male and female passengers. 
+
+```{r}
+fit.glm2 = glm(formula = survived ~ 1 + sex,
+               family = "binomial",
+               data = df.titanic)
+
+fit.glm2 %>% 
+  summary()
+```
+
+It looks like it did! Let's visualize: 
+
+```{r}
+df.titanic %>% 
+  mutate(survived = factor(survived, labels = c("died", "survived"))) %>% 
+  ggplot(data = .,
+         mapping = aes(x = sex,
+                       fill = survived)) +
+  geom_bar(position = "fill",
+           color = "black") +
+  scale_fill_brewer(palette = "Set1")  +
+  labs(x = "",
+       fill = "",
+       y = "probability")
+```
+
+And let's interpret the parameters by applying the inverse logit transform. To get the prediction for female passengers we get 
+
+$$
+\widehat{\ln(\frac{\pi_i}{1-\pi_i})} = b_0 + b_1 \cdot \text{sex}_i = b_0 + b_1 \cdot 0 = b_0
+$$
+since we dummy coded the predictor and female is our reference category. To get the predicted probability of survival for women we do the logit transform: 
+
+$$
+\pi = \frac{e^{b_0}}{1 + e^{b_0}}
+$$
+The predicted probability is: 
+
+```{r}
+fit.glm2 %>% 
+  pluck(coefficients, 1) %>% 
+  inv.logit()
+```
+
+To get the prediction for male passengers we have: 
+
+$$
+\widehat{\ln(\frac{\pi_i}{1-\pi_i})} = b_0 + b_1 \cdot \text{sex}_i = b_0 + b_1 \cdot 1 = b_0 + b_1
+$$
+Applying the logit transform like so
+
+$$
+\pi = \frac{e^{b_0 + b_1}}{1 + e^{b_0 + b_1}}
+$$
+
+The predicted probability of male passengers surviving is: 
+
+```{r}
+fit.glm2 %>% 
+  pluck(coefficients) %>% 
+  sum() %>% 
+  inv.logit()
+```
+
+Here is the same information in a table: 
+
+```{r}
+df.titanic %>% 
+  count(sex, survived) %>% 
+  mutate(p = n / sum(n)) %>% 
+  group_by(sex) %>% 
+  mutate(`p(survived|sex)` = p / sum(p))
+```
+
+### Continuous predictor
+
+To interpret the predictions when a continuous predictor is involved, it's easiest to consider a few concrete cases. Here, I use the `augment()` function from the "broom" package to get the model's predictions for some values of interest: 
+
+```{r}
+fit.glm %>% 
+  augment(newdata = tibble(fare = c(0, 10, 50, 100, 500))) %>% 
+  clean_names() %>% 
+  select(fare, prediction = fitted) %>% 
+  mutate(`p(survival)` = inv.logit(prediction))
+```
+
+### Several predictors 
+
+Let's fit a logistic regression that predicts the probability of survival based both on the passenger's sex and what fare they paid (allowing for an interaction of the two predictors): 
+
+```{r}
+fit.glm3 = glm(formula = survived ~ 1 + sex * fare,
+              family = "binomial",
+              data = df.titanic)
+
+fit.glm3 %>% 
+  summary()
+```
+
+Make sure not to interpret the significance test on the coefficients here as main effects. Based on this summary table, you cannot say whether there is a significant difference between male vs. female passenger in their probability of survival. What coefficient for `sexmale` captures is whether there is a significant difference between male and female passengers who paid a fare of 0. That is, it's the predicted difference between the reference category (female) and the other category (male) when all other predictors are 0. 
+
+Let's visualize the model predictions: 
+
+```{r, message=FALSE}
+ggplot(data = df.titanic,
+       mapping = aes(x = fare,
+                     y = survived,
+                     color = sex)) +
+  geom_point(alpha = 0.1, size = 2) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.2,
+              aes(fill = sex)) +
+  scale_color_brewer(palette = "Set1")
+```
+Just for kicks, to get a better sense for what the interaction looks like, here is the visualization in log-odds space: 
+
+```{r}
+fit.glm3 %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = fare,
+                       color = sex,
+                       y = fitted)) + 
+  geom_line() + 
+  scale_color_brewer(palette = "Set1")
+```
+
+
+Let's see how large the difference between genders is once we take into account how much each person paid for the fair:
+
+```{r} 
+ggpredict(fit.glm3,
+          terms = c("sex"))
+```
+
+
+We notice that there is one outlier who was male and paid a $500 fare (or maybe this is a mistake in the data entry?!). Let's remove this outlier and see what happens: 
+
+```{r, message=FALSE}
+fit.glm3_no_outlier = glm(formula = survived ~ 1 + sex * fare,
+                          family = "binomial",
+                          data = df.titanic %>% 
+                            filter(fare < 500))
+
+fit.glm3_no_outlier %>% 
+  summary()
+
+df.titanic %>% 
+  filter(fare < 500) %>% 
+  mutate(sex = as.factor(sex)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = fare,
+                       y = survived,
+                       color = sex)) +
+  geom_point(alpha = 0.1, size = 2) + 
+  stat_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.2,
+              fullrange = T,
+              aes(fill = sex)) +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_continuous(limits = c(0, 500))
+```
+
+There is still a clear difference between female and male passengers, but the prediction for male passengers has changed a bit. Let's look at a concrete example: 
+
+```{r}
+# with the outlier: 
+
+# predicted probability of survival for a male passenger who paid $200 for their fare 
+inv.logit(fit.glm3$coefficients[1] + fit.glm3$coefficients[2] + 
+            fit.glm3$coefficients[3] * 200 + fit.glm3$coefficients[4] * 200)
+  
+# without the outlier: 
+
+# predicted probability of survival for a male passenger who paid $200 for their fare 
+inv.logit(fit.glm3_no_outlier$coefficients[1] + 
+            fit.glm3_no_outlier$coefficients[2] + 
+            fit.glm3_no_outlier$coefficients[3] * 200 + 
+            fit.glm3_no_outlier$coefficients[4] * 200)
+```
+
+With the outlier removed, the predicted probability of survival for a male passenger who paid $200 decreases from 49% to 47%. 
+
+### Using the "ggeffects" package 
+
+The "ggeffects" package helps with the interpretation of the results. It applies the inverse logit transform for us, and shows the predictions for a range of cases. 
+
+```{r}
+# show effects 
+ggeffect(model = fit.glm,
+         terms = "fare [0, 100, 200, 300, 400, 500]")
+```
+
+I've used the `[]` construction to specify for what values of the predictor `fare`, I'd like get the predicted values. Here, the prediction is marginalized across both women and men. 
+
+We can also get a plot of the model predictions like so: 
+
+```{r}
+ggeffect(model = fit.glm,
+         terms = "fare [0, 100, 200, 300, 400, 500]") %>% 
+  plot()
+```
+
+And, we can also get the predicted probability of survival for sex marginalized over the fare, using the model which included both sex and fare, as well as its interaction as predictors. 
+
+```{r}
+ggeffect(model = fit.glm3,
+         terms = "sex")
+```
+
+Finally, we can ask for predictions for specific combinations of our predictor variables, by using the `ggpredict()` function. 
+
+```{r}
+ggpredict(model = fit.glm3,
+          terms = c("sex", "fare [200]"))
+```
+
+The example above, shows the predicted probability of survival for male vs. female passengers, assuming that they paid 200 for the fare. 
+
+## Simulate a logistic regression
+
+As always, to better understand a statistical modeling procedure, it's helpful to simulate data from the assumed data-generating process, fit the model, and see whether we can reconstruct the parameters.  
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# set parameters 
+sample_size = 1000 
+b0 = 0
+b1 = 1
+# b1 = 8
+
+# generate data 
+df.data = tibble(x = rnorm(n = sample_size),
+                 y = b0 + b1 * x,
+                 p = inv.logit(y)) %>% 
+  mutate(response = rbinom(n(), size = 1, p = p))
+
+# fit model 
+fit = glm(formula = response ~ 1 + x,
+          family = "binomial",
+          data = df.data)
+
+# model summary 
+fit %>% 
+  summary()
+
+df.data %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
+```
+
+Nice! The inferred estimates are very close to the parameter values we used to simulate the data. 
+
+Let's visualize the result: 
+
+```{r, message=FALSE}
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = response)) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial")) + 
+  geom_point(alpha = 0.1) +
+  labs(y = "p(response)")
+```
+
+#### Calculate the model's likelihood 
+
+To calculate the likelihood of the data for a given logistic model, we look at the actual response, and the probability of the predicted response, and then determine the likelihood of the observation assuming a Bernoulli process. To get the overall likelihood of the data, we then multiply the likelihood of each data point (or take the logs first and then the sum to get the log-likelihood). 
+
+This table illustrate the steps involved: 
+
+```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  mutate(p = inv.logit(fitted)) %>% 
+  select(response, p) %>% 
+  mutate(p_response = ifelse(response == 1, p, 1-p),
+         log_p = log(p_response)) %>% 
+  rename(`p(Y = 1)` = p, `p(Y = response)` = p_response,
+         `log(p(Y = response))` = log_p)
+```
+
+Let's calculate the log-likelihood by hand:
+
+```{r}
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  mutate(p = inv.logit(fitted),
+         log_likelihood = response * log(p) + (1 - response) * log(1 - p)) %>% 
+  summarize(log_likelihood = sum(log_likelihood))
+```
+
+And compare it with the model summary
+
+```{r}
+fit %>% 
+  glance() %>% 
+  select(logLik, AIC, BIC)
+```
+
+We're getting the same result -- neat! Now we know how the likelihood of the data is calculated for a logistic regression model. 
+
+## Testing hypotheses
+
+To test hypotheses, we can use our good old model comparison approach: 
+
+```{r}
+# fit compact model
+fit.compact = glm(formula = survived ~ 1 + fare,
+                  family = "binomial",
+                  data = df.titanic)
+
+# fit augmented model
+fit.augmented = glm(formula = survived ~ 1 + sex + fare,
+                    family = "binomial",
+                    data = df.titanic)
+
+# likelihood ratio test
+anova(fit.compact, fit.augmented, test = "LRT")
+```
+
+Note that in order to get a p-value out of this, we need to specify what statistical test we'd like to run. In this case, we use the likelihood ratio test ("LRT").
+
+We can also test for both effects of survived and fare in one go using the `joint_tests()` function from the "emmeans" package like so: 
+
+```{r}
+glm(formula = survived ~ 1 + sex + fare,
+    family = "binomial",
+    data = df.titanic) %>% 
+  joint_tests()
+```
+
+Notice that the F.ratio reported using `joint_tests()` (201.881) is not quite the same as the deviance value that we get through the likelihood ratio test (233.26). You can read more about why these two can come apart [here](https://stats.stackexchange.com/questions/400101/using-emmeans-with-clmm-to-look-at-joint-effects). 
+
+## Logistic mixed effects model 
+
+Just like we can build linear mixed effects models using `lmer()` instead of `lm()`, we can also build a logistic mixed effects regression using `glmer()` instead of `glm()`. 
+
+Let's read in some data: 
+
+```{r}
+# load bdf data set from nlme package
+data(bdf, package = "nlme")
+
+df.language = bdf %>% 
+  clean_names() %>% 
+  filter(repeatgr != 2) %>% 
+  mutate(repeatgr = repeatgr %>% 
+           as.character() %>% 
+           as.numeric())
+
+rm(bdf)
+```
+
+Fit the model, and print out the results: 
+
+```{r}
+fit =  glmer(repeatgr ~ 1 + ses + minority + (1 | school_nr),
+             data = df.language,
+             family = "binomial")
+
+fit %>%
+  summary()
+```
+
+To visualize the results, we can use the `ggeffects` package. 
+
+```{r} 
+ggpredict(model = fit,
+          terms = c("ses [all]", "minority")) %>% 
+  plot()
+```
+
+And for significance testing, we can use the the `joint_tests()` function from the "emmeans" package
+
+```{r}
+glmer(formula = repeatgr ~ 1 + ses + minority + (1 | school_nr),
+      data = df.language,
+      family = "binomial") %>% 
+  joint_tests()
+```
+
+The results show that there was both a significant effect of ses and of minority. 
+
+Note: This post [here](https://stats.stackexchange.com/questions/400101/using-emmeans-with-clmm-to-look-at-joint-effects) says a little more about the relationship of the F.ratio in the `joint_tests()` function, and what a likelihood ratio test yields. In short, it's roughly the same thing. 
+
+If you'd like to compute the likelihood ratio test, a convenient way of doing so is by using the `mixed()` function from the "afex" package.
+
+```{r}
+mixed(formula = repeatgr ~ 1 + ses + minority + (1 | school_nr),
+      family = "binomial",
+      data = df.language,
+      method = "LRT")
+```
+And we can compare that the model comparison approach gives us the same result: 
+
+```{r}
+fit_a =  glmer(repeatgr ~ 1 + ses + minority + (1 | school_nr),
+             data = df.language,
+             family = "binomial")
+
+# dropping ses as a predictor
+fit_c =  glmer(repeatgr ~ 1 +  minority + (1 | school_nr),
+             data = df.language,
+             family = "binomial")
+
+anova(fit_a, fit_c, test = "LRT")
+```
+
+
+
+## Additional information 
+
+### Datacamp 
+
+- [Multiple and logistic regression](https://www.datacamp.com/courses/multiple-and-logistic-regression)
+- [Generalized linear models in R](https://www.datacamp.com/courses/generalized-linear-models-in-r)
+- [Categorical data in the tidyverse](https://www.datacamp.com/courses/categorical-data-in-the-tidyverse)
+
+## Session info 
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r}
+sessionInfo()
+```
