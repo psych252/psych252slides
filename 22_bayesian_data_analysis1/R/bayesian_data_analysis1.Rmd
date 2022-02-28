@@ -1,22 +1,22 @@
 ---
-title: "Class 21"
+title: "Class 22"
 author: "Tobias Gerstenberg"
-date: "March 5th, 2021"
+date: "February 28th, 2022"
 output:
   bookdown::html_document2:
     toc: true
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=20"]
+    pandoc_args: ["--number-offset=21"]
 ---
 
 ```{r, eval=FALSE, include=FALSE}
 # Note: To get greta to work on my mac, I had to run the following commands 
 devtools::install_github("greta-dev/greta")
 greta::install_tensorflow(method = "conda",
-                   version = "1.14.0",
-                   extra_packages = "tensorflow-probability==0.7.0")
+                          version = "1.14.0",
+                          extra_packages = "tensorflow-probability==0.7.0")
 ```
 
 # Bayesian data analysis
@@ -345,6 +345,7 @@ ggplot(data = df.attitude,
        mapping = aes(x = complaints,
                      y = rating)) +
   geom_smooth(method = "lm",
+              formula = "y ~ x", 
               color = "black") + 
   geom_point()
 ```

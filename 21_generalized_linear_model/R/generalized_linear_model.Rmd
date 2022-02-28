@@ -312,8 +312,8 @@ Let's fit a logistic regression that predicts the probability of survival based 
 
 ```{r}
 fit.glm3 = glm(formula = survived ~ 1 + sex * fare,
-              family = "binomial",
-              data = df.titanic)
+               family = "binomial",
+               data = df.titanic)
 
 fit.glm3 %>% 
   summary()
