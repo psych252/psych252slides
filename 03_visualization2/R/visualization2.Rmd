@@ -547,8 +547,13 @@ Let's change a few more things in the legend using the `guides()` function:
 - make the points in the legend larger 
 
 ```{r}
-ggplot(data = df.diamonds, mapping = aes(x = color, y = price, color = clarity)) +
-  stat_summary(fun = "mean", geom = "point", size = 2) +
+ggplot(data = df.diamonds,
+       mapping = aes(x = color,
+                     y = price,
+                     color = clarity)) +
+  stat_summary(fun = "mean",
+               geom = "point",
+               size = 2) +
   theme(legend.position = "bottom") +
   guides(color = guide_legend(nrow = 3, # 3 rows 
                               reverse = TRUE, # reversed order 
