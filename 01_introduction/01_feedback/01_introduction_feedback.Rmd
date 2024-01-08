@@ -37,7 +37,6 @@ ggplot(data = df.pace,
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
-
 # Happiness
 
 ```{r, echo=FALSE}
@@ -63,11 +62,11 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> Add slide numbers please
+> I appreciated going through the different tools we'll use for this class, and making clear what is helpful for what. I also appreciated the expectation setting through showing past reviews.
 
-> I liked the openness and transparency about the difficulty of the class as well as the bit about DataCamp
+> Good overview! It gave me confidence for the course without making it sound falsely easy :)
 
-> session was engaging, I appreciated the stretch break
+> 	I think it was great! Maybe would add: candidate strategies for approaching the class depending on a) overall coding experience, b) r experience, c) stats experience, etc
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -78,6 +77,5 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- Make sure to check that each lecture has slide numbers. 
-
+- consider adding candidate strategies for approaching the class depending on a) overall coding experience, b) r experience, c) stats experience, etc
 
