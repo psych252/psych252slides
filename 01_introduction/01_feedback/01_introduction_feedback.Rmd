@@ -66,6 +66,8 @@ ggplot(data = df.happy,
 
 > Good overview! It gave me confidence for the course without making it sound falsely easy :)
 
+> I feel a little sad that we are being taught R at stats classes :(
+
 > 	I think it was great! Maybe would add: candidate strategies for approaching the class depending on a) overall coding experience, b) r experience, c) stats experience, etc
 
 ```{r echo=FALSE, message=FALSE}

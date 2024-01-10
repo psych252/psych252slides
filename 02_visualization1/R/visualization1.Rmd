@@ -1,7 +1,7 @@
 ---
 title: "Class 2"
 author: "Tobias Gerstenberg"
-date: "January 5th, 2022"
+date: "January 10th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -21,7 +21,7 @@ install.packages(c("bookdown","knitr","tidyverse", "devtools", "Hmisc"))
 
 In this lecture, we will take a look at how to visualize data using the powerful [ggplot2](https://ggplot2.tidyverse.org/) package. We will use `ggplot2` a lot throughout the rest of the course! 
 
-## Learning goals 
+## Learning goals
 
 - Take a look at some suboptimal plots, and think about how to make them better.
 - Get familiar with the RStudio interface.
@@ -46,6 +46,10 @@ opts_chunk$set(comment = "",
 The `tidyverse` is a collection of packages that includes `ggplot2`.
 
 ## Why visualize data?
+
+```{r hiding, echo=FALSE, fig.cap="Are you hiding anything?", out.width="95%"}
+include_graphics("figures/hiding_data.png")
+```
 
 > The greatest value of a picture is when it forces us to notice what we never expected to see. — John Tukey
 
@@ -183,7 +187,7 @@ Here is the help file for the `print()` function:
   include_graphics("figures/help_print.png")
 ```
 
-### R Markdown infos 
+### R Markdown infos
 
 An RMarkdown file has four key components: 
 
@@ -206,7 +210,7 @@ The **YAML** (*Y*et *A*nother *M*arkdown *L*anguage) header specifies general op
 
 Code chunks can have code chunk options which we can set by clicking on the cog symbol on the right. You can also give code chunks a name, so that we can refer to it in text. I've named the one above "another-code-chunk". Make sure to have no white space or underscore in a code chunk name. 
 
-### Helpful keyboard shortcuts 
+### Helpful keyboard shortcuts
 
 - `cmd + enter`: run selected code 
 - `cmd + shift + enter`: run code chunk 
@@ -270,7 +274,7 @@ ggplot(data = df.diamonds,
 
 Here, we specified that we want to plot `color` on the x-axis, and `price` on the y-axis. As you can see, `ggplot2` has already figured out how to label the axes. However, we still need to specify _how_ to plot it. 
 
-### Bar plot 
+### Bar plot
 
 Let's make a __bar graph__:
 
@@ -516,7 +520,7 @@ ggplot(data = df.diamonds,
                      color = cut)) +
   stat_summary(fun = "mean",
                geom = "line",
-               size = 2)
+               linewidth = 2)
 ```
 
 Nice! In addition to adding color, I've made the lines a little thicker here by setting the `size` argument to 2.
@@ -638,7 +642,7 @@ ggplot(data = df.diamonds,
   coord_cartesian(xlim = c(3, 10))
 ```
 
-We'll learn more about how these densities are determined later in class.
+We'll learn more about how these densities are created later in class.
 
 I promised that this section was about making facets, right? We're getting there! Let's first take a look at how wide diamonds of different `color` are. We can use grouping to make this happen.
 
@@ -790,7 +794,7 @@ Here, I've set `color = "black"` within the `geom_smooth()` function, and now on
 
 - [nice online ggplot tutorial](https://evamaerey.github.io/ggplot2_grammar_guide/about)
 - [how to read R help files](https://socviz.co/appendix.html#a-little-more-about-r)
-- [ggplot2 extensions](http://www.ggplot2-exts.org/gallery/) --> gallery of ggplot2 extension packages
+- [ggplot2 extensions](https://exts.ggplot2.tidyverse.org/gallery/) --> gallery of ggplot2 extension packages
 - [ggplot2 visualizations with code](http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html) --> gallery of plots with code
 
 ## Session info
@@ -799,8 +803,6 @@ Here, I've set `color = "black"` within the `geom_smooth()` function, and now on
 sessionInfo()
 ```
 
-```{r, echo=FALSE, fig.cap="Defense at the reproducibility court.", out.width="95%"}
+```{r, echo=FALSE, fig.cap="Defense at the reproducibility court (graphic by [Allison Horst](https://github.com/allisonhorst)).", out.width="95%"}
 include_graphics("figures/reproducibility_court.jpg")
 ```
-
-## References
