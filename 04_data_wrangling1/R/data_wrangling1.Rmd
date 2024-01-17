@@ -1,7 +1,7 @@
 ---
 title: "Class 4"
 author: "Tobias Gerstenberg"
-date: "January 10th, 2022"
+date: "January 17th, 2024"
 output: 
   bookdown::html_document2:
     toc: true
@@ -15,18 +15,18 @@ output:
 install.packages(c("skimr", "visdat", "summarytools", "DT"))
 ```
 
-# Data wrangling 1 
+# Data wrangling 1
 
-In this lecture, we will take a look at how to wrangle data using the [dplyr](https://ggplot2.dplyr.org/) package. Again, getting our data into shape is something we'll need to do throughout the course, so it's worth spending some time getting a good sense for how this works. The nice thing about R is that (thanks to the `tidyverse`), both visualization and data wrangling are particularly powerful. 
+In this lecture, we will take a look at how to wrangle data using the [dplyr](https://dplyr.tidyverse.org/) package. Again, getting our data into shape is something we'll need to do throughout the course, so it's worth spending some time getting a good sense for how this works. The nice thing about R is that (thanks to the `tidyverse`), both visualization and data wrangling are particularly powerful. 
 
-## Learning goals 
+## Learning goals
 
 - Review R basics (incl. variable modes, data types, operators, control flow, and functions). 
 - Learn how the pipe operator `%>%` works. 
 - See different ways for getting a sense of one's data. 
 - Master key data manipulation verbs from the `dplyr` package (incl. `filter()`, `arrange()`, `rename()`, `relocate()`, `select()`, `mutate()`) as well as the helper functions `across()` and `where()`.
 
-## Load packages 
+## Load packages
 
 Let's first load the packages that we need for this chapter. 
 
@@ -41,11 +41,11 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Some R basics 
+## Some R basics
 
 To test your knowledge of the R basics, I recommend taking the free interactive tutorial on datacamp: [Introduction to R](https://www.datacamp.com/courses/free-introduction-to-r). Here, I will just give a very quick overview of some of the basics. 
 
-### Modes 
+### Modes
 
 Variables in R can have different modes. Table \@ref(tab:variable-modes) shows the most common ones. 
 
@@ -101,7 +101,7 @@ kable(x = tibble(name, description),
       booktabs = TRUE)
 ```
 
-#### Vectors 
+#### Vectors
 
 We build vectors using the concatenate function `c()`, and we use `[]` to access one or more elements of a vector.  
 
@@ -114,7 +114,7 @@ numbers[c(1, 3)] # access the first and last element
 
 In R (unlike in Python for example), 1 refers to the first element of a vector (or list). 
 
-#### Matrix 
+#### Matrix
 
 We build a matrix using the `matrix()` function, and we use `[]` to access its elements. 
 
@@ -131,11 +131,11 @@ matrix[-1, ] # a matrix which excludes the first row
 
 Note how we use an empty placeholder to indicate that we want to select all the values in a row or column, and `-` to indicate that we want to remove something.
 
-#### Array 
+#### Array
 
 Arrays work the same was as matrices with data of more than two dimensions. 
 
-#### Data frame 
+#### Data frame
 
 ```{r}
 df = tibble(participant_id = c(1, 2, 3),
@@ -155,7 +155,7 @@ We'll use data frames a lot. Data frames are like a matrix with column names. Da
 
 Here we used the `tibble()` function to create the data frame. A `tibble` is almost the same as a data frame but it has better defaults for formatting output in the console (more information on tibbles is [here](http://r4ds.had.co.nz/tibbles.html)). 
 
-#### Lists 
+#### Lists
 
 ```{r}
 l.mixed = list(number = 1, 
@@ -198,7 +198,7 @@ c(3, 4) %in% x
 
 It's particularly useful for filtering data as we will see below. 
 
-### Control flow 
+### Control flow
 
 #### if-then {#if-else}
 
@@ -231,7 +231,7 @@ for(i in 1:length(sequence)){
 }
 ```
 
-#### while loop 
+#### while loop
 
 ```{r}
 number = 1 
@@ -242,7 +242,7 @@ while(number <= 10){
 }
 ```
 
-### Functions 
+### Functions
 
 ```{r}
 fun.add_two_numbers = function(a, b){
@@ -255,7 +255,7 @@ fun.add_two_numbers(1, 2)
 
 I've used the `str_c()` function here to concatenate the string with the number. (R converts the number `x` into a string for us.) Note, R functions can only return a single object. However, this object can be a list (which can contain anything). 
 
-#### Some often used functions 
+#### Some often used functions
 
 ```{r, echo=FALSE}
 name = c(
@@ -296,7 +296,7 @@ kable(x = tibble(name, description),
       booktabs = TRUE)
 ```
 
-### The pipe operator `%>%` 
+### The pipe operator `%>%`
 
 ```{r, out.width = "80%", echo=FALSE, fig.cap="Inspiration for the `magrittr` package name."}
 include_graphics("figures/pipe.jpg")
@@ -448,7 +448,7 @@ The pipe operator `%>%` is similar to the `+` used in `ggplot2`. It allows us to
 
 A key advantage of using the pipe is that you don't have to save intermediate computations as new variables and this helps to keep your environment nice and clean! 
 
-#### Practice 1 
+#### Practice 1
 
 Let's practice the pipe operator. 
 
@@ -472,7 +472,7 @@ mean(round(sqrt(x), digits = 2))
 # the pipe way (write your code underneath)
 ```
 
-## A quick note on naming things 
+## A quick note on naming things
 
 Personally, I like to name things in a (pretty) consistent way so that I have no trouble finding stuff even when I open up a project that I haven't worked on for a while. I try to use the following naming conventions: 
 
@@ -565,7 +565,7 @@ df.starwars %>%
   DT::datatable()
 ```
 
-### Other tools for taking a quick look at data 
+### Other tools for taking a quick look at data
 
 #### `vis_dat()`
 
@@ -592,7 +592,7 @@ skimr::skim(df.starwars)
 
 #### `dfSummary()`
 
-The `summarytools` package is another great package for taking a look at the data. It renders a nice html output for the data frame including a lot of helpful information. You can find out more about this package [here](https://cran.r-project.org/web/packages/summarytools/vignettes/Introduction.html).
+The `summarytools` package is another great package for taking a look at the data. It renders a nice html output for the data frame including a lot of helpful information. You can find out more about this package [here](https://cran.r-project.org/web/packages/summarytools/index.html).
 
 ```{r, eval=FALSE}
 df.starwars %>% 
@@ -605,7 +605,7 @@ df.starwars %>%
 
 Once we've taken a look at the data, the next step would be to visualize relationships between variables of interest. 
 
-## Wrangling data 
+## Wrangling data
 
 We use the functions in the package `dplyr` to manipulate our data. 
 
@@ -686,7 +686,7 @@ df.starwars %>%
   relocate(species, .after = name)
 ```
 
-### `select()` 
+### `select()`
 
 `select()` allows us to select a subset of the columns in the data frame. 
 
@@ -874,7 +874,7 @@ df.starwars %>%
                 .fns = ~ round(., digits = 1)))
 ```
 
-### Practice 3 
+### Practice 3
 
 Compute the body mass index for `masculine` characters who are `human`.
 
@@ -887,9 +887,9 @@ Compute the body mass index for `masculine` characters who are `human`.
 # write your code here 
 ```
 
-## Additional resources  
+## Additional resources
 
-### Cheatsheets 
+### Cheatsheets
 
 - [base R](figures/base-r.pdf) --> summary of how to use base R (we will mostly use the tidyverse but it's still important to know how to do things in base R)
 - [data transformation](figures/data-transformation.pdf) --> transforming data using `dplyr`
@@ -899,8 +899,6 @@ Compute the body mass index for `masculine` characters who are `human`.
 - [dplyr](https://www.datacamp.com/courses/dplyr-data-manipulation-r-tutorial)
 - [tidyverse](https://www.datacamp.com/courses/introduction-to-the-tidyverse)
 - [working with data in the tidyverse](https://www.datacamp.com/courses/working-with-data-in-the-tidyverse)
-- [cleaning data](https://www.datacamp.com/courses/importing-cleaning-data-in-r-case-studies)
-- [cleaning data: case studies](https://www.datacamp.com/courses/importing-cleaning-data-in-r-case-studies)
 - [string manipulation in R](https://www.datacamp.com/courses/string-manipulation-in-r-with-stringr)
 - [Intermediate R](https://www.datacamp.com/courses/intermediate-r)
 - [Writing functions in R](https://www.datacamp.com/courses/introduction-to-function-writing-in-r)
@@ -910,7 +908,7 @@ Compute the body mass index for `masculine` characters who are `human`.
 - [Chapters 9-15 in "R for Data Science"](https://r4ds.had.co.nz/wrangle-intro.html)
 - [Chapter 5 in "Data Visualization - A practical introduction"](http://socviz.co/workgeoms.html#workgeoms)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

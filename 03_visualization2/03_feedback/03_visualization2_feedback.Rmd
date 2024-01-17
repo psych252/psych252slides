@@ -63,13 +63,10 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> liked that we dived into actual material, thought it was well-paced. if you could post the rmds with solutions after class (which I think you said you would) that would be super helpful to go back to when we forget something
+> I liked the pace of the class for most of the time except for the last like 10 minutes when we were just jumping thru the markdown file really quickly, I didn't really understand the shiny parts etc. At the end
 
-> "Science is what we understand well enough to explain to a computer. Art is everything else we do." — Donald Knuth
+> I think maybe it's better to blurb us on what are the more important contents in the rmd files so that we can better preview contents before class!
 
-> Really like the breakout discussion & practice. Learned good stuffs.
-
-> I liked everything. Would be great to have a cheatsheet that we can reference for some common graph types.
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -80,5 +77,6 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- have a cheatsheet with common graph types 
+- work on time management 
+- maybe: make it more explicit in the Rmd file what is optional 
 
