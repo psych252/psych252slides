@@ -1,7 +1,7 @@
 ---
 title: "Class 5"
 author: "Tobias Gerstenberg"
-date: "January 12th, 2022"
+date: "January 19th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -11,7 +11,7 @@ output:
     pandoc_args: ["--number-offset=4"]
 ---
 
-# Data wrangling 2 
+# Data wrangling 2
 
 In this session, we will continue to learn about wrangling data. Some of the functions that I'll introduce in this session are a little tricky to master. Like learning a new language, it takes some time to get fluent. However, it's worth investing the time. 
 
@@ -23,7 +23,7 @@ In this session, we will continue to learn about wrangling data. Some of the fun
 - Learn how to deal with missing data entries `NA`. 
 - Master how to _read_ and _save_ data. 
 
-## Load packages 
+## Load packages
 
 Let's first load the packages that we need for this chapter. 
 
@@ -32,7 +32,7 @@ library("knitr") # for rendering the RMarkdown file
 library("tidyverse") # for data wrangling 
 ```
 
-## Settings 
+## Settings
 
 ```{r}
 # sets how code looks in knitted document
@@ -45,7 +45,7 @@ options(dplyr.summarise.inform = F)
 
 ## Wrangling data (continued)
 
-### Summarizing data 
+### Summarizing data
 
 Let's first load the `starwars` data set again: 
 
@@ -96,7 +96,9 @@ Sometimes `group_by()` is also useful without summarizing the data. For example,
 set.seed(1) # to make this reproducible 
 
 df.summarize = tibble(participant = rep(1:3, each = 5),
-                      judgment = sample(0:100, size = 15, replace = TRUE)) %>% 
+                      judgment = sample(x = 0:100,
+                                        size = 15,
+                                        replace = TRUE)) %>% 
   print()
 ```
 
@@ -149,7 +151,7 @@ df.starwars %>%
   select(name, height, mass, mean_height_mass)
 ```
 
-#### Practice 1 
+#### Practice 1
 
 Find out what the average `height` and `mass` (as well as the standard deviation) is from different `species` in different `homeworld`s. Why is the standard deviation `NA` for many groups?  
 
@@ -164,7 +166,7 @@ Who is the tallest member of each species? What eye color do they have? The `top
 
 ```
 
-### Reshaping data 
+### Reshaping data
 
 We want our data frames to be tidy. What's tidy? 
 
@@ -353,7 +355,7 @@ df.reshape3 %>%
   separate_rows(judgments)
 ```
 
-#### Practice 2 
+#### Practice 2
 
 Load this data frame first.
 
@@ -368,7 +370,7 @@ df.practice2 = tibble(participant = 1:10,
 - Make the `df.practice2` data frame tidy (by turning into a long format).
 - Compute the z-score of each participants' judgments (using the `scale()` function).
 - Calculate the mean and standard deviation of each participants' z-scored judgments. 
-- Notice anything interesting? Think about what [z-scoring](https://www.statisticshowto.datasciencecentral.com/probability-and-statistics/z-score/) does ... 
+- Notice anything interesting? Think about what [z-scoring](https://www.statisticshowto.com/probability-and-statistics/z-score/) does ... 
 
 ```{r}
 # write your code here 
@@ -376,7 +378,7 @@ df.practice2 = tibble(participant = 1:10,
 ```
 
 
-### Joining multiple data frames 
+### Joining multiple data frames
 
 It's nice to have all the information we need in a single, tidy data frame. We have learned above how to go from a single untidy data frame to a tidy one. However, often our situation to start off with is even worse. The information we need sits in several, messy data frames. 
 
@@ -465,7 +467,7 @@ Create a new data frame called `df.join` that combines the information from both
 ```
 
 
-### Dealing with missing data 
+### Dealing with missing data
 
 There are two ways for data to be missing. 
 
@@ -542,7 +544,7 @@ df.stocks %>%
 
 This specifies that we would like to replace any `NA` in the `return` column with `0`. Again, if we had multiple columns with `NA`s, we could speficy for each column separately how to replace it. 
 
-## Reading in data 
+## Reading in data
 
 So far, we've used data sets that already came with the packages we've loaded. In the visualization chapters, we used the `diamonds` data set from the `ggplot2` package, and in the data wrangling chapters, we used the `starwars` data set from the `dplyr` package. 
 
@@ -590,7 +592,7 @@ The data frame contains a bunch of movies with information about their genre, di
 
 The `readr` package (which contains the `read_csv()` function) has a number of other functions for reading data. Just type `read_` in the console below and take a look at the suggestions that autocomplete offers. 
 
-### RData 
+### RData
 
 RData is a data format native to R. Since this format can only be read by R, it's not a good format for sharing data. However, it's a useful format that allows us to flexibly save and load R objects. For example, consider that we always start our script by reading in and structuring data, and that this takes quite a while. One thing we can do is to save the output of intermediate steps as an RData object, and then simply load this object (instead of re-running the whole routine every time). 
 
@@ -602,9 +604,9 @@ load("data/test.RData", verbose = TRUE)
 
 I've set the `verbose = ` argument to `TRUE` here so that the `load()` function tells me what objects it added to the environment. This is useful for checking whether existing objects were overwritten. 
 
-## Saving data 
+## Saving data
 
-### csv 
+### csv
 
 To save a data frame as a csv file, we simply write: 
 
@@ -617,7 +619,7 @@ write_csv(df.test, file = "data/test.csv")
 
 Just like for reading in data, the `readr` package has a number of other functions for saving data. Just type `write_` in the console below and take a look at the autocomplete suggestions.
 
-### RData 
+### RData
 
 To save objects as an RData file, we write: 
 
@@ -656,10 +658,8 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 ### Tutorials
 
 -   **Joining data**:
-
     -   [Two-table verbs](https://dplyr.tidyverse.org/articles/two-table.html)
     -   [Tutorial by Jenny Bryan](http://stat545.com/bit001_dplyr-cheatsheet.html)
-
 -   [tidyexplain](https://github.com/gadenbuie/tidyexplain): Animations that illustrate how `pivot_longer()`, `pivot_wider()`, `left_join()`, etc. work
 
 ## Session info
@@ -667,3 +667,4 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 ```{r, echo=F}
 sessionInfo()
 ```
+
