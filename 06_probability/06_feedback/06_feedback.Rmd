@@ -20,9 +20,9 @@ theme_set(theme_classic() +
                   panel.grid.major.y = element_line(color = "gray90")))
 ```
 
-# Pace
+<!-- # Pace -->
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE, eval=FALSE}
 df.pace = read_csv("data/How was the pace of today's class-.csv",
                    skip = 1,
                    show_col_types = FALSE) %>% 
@@ -39,9 +39,9 @@ ggplot(data = df.pace,
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
 
-# Happiness
+<!-- # Happiness -->
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE, eval=FALSE}
 df.happy = read_csv("data/How happy were you with today's class overall-.csv",
                     skip = 1,
                     show_col_types = FALSE) %>% 
@@ -64,11 +64,9 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> I had kind of a hard time keeping up with writing notes! But I did like all the examples. They were very intuitive and good. The clue one made a lot of sense and the covid data example was really helpful but also relevant
+> If there was recordings of this classes (from the previous years), it will be great. Gives us a chance to relook at the content.
 
-> I'm a little confused by the sectionals. Are they like office hours but in a group? When the sectionals actually cover a specific topic, will there be a specific announcement that goes out?
-
-> It was a lot of information... I still don't understand Bayes theorem, but will be having a look over the slides and the posted video!
+> I really liked the examples and when we were solving the problems! I think it would be nice to walk through the little screenshots of R code a little slower if possible!
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -79,5 +77,6 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- still a little on the fast side (although most people were happy with the pace)
+- share recordings of previous classes 
+- walk through code examples a little slower (maybe even switch to RStudio to illustrate)
 

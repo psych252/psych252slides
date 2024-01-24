@@ -1,7 +1,7 @@
 ---
 title: "Class 6"
 author: "Tobias Gerstenberg"
-date: "January 14th, 2022"
+date: "January 22nd, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -15,7 +15,7 @@ output:
 install.packages(c("arrangements", "kableExtra", "DiagrammeR"))
 ```
 
-# Probability and causality
+# Probability
 
 ## Load packages, load data, set theme
 
@@ -40,7 +40,7 @@ opts_chunk$set(comment = "",
 ```
 
 
-## Counting 
+## Counting
 
 Imagine that there are three balls in an urn. The balls are labeled 1, 2, and 3. Let's consider a few possible situations. 
 
@@ -61,7 +61,7 @@ combinations(balls, ndraws, replace = T)
 combinations(balls, ndraws)
 ```
 
-I've generated the figures below using the `DiagrammeR` package. It's a powerful package for drawing diagrams in R. See information on how to use the DiagrammeR package [here](http://rich-iannone.github.io/DiagrammeR/graphviz_and_mermaid.html). 
+I've generated the figures below using the `DiagrammeR` package. It's a powerful package for drawing diagrams in R. See information on how to use the DiagrammeR package [here](https://rich-iannone.github.io/DiagrammeR/). 
 
 ```{r, echo=FALSE, fig.cap="Drawing two marbles out of an urn __with__ replacement."}
 grViz("
@@ -175,7 +175,7 @@ ggplot(data = df.letters,
        y = "probability")
 ```
 
-## Flipping a coin many times 
+## Flipping a coin many times
 
 ```{r, fig.cap='A demonstration of the law of large numbers.'}
 
@@ -202,7 +202,7 @@ ggplot(data = df.samples,
   theme(text = element_text(size = 20))
 ```
 
-## Clue guide to probability 
+## Clue guide to probability
 
 ```{r}
 who = c("ms_scarlet", "col_mustard", "mrs_white",
@@ -231,7 +231,7 @@ df.suspects %>%
   kable_styling("striped", full_width = F)
 ```
 
-### Conditional probability 
+### Conditional probability
 
 ```{r}
 # conditional probability (via rules of probability)
@@ -290,7 +290,7 @@ digraph dot{
 )
 ```
 
-## Probability operations 
+## Probability operations
 
 ```{r}
 # Make a deck of cards 
@@ -358,9 +358,9 @@ digraph dot{
 )
 ```
 
-## Getting Bayes right matters 
+## Getting Bayes right matters
 
-### Bayesian reasoning example 
+### Bayesian reasoning example
 
 ```{r}
 # prior probability of the disease
@@ -405,7 +405,7 @@ str_c("Probability of COVID given a positive test: ", round(p.D_given_T * 100, 1
 str_c("Probability of COVID given a negative test: ", round(p.D_given_notT * 100, 1), "%")
 ```
 
-### Most people in the hospital are vaccinated 
+### Most people in the hospital are vaccinated
 
 ```{r}
 # probability of being vaccinated 
@@ -421,9 +421,9 @@ p.V_given_H = (p.H_given_V * p.V) / ((p.H_given_V * p.V) + (p.H_given_notV * (1-
 p.V_given_H
 ```
 
-## Building a Bayesis 
+## Building a Bayesis
 
-### Dice example 
+### Dice example
 
 ```{r}
 # prior
@@ -455,9 +455,9 @@ p.four_given_data
 
 Given this data $d$ = [`r data`], there is a `r round(p.four_given_data * 100)`% chance that the four sided die was rolled rather than the six sided die. 
 
-## Additional resources 
+## Additional resources
 
-### Cheatsheets 
+### Cheatsheets
 
 - [Probability cheatsheet](figures/probability.pdf)
 
@@ -466,13 +466,13 @@ Given this data $d$ = [`r data`], there is a `r round(p.four_given_data * 100)`%
 - [Probability and Statistics with examples using R](http://www.isibang.ac.in/~athreya/psweur/)
 - [Learning statistics with R: Chapter 9 Introduction to probability](https://learningstatisticswithr-bookdown.netlify.com/probability.html#probstats)
 
-### Misc 
+### Misc
 
 - [Bayes' theorem in three panels](https://www.tjmahr.com/bayes-theorem-in-three-panels/)
 - [Statistics 110: Probability; course at Harvard](https://projects.iq.harvard.edu/stat110)  
 - [Bayes theorem and making probability intuitive](https://www.youtube.com/watch?v=HZGCoVF3YvM&feature=youtu.be)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
