@@ -1,7 +1,7 @@
 ---
 title: "Class 8"
 author: "Tobias Gerstenberg"
-date: "January 21th, 2021"
+date: "January 26th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -16,7 +16,7 @@ output:
 install.packages(c("janitor"))
 ```
 
-# Simulation 2 
+# Simulation 2
 
 In which we figure out some key statistical concepts through simulation and plotting. On the menu we have: 
 
@@ -25,7 +25,7 @@ In which we figure out some key statistical concepts through simulation and plot
 - Confidence interval
 - Bootstrapping 
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -44,7 +44,7 @@ opts_chunk$set(comment = "",
 
 ## Making statistical inferences (frequentist style)
 
-### Population distribution 
+### Population distribution
 
 Let's first put the information we need for our population distribution in a data frame. 
 
@@ -83,7 +83,7 @@ df.population %>%
                 full_width = F)
 ```
 
-### Distribution of a single sample 
+### Distribution of a single sample
 
 Let's draw a single sample of size $n = 40$ from the population distribution and plot it: 
 
@@ -181,7 +181,7 @@ ggplot(data = df.plot,
                  fill = "lightblue",
                  color = "black") +
   stat_density(bw = 0.1,
-               size = 2,
+               linewidth = 2,
                geom = "line") + 
   scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
@@ -295,7 +295,7 @@ df.bootstrap %>%
 
 Neat, as we can see, the mean and standard deviation of the bootstrapped sampling distribution are very close to the sampling distribution that we generated from the population distribution. 
 
-## Understanding p-values 
+## Understanding p-values
 
 > The p-value is the probability of finding the observed, or more extreme, results when the null hypothesis ($H_0$) is true.
 
@@ -308,7 +308,7 @@ Instead, we define a null hypothesis, construct a sampling distribution that tel
 
 An intutive way for illustrating (this rather unintuitive procedure) is the permutation test. 
 
-### Permutation test 
+### Permutation test
 
 Let's start by generating some random data from two different normal distributions (simulating a possible experiment). 
 
@@ -461,7 +461,7 @@ df.permutations %>%
   summarize(p_value = sum(mean_difference <= difference_actual)/n())
 ```
 
-### t-test by hand 
+### t-test by hand
 
 Examining the t-distribution. 
 
@@ -533,7 +533,7 @@ ggplot(data = df.ttest,
 ```
 
 
-## Confidence intervals 
+## Confidence intervals
 
 The definition of the confidence interval is the following: 
 
@@ -590,12 +590,17 @@ df.confidence = df.confidence %>%
                              'inside'))
 
 # plot the result
-ggplot(data = df.confidence, aes(x = sample, y = mean, color = conf_index)) +
-  geom_hline(yintercept = 3.5, color = "red") +
+ggplot(data = df.confidence, aes(x = sample,
+                                 y = mean,
+                                 color = conf_index)) +
+  geom_hline(yintercept = 3.5,
+             color = "red") +
   geom_point() +
-  geom_linerange(aes(ymin = conf_low, ymax = conf_high)) +
+  geom_linerange(aes(ymin = conf_low,
+                     ymax = conf_high)) +
   coord_flip() +
-  scale_color_manual(values = c("black", "red"), labels = c("inside", "outside")) +
+  scale_color_manual(values = c("black", "red"),
+                     labels = c("inside", "outside")) +
   theme(axis.text.y = element_text(size = 12),
         legend.position = "none")
 ```
@@ -668,13 +673,17 @@ ggplot(data = as_tibble(bootstraps),
              linetype = 2) 
 ```
 
-## Additional resources 
+## Additional resources
 
-### Datacamp 
+### Misc 
+
+- [Nice illustration of the permutation test](https://www.jwilber.me/permutationtest/?s=09)
+
+### Datacamp
 
 - [Foundations of Inference](https://www.datacamp.com/courses/foundations-of-inference)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

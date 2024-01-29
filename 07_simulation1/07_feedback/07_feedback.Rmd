@@ -64,11 +64,12 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> I like the penguins exercises!
+> Really appreciated the recap of last class! It's nice to get a refresher and to get to hear material twice.
 
-> The class was interesting but it wasn't clear what we were supposed to takeaway from the lecture. For example, are we expected to know how to do power analysis based on the lecture today?
+> Today's class felt less rushed than the last one which I appreciated. The slide animations were helpful for understanding density!
 
-> Hybrid was done quite well, thank you!
+> I want the latest r-markdown file that you showed us in the class to be shared that we can see the updated code from the original html.
+
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -79,6 +80,6 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- make the learning goals more clear at the beginning of each class 
+- maybe use more than 10 minutes next time for the practice exercise 
 
 

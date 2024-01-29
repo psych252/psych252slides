@@ -1,7 +1,7 @@
 ---
 title: "Class 9"
 author: "Tobias Gerstenberg"
-date: "January 24th, 2022"
+date: "January 29th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,7 +13,7 @@ output:
 
 # Modeling data
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -30,9 +30,9 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Modeling data 
+## Modeling data
 
-### Simplicity vs. accuracy trade-off 
+### Simplicity vs. accuracy trade-off
 
 ```{r, warning=F, fig.cap="Tradeoff between fit and model simplicity."}
 # make example reproducible 
@@ -80,7 +80,7 @@ ggplot(data = df.pre,
         axis.text = element_blank())
 ```
 
-### Sampling distributions for median and mean 
+### Sampling distributions for median and mean
 
 ```{r}
 # make example reproducible 
@@ -143,7 +143,8 @@ set.seed(1)
 n_participants = 1000
 
 df.normal = tibble(participant = 1:n_participants,
-                   condition = rep(c("control", "experimental"), each = n_participants/2)) %>% 
+                   condition = rep(c("control", "experimental"),
+                                   each = n_participants/2)) %>% 
   mutate(score = ifelse(condition == "control",
                         rnorm(n = n_participants, mean = 5, sd = 2),
                         rnorm(n = n_participants, mean = 15, sd = 3)))
@@ -170,7 +171,7 @@ ggplot(data = tibble(residuals = fit$residuals),
 ```
 
 
-## Hypothesis testing: "One-sample t-test" 
+## Hypothesis testing: "One-sample t-test"
 
 ```{r, warning=F}
 df.internet = read_table2(file = "data/internet_access.txt") %>% 
@@ -245,7 +246,7 @@ We've implemented a one sample t-test (compare the p-value here to the one I com
 t.test(df.internet$internet, mu = 75)
 ```
 
-## Building a sampling distribution of PRE 
+## Building a sampling distribution of PRE
 
 Here is the general procedure for building a sampling distribution of the proportional reduction in error (PRE). In this instance, I compare the following two models 
 
@@ -400,17 +401,17 @@ ggplot(data = tibble(x = c(0, 1)),
 ```
 
 
-## Additional resources 
+## Additional resources
 
-### Reading 
+### Reading
 
 - Judd, C. M., McClelland, G. H., & Ryan, C. S. (2011). Data analysis: A model comparison approach. Routledge. --> Chapters 1--4
 
-### Datacamp 
+### Datacamp
 
 - [Foundations of Inference](https://www.datacamp.com/courses/foundations-of-inference)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
