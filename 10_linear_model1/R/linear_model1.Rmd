@@ -1,7 +1,7 @@
 ---
 title: "Class 10"
 author: "Tobias Gerstenberg"
-date: "January 26th, 2022"
+date: "January 31st, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,7 +13,7 @@ output:
 
 # Linear model 1
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -31,7 +31,7 @@ opts_chunk$set(comment = "",
                fig.show = "hold")            
 ```
 
-## Correlation 
+## Correlation
 
 ```{r}
 # make example reproducible 
@@ -52,7 +52,7 @@ ggplot(data = df.correlation,
        y = "happiness")
 ```
 
-#### Variance 
+#### Variance
 
 Variance is the average squared difference between each data point and the mean: 
 
@@ -82,7 +82,7 @@ ggplot(data = df.variance,
         axis.ticks.x = element_blank())
 ```
 
-#### Covariance 
+#### Covariance
 
 Covariance is defined in the following way: 
 
@@ -97,8 +97,9 @@ df.covariance = tibble(x = runif(20, min = 0, max = 1),
                        y = x + rnorm(x, mean = 0.5, sd = 0.25))
 
 # plot the data
-ggplot(df.covariance,
-       aes(x = x, y = y)) +
+ggplot(data = df.covariance,
+       mapping = aes(x = x,
+                     y = y)) +
   geom_point(size = 3) +
   theme(axis.text = element_blank(),
         axis.title = element_blank(),
@@ -108,14 +109,15 @@ ggplot(df.covariance,
 Add lines for $\overline X$ and $\overline Y$ to the data:
 
 ```{r}
-ggplot(df.covariance,
-       aes(x = x, y = y)) +
+ggplot(data = df.covariance,
+       mapping = aes(x = x,
+                     y = y)) +
   geom_hline(yintercept = mean(df.covariance$y),
              color = "red",
-             size = 1) +
+             linewidth = 1) +
   geom_vline(xintercept = mean(df.covariance$x),
              color = "red",
-             size = 1) +
+             linewidth = 1) +
   geom_point(size = 3) +
   theme(axis.text = element_blank(),
         axis.title = element_blank(),
@@ -136,8 +138,10 @@ df.plot$color[1] = 1
 df.plot$color[10] = 2
 df.plot$color[19] = 3
 
-ggplot(df.plot,
-       aes(x = x, y = y, color = as.factor(color))) +
+ggplot(data = df.plot,
+       mapping = aes(x = x, 
+                     y = y, 
+                     color = as.factor(color))) +
   geom_segment(data = df.plot %>% 
                  filter(color == 1),
                mapping = aes(x = x,
@@ -207,8 +211,9 @@ df.ranking = tibble(x = c(1.2, 2.5, 4.5),
                     label_rank = str_c("(", x_rank, ", ", y_rank, ")"))
 
 # plot the data (and show their ranks)
-ggplot(df.ranking,
-       aes(x = x, y = y)) +
+ggplot(data = df.ranking,
+       mapping = aes(x = x, 
+                     y = y)) +
   geom_point(size = 3) +
   geom_text(aes(label = label),
             hjust = -0.2,
@@ -238,8 +243,9 @@ df.spearman %>%
             r_ranks = cor(x_rank, y_rank))
 
 # plot
-ggplot(df.spearman,
-       aes(x = x_rank, y = y_rank)) +
+ggplot(data = df.spearman,
+       mapping = aes(x = x_rank,
+                     y = y_rank)) +
   geom_point(size = 3) +
   scale_x_continuous(breaks = 1:20) +
   scale_y_continuous(breaks = 1:20) +
@@ -251,7 +257,6 @@ df.spearman %>%
   kable(digits = 2) %>% 
   kable_styling(bootstrap_options = "striped",
               full_width = F)
-
 ```
 
 Comparison between $r$ and $\rho$ for a given data set: 
@@ -270,9 +275,9 @@ df.example %>%
             r_ranks = cor(x_rank, y_rank))
 
 # plot
-ggplot(df.example,
-       # aes(x = x_rank, y = y_rank)) + # see the ranked data 
-       aes(x = x, y = y)) + # see the original data
+ggplot(data = df.example,
+       # mapping = aes(x = x_rank, y = y_rank)) + # see the ranked data 
+       mapping = aes(x = x, y = y)) + # see the original data
   geom_point(size = 3) +
   theme(axis.text = element_text(size = 10))
 
@@ -297,15 +302,16 @@ df.example2 %>%
             r_ranks = cor(x_rank, y_rank))
 
 # plot
-ggplot(df.example2,
-       # aes(x = x_rank, y = y_rank)) + # see the ranked data 
-       aes(x = x, y = y)) + # see the original data
+ggplot(data = df.example2,
+       # mapping = aes(x = x_rank, y = y_rank)) + # see the ranked data 
+       mapping = aes(x = x,
+                     y = y)) + # see the original data
   geom_point(size = 3) +
   theme(axis.text = element_text(size = 10))
 
 ```
 
-## Regression 
+## Regression
 
 ```{r}
 # make example reproducible 
@@ -320,8 +326,8 @@ df.regression = tibble(chocolate = runif(n_samples, min = 0, max = 100),
 
 # plot the data 
 ggplot(data = df.regression,
-       aes(x = chocolate,
-           y = happiness)) +
+       mapping = aes(x = chocolate,
+                     y = happiness)) +
   geom_point(size = 3)
 ```
 
@@ -338,11 +344,11 @@ df.compact = tidy(lm.compact)
 
 # plot the data with model prediction
 ggplot(data = df.regression,
-       aes(x = chocolate,
-           y = happiness)) +
+       mapping = aes(x = chocolate,
+                     y = happiness)) +
   geom_hline(yintercept = df.compact$estimate,
              color = "blue",
-              size = 1) +
+             size = 1) +
   geom_point(size = 3) 
 
 ```
@@ -358,8 +364,8 @@ df.augmented = tidy(lm.augmented)
 
 # plot the data with model prediction
 ggplot(data = df.regression,
-       aes(x = chocolate,
-           y = happiness)) +
+       mapping = aes(x = chocolate,
+                     y = happiness)) +
   geom_abline(intercept = df.augmented$estimate[1],
               slope = df.augmented$estimate[2],
               color = "red",
@@ -385,13 +391,13 @@ df.compact_model = augment(lm.compact) %>%
 
 # plot model prediction with residuals
 ggplot(data = df.compact_model,
-       aes(x = chocolate,
-           y = happiness)) +
+       mapping = aes(x = chocolate,
+                     y = happiness)) +
   geom_hline(yintercept = df.compact_summary$estimate,
              color = "blue",
-              size = 1) +
-  geom_segment(aes(xend = chocolate,
-                   yend = df.compact_summary$estimate),
+             linewidth = 1) +
+  geom_segment(mapping = aes(xend = chocolate,
+                             yend = df.compact_summary$estimate),
                color = "blue") + 
   geom_point(size = 3) 
 
@@ -416,14 +422,14 @@ df.augmented_model = augment(lm.augmented) %>%
 
 # plot model prediction with residuals
 ggplot(data = df.augmented_model,
-       aes(x = chocolate,
-           y = happiness)) +
+       mapping = aes(x = chocolate,
+                     y = happiness)) +
   geom_abline(intercept = df.augmented_summary$estimate[1],
               slope = df.augmented_summary$estimate[2],
-             color = "red",
-              size = 1) +
-  geom_segment(aes(xend = chocolate,
-                   yend = fitted),
+              color = "red",
+              linewidth = 1) +
+  geom_segment(mapping = aes(xend = chocolate,
+                             yend = fitted),
                color = "red") + 
   geom_point(size = 3) 
 
@@ -573,8 +579,8 @@ Here is a plot of the residuals. Residual plots are important for checking wheth
 fit %>% 
   augment() %>% 
   clean_names() %>% 
-  ggplot(aes(x = fitted,
-             y = resid)) + 
+  ggplot(mapping = aes(x = fitted,
+                       y = resid)) + 
   geom_hline(yintercept = 0,
              color = "blue") +
   geom_point(alpha = 0.3)
@@ -673,19 +679,19 @@ Here are some examples of what the residuals could look like when things go wron
 include_graphics("figures/when_things_go_wrong.png")
 ```
 
-## Additional resources 
+## Additional resources
 
-### Datacamp 
+### Datacamp
 
 - [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
 - [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
 - [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
-### Misc 
+### Misc
 
 - [Spurious correlations](http://www.tylervigen.com/spurious-correlations)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

@@ -22,7 +22,7 @@ theme_set(theme_classic() +
 
 # Pace
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval=FALSE}
 df.pace = read_csv("data/How was the pace of today's class-.csv",
                    skip = 1,
                    show_col_types = FALSE) %>% 
@@ -41,7 +41,7 @@ ggplot(data = df.pace,
 
 # Happiness
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, eval=FALSE}
 df.happy = read_csv("data/How happy were you with today's class overall-.csv",
                     skip = 1,
                     show_col_types = FALSE) %>% 
@@ -64,14 +64,6 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> Could you review bootstrapping once more at the beginning of next class? Or could we have time in groups/breakout rooms to work through a quick example of bootstrapping?
-
-> I very much appreciate the review of prior materials at the beginning of the class. Could you please walk through code more slowly. I am not sure why and when we use "{"
-
-> please release the homework before the classes that will review the material (right now it's released after the classes that contain the relevant material), this allows us to have a framework for applying the material. Thank you!
-
-> I'm excited we're finally getting to modeling!
-
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
          skip = 1,
@@ -81,6 +73,5 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- explaining bootstrapping and confidence intervals worked fairly well this time 
-- go over code slower next time 
+- don't spend too much time on the recap
 
