@@ -1,7 +1,7 @@
 ---
 title: "Class 11"
 author: "Tobias Gerstenberg"
-date: "January 28th, 2022"
+date: "February 2nd, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -29,7 +29,7 @@ install.packages(c("corrr", "GGally"))
 - Both continuous and categorical predictors. 
 - Interpreting interactions. 
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -54,7 +54,7 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Load data sets 
+## Load data sets
 
 Let's load the data sets that we'll explore in this class: 
 
@@ -89,11 +89,11 @@ tibble(variable = c("income", "limit", "rating", "cards", "age", "education",
                 full_width = F)
 ```
 
-## Multiple continuous variables 
+## Multiple continuous variables
 
 Let's take a look at a case where we have multiple continuous predictor variables. In this case, we want to make sure that our predictors are not too highly correlated with each other (as this makes the interpration of how much each variable explains the outcome difficult). So we first need to explore the pairwise correlations between variables. 
 
-### Explore correlations 
+### Explore correlations
 
 The `corrr` package is great for exploring correlations between variables. To find out more how `corrr` works, take a look at this vignette: 
 
@@ -261,7 +261,7 @@ fit_a %>%
 
 As we can see, the model almost explains 90% of the variance. That's very decent! 
 
-#### Visualizing the model fits 
+#### Visualizing the model fits
 
 Here is a way of visualizing how both tv ads and radio ads affect sales: 
 
@@ -458,7 +458,7 @@ t.test(x = df.credit$balance[df.credit$student == "No"],
        y = df.credit$balance[df.credit$student == "Yes"])
 ```
 
-### Dummy coding 
+### Dummy coding
 
 When we put a variable in a linear model that is coded as a character or as a factor, R automatically recodes this variable using dummy coding. It uses level 1 as the reference category for factors, or the value that comes first in the alphabet for characters. 
 
@@ -603,7 +603,7 @@ Note that we just specified here that we want to have a linear model (via `geom_
 
 But is the interaction in the model worth it? That is, does a model that includes an interaction explain significantly more variance in the data, than a model that does not have an interaction. 
 
-### Hypothesis test 
+### Hypothesis test
 
 Let's check: 
 
@@ -618,19 +618,19 @@ anova(fit_c, fit_a)
 
 Nope, not worth it! The F-test comes out non-significant. 
 
-## Additional resources 
+## Additional resources
 
-### Datacamp 
+### Datacamp
 
 - [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
 - [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
 - [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
-### Misc 
+### Misc
 
 - [Nice review of multiple regression in R](https://bookdown.org/roback/bookdown-bysh/ch-MLRreview.html)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
