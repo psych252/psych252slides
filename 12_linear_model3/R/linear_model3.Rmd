@@ -1,7 +1,7 @@
 ---
 title: "Class 12"
 author: "Tobias Gerstenberg"
-date: "January 31st, 2022"
+date: "February 5th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -17,12 +17,12 @@ install.packages(c("afex", "car"))
 
 # Linear model 3
 
-## Learning goals 
+## Learning goals
 
 - Linear model with one multi-level categorical predictor (One-way ANOVA).
 - Linear model with multiple categorical predictors (N-way ANOVA).
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -47,7 +47,7 @@ opts_chunk$set(comment = "",
 options(dplyr.summarise.inform = F)
 ```
 
-## Load data sets 
+## Load data sets
 
 ```{r, message=F, warning=FALSE}
 df.poker = read_csv("data/poker.csv") %>% 
@@ -80,7 +80,7 @@ df.poker %>%
 
 ## One-way ANOVA
 
-### Visualization 
+### Visualization
 
 ```{r}
 df.poker %>% 
@@ -101,7 +101,7 @@ df.poker %>%
   theme(legend.position = "none")
 ```
 
-### Model fitting 
+### Model fitting
 
 We pass the result of the `lm()` function to `anova()` to calculate an analysis of variance like so: 
 
@@ -111,7 +111,7 @@ lm(formula = balance ~ hand,
   anova()
 ```
 
-### Hypothesis test 
+### Hypothesis test
 
 The F-test reported by the ANOVA compares the fitted model with a compact model that only predicts the grand mean: 
 
@@ -124,7 +124,7 @@ fit_a = lm(formula = balance ~ hand, data = df.poker)
 anova(fit_c, fit_a)
 ```
 
-### Visualize the model's predictions 
+### Visualize the model's predictions
 
 Here is the model prediction of the compact model:
 
@@ -297,6 +297,7 @@ df.a = fit_a %>%
 pre = 1 - df.a$sse/df.c$sse
 print(pre %>% round(2))
 ```
+
 Note that this is the same as the $R^2$ for the augmented model: 
 
 ```{r}
@@ -332,6 +333,7 @@ fit.tmp %>%
   summary()
 
 ```
+
 Here, I've directly put the dummy-coded variables as predictors into the `lm()`. We get the same model as if we used the `hand` variable instead. 
 
 ### Follow up questions
@@ -395,7 +397,7 @@ df.poker %>%
             variance_residual = variance_total - variance_model)
 ```
 
-#### Visualize model predictions 
+#### Visualize model predictions
 
 ##### Total variance
 
@@ -489,7 +491,7 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
-##### Residual variance 
+##### Residual variance
 
 ```{r}
 set.seed(1)
@@ -550,7 +552,7 @@ ggplot(data = df.plot,
 ```
 
 
-## Two-way ANOVA 
+## Two-way ANOVA
 
 Now let's take a look at a case where we have multiple categorical predictors. 
 
@@ -635,7 +637,7 @@ aov_ez(id = "participant",
 
 The `afex` package uses effect coding and type 3 sums of squares by default.
 
-### Interpreting interactions 
+### Interpreting interactions
 
 Code I've used to generate the different plots in the competition: 
 
@@ -877,19 +879,21 @@ df.poker %>%
             variance_residual = variance_total - variance_skill - variance_hand - 
               variance_hand_skill)
 ```
-## Additional resources 
 
-### Datacamp 
+## Additional resources
+
+### Datacamp
 
 - [Statistical modeling 1](https://www.datacamp.com/courses/statistical-modeling-in-r-part-1)
 - [Statistical modeling 2](https://www.datacamp.com/courses/statistical-modeling-in-r-part-2)
 - [Correlation and regression](https://www.datacamp.com/courses/correlation-and-regression)
 
-### Misc 
+### Misc
 
 - [Explanation of different types of sums of squares](https://mcfromnz.wordpress.com/2011/03/02/anova-type-iiiiii-ss-explained/)
+- [Blog posts on marginal effects](https://www.andrewheiss.com/blog/2022/05/20/marginalia/)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
