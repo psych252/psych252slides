@@ -1,7 +1,7 @@
 ---
 title: "Class 13"
 author: "Tobias Gerstenberg"
-date: "February 2nd, 2022"
+date: "February 7th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -17,7 +17,7 @@ install.packages("afex")
 
 # Linear model 4
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r load-packages, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -88,6 +88,7 @@ lm(formula = balance ~ hand + skill,
          data = df.poker.unbalanced) %>% 
   anova()
 ```
+
 We should compute an ANOVA with type 3 sums of squares, and set the contrast to sum contrasts. I like to use the `joint_tests()` function from the "emmeans" package for doing so. It does both of these things for us. 
 
 ```{r}
@@ -144,7 +145,7 @@ df.poker %>%
 
 We see here that the difference in balance between the average and expert players when they have a bad hand is 2.7098. This is the same value as the `skillexpert` parameter in the `summary()` table above, and the corresponding significance test captures whether this difference is significantly different from 0. It doesn't capture, whether there is an effect of skill overall! To test this, we need to do an analysis of variance (using the `Anova(type = 3)` function).
 
-## Linear contrasts 
+## Linear contrasts
 
 Here is a linear contrast that assumes that there is a linear relationship between the quality of one's hand, and the final balance.  
 
@@ -216,7 +217,7 @@ ggplot(data = df.plot,
         axis.title.x = element_blank())
 ```
 
-### Hypothetical data 
+### Hypothetical data
 
 Here is some code to generate a hypothetical developmental data set. 
 
@@ -454,7 +455,7 @@ fit %>%
   pluck("contrasts")
 ```
 
-### Understanding dummy coding 
+### Understanding dummy coding
 
 ```{r}
 fit = lm(formula = balance ~ 1 + hand,
@@ -476,7 +477,7 @@ df.poker %>%
                 full_width = F)
 ```
 
-### Understanding sum coding 
+### Understanding sum coding
 
 ```{r}
 fit = lm(formula = balance ~ 1 + hand,
@@ -494,12 +495,16 @@ model.matrix(fit) %>%
                 full_width = F)
 ```
 
-## Session info 
+## Additional resources
+
+### Misc
+
+- [Overview of different regression models in R](https://strengejacke.github.io/regressionmodels/?s=09)
+
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
 ```{r session}
 sessionInfo()
 ```
-
-## References
