@@ -23,6 +23,7 @@ library("corrr")      # for correlation tables
 library("lme4")       # for linear mixed effects models 
 library("MASS")       # for additional function (e.g. multivariate Gaussian)
 library("janitor")    # for cleaning column names
+library("emmeans")    # for conditional effects 
 library("tidyverse")  # for everything else 
 
 theme_set(theme_classic() + #set the theme 
@@ -1168,4 +1169,44 @@ ggplot(data = tibble(x = c(0, 10)),
   scale_y_continuous(limits = c(0, 1.5))
 
 ```
+
+# anova() vs. joint_tests() 
+
+```{r}
+# credit data set
+df.credit = read_csv("data/credit.csv") %>% 
+  rename(index = `...1`) %>% 
+  clean_names()
+
+lm(balance ~ 1 + income * student, df.credit) %>% 
+  emmeans::joint_tests()
+
+lm(balance ~ 1 + income * student, df.credit) %>% 
+  aov() %>% 
+  summary()
+
+fit1 = lm(balance ~ 1, df.credit)
+fit2 = lm(balance ~ 1 + income, df.credit)
+
+anova(fit1, fit2)
+
+fit = lm(balance ~ 1 + income * student, df.credit)
+
+summary(fit)
+
+fit %>% 
+  emmeans("student",
+          contr = "pairwise",
+          data = df.credit)
+
+fit %>% 
+  emtrends(specs = pairwise ~ student,
+           var = "income",
+           data = df.credit)
+
+
+fit3 = lm(balance ~ 1 + student, df.credit)
+summary(fit3)
+```
+
 

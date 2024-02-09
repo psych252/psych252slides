@@ -858,7 +858,6 @@ fit = lm(formula = balance ~ hand * skill, data = df.poker)
 fit %>% 
   anova()
 ```
-
 And let's compute how the the sums of squares are decomposed:
 
 ```{r}

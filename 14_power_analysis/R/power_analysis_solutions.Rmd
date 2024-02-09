@@ -167,7 +167,7 @@ df.power3 = expand_grid(n = seq(10, 500, 50),
                    .f = ~ lm(formula = z ~ x * y,
                              data = .x))) %>% 
   mutate(coef = map(.x = fit,
-                    .f = tidy)) %>% 
+                    .f = ~ tidy(.x))) %>% 
   select(simulation, n, index, coef) %>% 
   unnest(cols = coef) %>% 
   filter(term == "x:y") %>% 
@@ -181,7 +181,7 @@ ggplot(data = df.power3,
   geom_hline(yintercept = seq(0, 1, 0.1),
              linetype = 2,
              color = "gray50",
-             size = 0.1) + 
+             linewidth = 0.1) + 
   geom_smooth(method = "loess",
               color = "black") +
   geom_point(shape = 21)
@@ -212,7 +212,7 @@ df.power4 = expand_grid(n = seq(10, 1000, 50),
                    .f = ~ lm(formula = z ~ x * y,
                              data = .x))) %>% 
   mutate(coef = map(.x = fit, 
-                    .f = tidy)) %>% 
+                    .f = ~ tidy(.x))) %>% 
   select(simulation, n, index, coef) %>% 
   unnest(cols = coef) %>% 
   filter(term == "x:y") %>% 

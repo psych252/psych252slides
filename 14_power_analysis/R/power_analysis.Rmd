@@ -1,7 +1,7 @@
 ---
 title: "Class 14"
 author: "Tobias Gerstenberg"
-date: "February 4th, 2022"
+date: "February 9th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,7 +13,7 @@ output:
 
 # Power analysis
 
-## Learning goals 
+## Learning goals
 
 - Making decisions based on statistical inference.
 - The concept of statistical power. 
@@ -23,7 +23,7 @@ output:
   - Understanding `map()` and its children. 
   - Understanding `nest()` and `unnest()`.
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -47,13 +47,13 @@ opts_chunk$set(comment = "",
 options(dplyr.summarise.inform = F)
 ```
 
-## Load data sets 
+## Load data sets
 
 ```{r, warning=F, message=F}
 df.poker = read_csv("data/poker.csv")
 ```
 
-## Decision-making 
+## Decision-making
 
 Figures to illustrate power: 
 
@@ -141,7 +141,7 @@ df.cohen = df.poker %>%
 print(df.cohen)
 ```
 
-## Determining sample size 
+## Determining sample size
 
 One way to determine sample size is by using the `pwr` package. While this packages is very convenient, we cannot compute power for all the hypotheses that we might be interested in testing. 
 
@@ -201,20 +201,20 @@ pwr.t.test(d = 0.3,
 
 So, to achieve a power of 0.8 for an effect size of d = 0.3, we would need to have 176 participants in each condition! 
 
-### Power analysis 
+### Power analysis
 
 While the `pwr` package works great for relatively simple designs, it quickly reaches its limits. For example, you may be interested in the sample size required to achieve adequate power for detecting an interaction, or for a specific linear contrast. 
 
 Luckily, there is a very flexible approach to determining sample size: via simulation! 
 
-#### The general recipe 
+#### The general recipe
 
 - assume: significance level, n, effect size
 - simulate a large number of data sets of size n with the specified effect size
 - for each data set, run a statistical test to calculate the p-value
 - determine the probability of rejecting the H0 (given that H1 is true)
 
-#### Using `map()` and list columns 
+#### Using `map()` and list columns
 
 ##### Understanding `map()`
 
@@ -255,7 +255,7 @@ str_c("Is tmp1 identical to tmp2? ", identical(tmp1, tmp2))
 str_c("Is tmp2 identical to tmp3? ", identical(tmp2, tmp3))
 ```
 
-###### Understanding `map()`'s children 
+###### Understanding `map()`'s children
 
 Notice that the output of `map()` is a list. 
 
@@ -280,7 +280,7 @@ We can also return data frames by using either `map_dfr()` which binds data fram
 set.seed(1)
 
 # function to create a data frame 
-fun_make_df = function(x){
+fun.make_df = function(x){
   tibble(number = x,
          group = sample(c("A", "B"),
                         size = 3,
@@ -290,7 +290,7 @@ fun_make_df = function(x){
 
 # bind data frames by row 
 map_dfr(.x = 1:3, 
-        .f = ~ fun_make_df(.))
+        .f = ~ fun.make_df(.x))
 ```
 
 A nice use-case of the `map_dfr()` function can be to read in a number of csv files from individual participants into one larger data frame. Let's simulate some data first, and save the data of each participant as a separate csv file (using `map()` of course). 
@@ -298,7 +298,7 @@ A nice use-case of the `map_dfr()` function can be to read in a number of csv fi
 ```{r}
 set.seed(1)
 
-fun_simulate_csv = function(x){
+fun.simulate_csv = function(x){
   n_observations = sample(3:6, size = 1)
   df = tibble(age = sample(18:99, size = n_observations),
               responses = rnorm(n = n_observations, mean = 100, sd = 10))
@@ -306,7 +306,7 @@ fun_simulate_csv = function(x){
 }
 
 map(.x = 1:3, 
-    .f = ~ fun_simulate_csv(.))
+    .f = ~ fun.simulate_csv(.x))
 ```
 
 Now, let's read in the data from the three participants and combine it into a single data frame.
@@ -318,7 +318,7 @@ map_dfr(.x = 1:3,
 ```
 Notice how I used the `.id = ` argument of the function to add a `participant` column to my data frame in this case. 
 
-###### Use `map2()` for functions with more than one input 
+###### Use `map2()` for functions with more than one input
 
 If you have a function with more than one input, `map2()` is your friend. Here is a silly example: 
 
@@ -372,7 +372,7 @@ df.practice = tibble(a = c(12.123, 53.234, 23.324, 54.232, 12.454),
 # write your code here
 ```
 
-##### List columns 
+##### List columns
 
 `map()` becomes particularly powerful when combined with list columns. List columns allow you to put data frames into a column of your data frame. For example, you can do something like this: 
 
@@ -447,7 +447,7 @@ df.data = mtcars %>%
   nest() %>% 
   mutate(fit = map(.x = data,
                    .f = ~ lm(formula = mpg ~ 1 + wt,
-                             data = .)))
+                             data = .x)))
 ```
 
 I first grouped by the `cyl` (the number of cylinders), used `nest()` to put the rest of the data into a list column, and then used `mutate()` to run a separate linear model on each data set and saved the modle result into the `fit` column. 
@@ -459,9 +459,9 @@ mtcars %>%
   group_by(cyl) %>% 
   nest() %>% 
   mutate(fit = map(.x = data, 
-                   .f = ~ lm(mpg ~ 1 + wt, data = .)),
+                   .f = ~ lm(mpg ~ 1 + wt, data = .x)),
          coef = map(.x = fit, 
-                    .f = ~ tidy(.))) %>% 
+                    .f = ~ tidy(.x))) %>% 
   unnest(cols = coef) %>% 
   select(-c(data, fit))
 ```
@@ -474,13 +474,13 @@ Base R has a number of functions like `apply()`, `sapply()`, `lapply()`, etc. th
 
 So, after this long detour via `map()`, list columns, `nest()`, and `unnest()`, we can finally start doing some power analysis via simulation, yay! 
 
-##### Simulating the Binomial test 
+##### Simulating the Binomial test
 
 Let's start with the Binomial test that we played around with above. We want to use simulation to determine the sample size we need to have an 80% of detecting a difference between two proportions p = 0.75 and p = 0.5. 
 
 I'll first do it step by step, and then afterwards put all the code in one place together 
 
-###### Step by step 
+###### Step by step
 
 Here is how we would go about this. First, I'll set up a simulation grid.
 
@@ -569,9 +569,9 @@ ggplot(data = df.plot,
 
 As expected, the power increases with the sample size n. 
 
-###### All in one 
+###### All in one
 
-Here is a slightly different way to run the same simulation we just did before in one go: 
+Here is a slightly different way to run the same simulation we just did before in one go (this time without using `map()`): 
 
 ```{r}
 # make reproducible 
@@ -599,7 +599,7 @@ expand_grid(n = seq(10, 40, 2),
   ungroup()
 ```
 
-And another time with a larger sample size, and also for two different alternative hypotheses: p1 = 0.75, and p2 = 0.9. 
+And another time with a larger sample size, and also for two different alternative hypotheses: p1 = 0.75, and p2 = 0.9 (this time, using `map()`).
 
 ```{r, message=FALSE}
 # make reproducible 
@@ -700,7 +700,6 @@ $$d = \frac{\lvert\overline y_1 - \overline y_2\rvert}{s_p}$$
 where 
 
 $$s_p = \sqrt\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}$$
-
 In our sample, the effect size Cohen's d was: 
 
 ```{r}
@@ -760,9 +759,9 @@ df.power2 = expand_grid(n = seq(from = 10, to = 60, by = 5),
                        pivot_longer(cols = everything()))) %>% 
   mutate(fit = map(.x = data,
                    .f = ~ lm(formula = value ~ 1 + name,
-                             data = .)),
+                             data = .x)),
          parameters = map(.x = fit,
-                          .f = ~ tidy(.))) %>%
+                          .f = ~ tidy(.x))) %>%
   select(index, n, simulation,  parameters) %>% 
   unnest(cols = parameters) %>% 
   filter(term != "(Intercept)") %>% 
@@ -875,18 +874,21 @@ set.seed(1)
 # write your code here 
 ```
 
-## Additional resources 
+## Additional resources
 
-### Datacamp 
+### Datacamp
 
 - [Functional programming with purrr](https://www.datacamp.com/courses/foundations-of-functional-programming-with-purrr)
 
-### Cheatsheets 
+### Cheatsheets
 
 - [purrr](figures/purrr.pdf) 
 
-### Misc 
+### Misc
 
+- [Nice tutorial on simulating power](https://cjungerius.github.io/powersim/)
+- [Sample size justification](https://lakens.github.io/statistical_inferences/08-samplesizejustification.html)
+- [Guide to reporting effect sizes and confidence intervals](https://matthewbjane.quarto.pub/)
 - [Getting started with `pwr`](https://cran.r-project.org/web/packages/pwr/vignettes/pwr-vignette.html)
 - [Visualize power](https://rpsychologist.com/d3/NHST/)
 - [Calculating and reporting effect sizes to facilitate cumulative science: a practical primer for t-tests and ANOVAs](https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00863/full)
@@ -895,13 +897,10 @@ set.seed(1)
 - [simglm](https://cran.r-project.org/web/packages/simglm/index.html): Alternative R package for running power analysis via simulation. 
 - [cautionary tale about using pilot studies for power calculations](https://nccih.nih.gov/grants/whatnccihfunds/pilot_studies)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
 ```{r}
 sessionInfo()
 ```
-
-## References 
-
