@@ -1,7 +1,7 @@
 ---
 title: "Class 15"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2022"
+date: "February 12th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -29,9 +29,9 @@ opts_chunk$set(comment = "",
                results = "hold")
 ```
 
-## LOO crossvalidation
+## Crossvalidation example 
 
-### Generate the data
+### Generate pilot data
 
 ```{r}
 # make example reproducible 
@@ -50,7 +50,7 @@ df.data = tibble(participant = 1:sample_size,
                  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)) 
 ```
 
-### Visualize the result
+### Visualize data
 
 ```{r}
 ggplot(data = df.data,
@@ -63,20 +63,22 @@ ggplot(data = df.data,
                                  degree = 2,
                                  raw = TRUE))
 ```
-
-
+### Perform crossvalidation
 
 ```{r}
 df.cross = df.data %>% 
-  # crossv_loo() %>%
-  crossv_mc(n = 50, test = 0.8) %>%
+  crossv_loo() %>%
+  # crossv_mc(n = 50, test = 0.8) %>%
   # crossv_kfold(k = 3) %>%
   mutate(model_simple = map(.x = train,
-                            .f = ~ lm(y ~ 1 + x, data = .)),
+                            .f = ~ lm(y ~ 1 + x,
+                                      data = .x)),
          model_correct = map(.x = train,
-                             .f = ~ lm(y ~ 1 + x + I(x^2), data = .)),
+                             .f = ~ lm(y ~ 1 + x + I(x^2),
+                                       data = .x)),
          model_complex = map(.x = train,
-                             .f = ~ lm(y ~ 1 + x + I(x^2) + I(x^3), data = .))) %>% 
+                             .f = ~ lm(y ~ 1 + x + I(x^2) + I(x^3),
+                                       data = .x))) %>% 
   pivot_longer(cols = contains("model"),
                names_to = "index",
                values_to = "model") %>% 

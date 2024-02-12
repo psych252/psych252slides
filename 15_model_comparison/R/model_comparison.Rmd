@@ -1,7 +1,7 @@
 ---
 title: "Class 15"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2022"
+date: "February 12th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,7 +13,7 @@ output:
 
 # Model comparison
 
-## Learning goals 
+## Learning goals
 
 - Model comparison. 
 - Underfitting vs. overfitting. 
@@ -23,7 +23,7 @@ output:
   - Monte Carlo cross-validation.
 - Information criteria: AIC and BIC. 
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -43,13 +43,13 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Model comparison 
+## Model comparison
 
 In general, we want our models to explain the data we observed, and correctly predict future data. Often, there is a trade-off between how well the model fits the data we have (e.g. how much of the variance it explains), and how well the model will predict future data. If our model is too complex, then it will not only capture the systematicity in the data but also fit to the noise in the data. If our mdoel is too simple, however, it will not capture some of the systematicity that's actually present in the data. The goal, as always in statistical modeling, is to find a model that finds the sweet spot between simplicity and complexity. 
 
 ### Fitting vs. predicting
 
-Let's illustrate the trad-off between complexity and simplicty for fitting vs. prediction. We generate data from a model of the following form: 
+Let's illustrate the trade-off between complexity and simplicty for fitting vs. prediction. We generate data from a model of the following form: 
 
 $$
 Y_i = \beta_0 + \beta_1 \cdot X_i + \beta_2 + X_i^2 + \epsilon_i
@@ -157,8 +157,11 @@ plot_fit = function(i){
     geom_point(data = df.more_data,
                size = 2, 
                color = "red") +
-    geom_smooth(method = "lm", se = F,
-                formula = y ~ poly(x, degree = i, raw = TRUE)) +
+    geom_smooth(method = "lm",
+                se = F,
+                formula = y ~ poly(x,
+                                   degree = i,
+                                   raw = TRUE)) +
     annotate(geom = "text",
              x = Inf,
              y = -Inf,
@@ -202,7 +205,9 @@ sd = 0.5
 
 # sample
 df.data = tibble(participant = 1:sample_size,
-                 x = runif(sample_size, min = 0, max = 1),
+                 x = runif(sample_size,
+                           min = 0,
+                           max = 1),
                  y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)) 
 ```
 
@@ -211,13 +216,13 @@ And plot it:
 ```{r}
 ggplot(data = df.data,
        mapping = aes(x = x,
-                    y = y)) + 
+                     y = y)) + 
   geom_smooth(method = "lm",
               formula = y ~ x + I(x^2)) +
   geom_point()
 ```
 
-### F-test 
+### F-test
 
 Let's fit three models of increasing complexity to the data. The model which fits the way in which the data were generated has the following form: 
 
@@ -242,7 +247,7 @@ But, as discussed in class, there are many situations in which we cannot use the
 
 Let's take a look.
 
-### Cross-validation 
+### Cross-validation
 
 Cross-validation is a powerful technique for finding the sweet spot between simplicity and complexity. Moreover, we can use cross-validation to compare models that we cannot compare using the F-test approach that we've been using up until now. 
 
@@ -257,7 +262,7 @@ Different versions of cross-validation differ in how the training and test data 
 2. k-fold cross-validation
 3. Monte Carlo cross-validation 
 
-#### Leave-one-out cross-validation 
+#### Leave-one-out cross-validation
 
 I've used code similar to this one to illustrate how LOO works in class. Here is a simple data set with 9 data points. We fit 9 models, where for each model, the training set includes one of the data points, and then we look at how well the model captures the held-out data point. We can then characterize the model's performance by calculating the mean squared error across the 9 runs. 
 
@@ -296,8 +301,10 @@ fun.cv_plot = function(data_point){
               filter(color == 2)) %>% 
     clean_names()
   
-  p = ggplot(df.plot,
-             aes(x, y, color = as.factor(color))) + 
+  p = ggplot(data = df.plot,
+             mapping = aes(x = x, 
+                           y = y, 
+                           color = as.factor(color))) + 
     geom_segment(aes(xend = x,
                      yend = fitted),
                  data = df.fit,
@@ -359,7 +366,7 @@ As we can see, the `model_correct` has the lowest average RMSE on the test data.
 
 One downside with LOO is that it becomes unfeasible when the number of data points is very large, as the number of cross validation runs equals the number of data points. The next cross-validation procedures help in this case. 
 
-#### k-fold cross-validation 
+#### k-fold cross-validation
 
 For k-fold cross-validation, we split the data set in k folds, and then use k-1 folds as the training set, and the remaining fold as the test set. 
 
@@ -389,7 +396,7 @@ df.cross %>%
 
 Note, for this example, I've calculated $R^2$ (the variance explained by each model) instead of RMSE -- just to show you that you can do this, too. Often it's useful to do both: show how well the model correlates, but also show the error. 
 
-#### Monte Carlo cross-validation 
+#### Monte Carlo cross-validation
 
 Finally, let's consider another very flexible version of cross-validation. For this version of cross-validation, we determine how many random splits into training set and test set we would like to do, and what proportion of the data should be in the test set. 
 
@@ -417,7 +424,7 @@ df.cross %>%
 
 In this example, I've asked for $n = 50$ splits and for each split, half of the data was in the training set, and half of the data in the test set. 
 
-### Bootstrap 
+### Bootstrap
 
 We can also use the `modelr` package for bootstrapping. The idea is the same as when we did cross-validation. We create a number of data sets from our original data set. Instead of splitting the data set in a training and test data set, for bootstrapping, we sample values from the original data set with replacement. Doing so, we can, for example, calculate the confidence interval of different statistics of interest. 
 
@@ -449,7 +456,7 @@ df.data %>%
             high = quantile(estimate, 0.975))
 ```
 
-### AIC and BIC 
+### AIC and BIC
 
 The Akaike Information Criterion (AIC) and the Bayesian Information Criterion (BIC) are defined as follows: 
 
@@ -531,10 +538,12 @@ df.normal = tibble(y = seq(-5, 5, 0.1),
 
 # show the residual plot together with the normal distribution
 ggplot(data = df.plot ,
-       mapping = aes(x = fitted, y = resid)) + 
+       mapping = aes(x = fitted, 
+                     y = resid)) + 
   geom_point() +
   geom_path(data = df.normal,
-            aes(x = x, y = y),
+            aes(x = x,
+                y = y),
             size = 2)
 ```
 
@@ -573,7 +582,7 @@ fit %>%
   select(AIC, BIC)
 ```
 
-#### log() is your friend 
+#### log() is your friend
 
 ```{r}
 ggplot(data = tibble(x = c(0, 1)),
@@ -587,18 +596,18 @@ ggplot(data = tibble(x = c(0, 1)),
 ```
 
 
-## Additional resources 
+## Additional resources
 
 ### Datacamp course
 
 - [Foundations of Functional Programming with purrr](https://www.datacamp.com/courses/foundations-of-functional-programming-with-purrr)
 - [Intermediate functional programming with purrr](https://www.datacamp.com/courses/intermediate-functional-programming-with-purrr)
 
-### Reading 
+### Reading
 
 - [R for Data Science: Chapter 25](https://r4ds.had.co.nz/many-models.html)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
