@@ -1176,19 +1176,37 @@ ggplot(data = tibble(x = c(0, 10)),
 # credit data set
 df.credit = read_csv("data/credit.csv") %>% 
   rename(index = `...1`) %>% 
-  clean_names()
+  clean_names() %>% 
+  mutate(income_c = scale(income, scale = F))
 
-lm(balance ~ 1 + income * student, df.credit) %>% 
-  emmeans::joint_tests()
+m1 = lm(balance ~ 1 + income * student, df.credit)
+m2 = lm(balance ~ 1 + married * student, df.credit)
 
-lm(balance ~ 1 + income * student, df.credit) %>% 
-  aov() %>% 
+m2 %>% 
   summary()
 
-fit1 = lm(balance ~ 1, df.credit)
-fit2 = lm(balance ~ 1 + income, df.credit)
+m2 %>% 
+  joint_tests()
+
+m2 %>% 
+  
+
+afex::set_sum_contrasts()
+
+lm(balance ~ 1 + income_c * student, df.credit) %>% 
+  summary()
+
+lm(balance ~ 1 + income * student, df.credit) %>% 
+  joint_tests()
+
+fit1 = lm(balance ~ 1 + income, df.credit)
+fit2 = lm(balance ~ 1 + married, df.credit)
 
 anova(fit1, fit2)
+
+coef(fit1)
+coef(fit2)
+
 
 fit = lm(balance ~ 1 + income * student, df.credit)
 

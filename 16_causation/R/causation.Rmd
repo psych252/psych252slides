@@ -1,7 +1,7 @@
 ---
 title: "Class 16"
 author: "Tobias Gerstenberg"
-date: "02/11/2022"
+date: "02/16/2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -19,7 +19,7 @@ install.packages(c("mediation", "multilevel", "rsvg", "DiagrammeRsvg"))
 
 Some of these notes are adapted from this tutorial: [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
 
-## Learning goals 
+## Learning goals
 
 - Understanding what controlling for variables means. 
 - Learning a graphical procedure that helps identify when it's good vs. bad to control for variables. 
@@ -32,12 +32,12 @@ Some of these notes are adapted from this tutorial: [Mediation and moderation](h
 - Limitations of mediation analysis. 
 - Simulating a moderator effect. 
 
-## Recommended reading 
+## Recommended reading
 
 - @fiedler2011mediation
 - @mackinnon2007mediationa
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r load-packages, message=FALSE}
 library("knitr")         # for knitting RMarkdown 
@@ -62,7 +62,7 @@ opts_chunk$set(comment = "",
 options(dplyr.summarise.inform = FALSE) # Disable summarize ungroup messages
 ```
 
-## Bayesian networks 
+## Bayesian networks
 
 ### Sprinkler example
 
@@ -145,9 +145,9 @@ df.rain_given_sprinkler_and_rain %>%
                 font_size = 20)
 ```
 
-## Controlling for variables 
+## Controlling for variables
 
-### Illustration of the d-separation algorithm 
+### Illustration of the d-separation algorithm
 
 - Question: Are D and E independent? 
 
@@ -465,13 +465,9 @@ graph neato {
 g
 ```
 
+#### Common effect (with direct link between X and Y)#### Common cause (without direct link between X and Y)
 
-
-
-
-#### Common cause (without direct link between X and Y)
-
-##### DAG 
+##### DAG
 
 ```{r}
 g = grViz("
@@ -586,7 +582,7 @@ digraph neato {
 g
 ```
 
-##### Regression 
+##### Regression
 
 ```{r}
 set.seed(1)
@@ -703,7 +699,7 @@ digraph neato {
 g
 ```
 
-##### Regression 
+##### Regression
 
 ```{r}
 set.seed(1)
@@ -773,7 +769,7 @@ digraph neato {
 g
 ```
 
-##### Regression 
+##### Regression
 
 ```{r}
 set.seed(1)
@@ -845,7 +841,7 @@ digraph neato {
 g
 ```
 
-#### Regression 
+#### Regression
 
 ```{r}
 set.seed(1)
@@ -872,7 +868,7 @@ lm(formula = y ~ x + z,
   summary()
 ```
 
-## Mediation 
+## Mediation
 
 ```{r mediation, echo=FALSE, out.width="75%", fig.cap="__Basic mediation model__. c = the total effect of X on Y; c = c’ + ab; c’ = the direct effect of X on Y after controlling for M; c’ = c - ab; ab = indirect effect of X on Y."}
 include_graphics("figures/mediation.png")
@@ -884,7 +880,7 @@ Figure \@ref(fig:mediation) shows the standard mediation model. Perfect mediatio
 
 __Important__: Both mediation and moderation assume that the DV __did not CAUSE the mediator/moderator__.
 
-### Generate data 
+### Generate data
 
 ```{r}
 # make example reproducible
@@ -901,7 +897,7 @@ df.mediation = tibble(x = rnorm(n, 75, 7), # grades
 
 ### Method 1: Baron & Kenny’s (1986) indirect effect method
 
-The @baron1986moderator method is among the original methods for testing for mediation but tends to have low statistical power. It is covered in this chapter because it provides a very clear approach to establishing relationships between variables and is still occassionally requested by reviewers.
+The @baron1986moderator method is among the original methods for testing for mediation but tends to have low statistical power. 
 
 __The three steps__:
 
@@ -912,7 +908,7 @@ __The three steps__:
 3. Estimate the relationship between $M$ and $Y$ controlling for $X$ (coffee consumption on wakefulness, controlling for hours since dawn). Path “b” must be significantly different from 0; mediator and DV must be related. The effect of $X$ on $Y$ decreases with the inclusion of $M$ in the model. 
 
 
-#### Total effect 
+#### Total effect
 
 Total effect of X on Y (not controlling for M).
 
@@ -922,16 +918,18 @@ fit.y_x = lm(formula = y ~ 1 + x,
             data = df.mediation)
 
 # summarize the results
-fit.y_x %>% summary()
+fit.y_x %>% 
+  summary()
 ```
 
-#### Path a 
+#### Path a
 
 ```{r}
 fit.m_x = lm(formula = m ~ 1 + x,
             data = df.mediation)
 
-fit.m_x %>% summary()
+fit.m_x %>% 
+  summary()
 ```
 
 #### Path b and c'
@@ -942,7 +940,8 @@ Effect of M on Y controlling for X.
 fit.y_mx = lm(formula = y ~ 1 + m + x,
             data = df.mediation)
 
-fit.y_mx %>% summary()
+fit.y_mx %>% 
+  summary()
 ```
 
 #### Interpretation
@@ -967,7 +966,7 @@ Here we find that our total effect model shows a significant positive relationsh
 
 Since the relationship between hours since dawn and wakefulness is no longer significant when controlling for coffee consumption, this suggests that coffee consumption does in fact mediate this relationship. However, this method alone does not allow for a formal test of the indirect effect so we don’t know if the change in this relationship is truly meaningful.
 
-### Method 2: Sobel Test 
+### Method 2: Sobel Test
 
 The Sobel Test tests whether the indirect effect from X via M to Y is significant. 
 
@@ -1013,12 +1012,11 @@ Plot the results:
 plot(fit.mediation)
 ```
 
-#### Interpretation 
+#### Interpretation
 
 The `mediate()` function gives us our Average Causal Mediation Effects (ACME), our Average Direct Effects (ADE), our combined indirect and direct effects (Total Effect), and the ratio of these estimates (Prop. Mediated). The ACME here is the indirect effect of M (total effect - direct effect) and thus this value tells us if our mediation effect is significant.
 
-
-### Be careful about mediation! 
+### Be careful about mediation!
 
 Different causal structures can lead to the same "mediation" effects. So it's difficult to tell from a pattern of regression results what the relationships between variables is. 
 
@@ -1159,9 +1157,10 @@ fit.m = mediate(model.m = fit.zx,
 
 summary(fit.m)
 ```
+
 Both models here lead to the same pattern of "mediation". However, only the first one is a chain: X-->Z-->Y. The second one is a common cause X<--Z-->Y (where X does not cause Y). 
 
-## Moderation 
+## Moderation
 
 ```{r moderation, echo=FALSE, out.width="75%", fig.cap="__Basic moderation model__."}
 include_graphics("figures/moderation.png")
@@ -1169,7 +1168,7 @@ include_graphics("figures/moderation.png")
 
 Moderation can be tested by looking for significant interactions between the moderating variable (Z) and the IV (X). Notably, it is important to mean center both your moderator and your IV to reduce multicolinearity and make interpretation easier.
 
-### Generate data 
+### Generate data
 
 ```{r}
 # make example reproducible 
@@ -1178,19 +1177,26 @@ set.seed(123)
 # number of participants
 n  = 100 
 
-df.moderation = tibble(x  = abs(rnorm(n, 6, 4)), # hours of sleep
-                       x1 = abs(rnorm(n, 60, 30)), # adding some systematic variance to our DV
-                       z  = rnorm(n, 30, 8), # ounces of coffee consumed
+df.moderation = tibble(x  = abs(rnorm(n = n,
+                                      mean = 6,
+                                      sd = 4)), # hours of sleep
+                       x1 = abs(rnorm(n = n,
+                                      mean = 60, 
+                                      sd = 30)), # adding some systematic variance to our DV
+                       z  = rnorm(n = n, 
+                                  mean = 30, 
+                                  sd = 8), # ounces of coffee consumed
                        y  = abs((-0.8 * x) * (0.2 * z) - 0.5 * x - 0.4 * x1 + 10 + 
                                   rnorm(n, 0, 3))) # attention Paid
 ```
 
-### Moderation analysis 
+### Moderation analysis
 
 ```{r}
 # scale the predictors 
 df.moderation = df.moderation %>%
-  mutate_at(vars(x, z), ~ scale(.)[,])
+  mutate(across(.cols = c(x, z), 
+                .fns = ~ scale(.)[,]))
 
 # run regression model with interaction 
 fit.moderation = lm(formula = y ~ 1 + x * z,
@@ -1201,7 +1207,7 @@ fit.moderation %>%
   summary()
 ```
 
-#### Visualize result 
+#### Visualize result
 
 ```{r}
 # generate data grid with three levels of the moderator 
@@ -1244,9 +1250,9 @@ df.prediction %>%
 ```
 
 
-## Additional resources 
+## Additional resources
 
-### Books 
+### Books
 
 - [Introduction to Mediation, Moderation, and Conditional Process Analysis (Second Edition): A Regression-Based Approach](https://www.guilford.com/books/Introduction-to-Mediation-Moderation-and-Conditional-Process-Analysis/Andrew-Hayes/9781462534654)
   - [Recoded with BRMS and Tidyverse](https://bookdown.org/connect/#/apps/1523/access)
@@ -1258,17 +1264,15 @@ df.prediction %>%
 - [Path analysis with brms](http://www.imachordata.com/bayesian-sem-with-brms/)
 - [Understanding d-separation](http://web.mit.edu/jmn/www/6.034/d-separation.pdf)
 
-### Misc 
+### Misc
 
 - [Judea Pearl on good, bad, and neutral controls](http://causality.cs.ucla.edu/blog/index.php/2019/08/14/a-crash-course-in-good-and-bad-control/)
 - [Mike Frank on covariates vs. confounds](http://babieslearninglanguage.blogspot.com/2019/10/confounds-and-covariates.html)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
 ```{r session}
 sessionInfo()
 ```
-
-## References

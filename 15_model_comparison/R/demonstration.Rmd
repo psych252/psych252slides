@@ -67,8 +67,8 @@ ggplot(data = df.data,
 
 ```{r}
 df.cross = df.data %>% 
-  crossv_loo() %>%
-  # crossv_mc(n = 50, test = 0.8) %>%
+  # crossv_loo() %>%
+  crossv_mc(n = 50, test = 0.5) %>%
   # crossv_kfold(k = 3) %>%
   mutate(model_simple = map(.x = train,
                             .f = ~ lm(y ~ 1 + x,

@@ -690,7 +690,7 @@ ggplot(data = df.ttest,
 
 # compute a t-test
 t.test(formula = value ~ name, 
-         data = df.ttest)
+       data = df.ttest)
 ```
 
 Let's calculate what the effect size was in our sample. Remember that Cohen's d is defined as 
@@ -778,9 +778,11 @@ ggplot(data = df.power2,
              linetype = 2,
              color = "gray50",
              linewidth = 0.1) + 
-  geom_smooth(method = "loess",
+  geom_smooth(method = "lm",
               color = "black",
-              formula = "y ~ x") +
+              formula = y ~ poly(x,
+                                 degree = 2,
+                                 raw = TRUE)) +
   geom_point(shape = 21) + 
   scale_x_continuous(breaks = seq(10, 60, 10),
                      labels = seq(10, 60, 10)) + 
