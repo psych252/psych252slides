@@ -1,7 +1,7 @@
 ---
 title: "Class 17"
 author: "Tobias Gerstenberg"
-date: "February 14th, 2022"
+date: "February 21th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -17,7 +17,7 @@ install.packages(c("lme4", "lmerTest", "pbkrtest"))
 
 # Linear mixed effects models 1
 
-## Learning goals 
+## Learning goals
 
 - Understanding sources of dependence in data. 
   - fixed effects vs. random effects. 
@@ -25,7 +25,7 @@ install.packages(c("lme4", "lmerTest", "pbkrtest"))
 - Understanding the `lmer()` summary. 
 - Simulating data from an `lmer()`.
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")        # for knitting RMarkdown 
@@ -45,7 +45,7 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Dependence 
+## Dependence
 
 Let's generate a data set in which two observations from the same participants are dependent, and then let's also shuffle this data set to see whether taking into account the dependence in the data matters. 
 
@@ -290,19 +290,19 @@ fit.augmented = lmer(formula = value ~ 1 + condition + (1 | participant),
                      data = df.original)
 
 # compare models
-# note: the lmer model has to be supplied first 
+# note: the lmer model has to be entered as the first argument
 anova(fit.augmented, fit.compact) 
 ```
 
-Yes, the likelihood of the data given the linear mixed effects model is significantly higher compared to its likelihood given the linear model. 
+Yes, the linear mixed effects model explains the data better than the linear model. 
 
-## Additional resources 
+## Additional resources
 
-### Readings 
+### Readings
 
 - [Linear mixed effects models tutorial by Bodo Winter](https://arxiv.org/pdf/1308.5499.pdf)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 
