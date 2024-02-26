@@ -17,6 +17,7 @@ library("knitr")      # for knitting
 library("pwr")        # for power analysis
 library("effectsize") # for effect sizes
 library("broom")      # for tidying up model fits
+library("broom.mixed")      # for tidying up model fits
 library("ggsignif")   # for showing significant differences in plots
 library("kableExtra") # for nice tables
 library("corrr")      # for correlation tables
@@ -1225,6 +1226,75 @@ fit %>%
 
 fit3 = lm(balance ~ 1 + student, df.credit)
 summary(fit3)
+```
+
+# complicated linear mixed effects models 
+
+- https://stats.stackexchange.com/questions/395801/multilevel-model-with-4-levels
+- wanted to check that I understand the syntax 
+- good resource here: https://rpsychologist.com/r-guide-longitudinal-lme-lmer#data-format
+
+```{r}
+set.seed(15)
+dt1 <- data.frame(expand.grid(SchoolID = LETTERS[1:6], FacultyID = LETTERS[1:6], CourseID = LETTERS[1:10], StudentID = 1:100, Score = c(NA, NA, NA)))
+dt1$Score <- as.numeric(dt1$SchoolID) + as.numeric(dt1$FacultyID) + as.numeric(dt1$CourseID) + as.numeric(dt1$StudentID) + rnorm(nrow(dt1), 0,5)
+lmm1 <- lmer(Score ~ 1 + (1 | SchoolID/FacultyID/CourseID/StudentID), data = dt1)
+lmm2 <- lmer(Score ~ 1 + 
+               (1 | SchoolID) + 
+               (1 | SchoolID:FacultyID) + 
+               (1 | SchoolID:FacultyID:CourseID) + 
+               (1 | SchoolID:FacultyID:CourseID:StudentID), data = dt1)
+summary(lmm1)
+summary(lmm2)
+
+lmm1 <- lmer(Score ~ 1 + (1 | SchoolID/FacultyID/CourseID/StudentID), data = dt1)
+lmm2 <- lmer(Score ~ 1 + 
+               (1 | SchoolID) + 
+               (1 | SchoolID:FacultyID) + 
+               (1 | SchoolID:FacultyID:CourseID) + 
+               (1 | SchoolID:FacultyID:CourseID:StudentID), data = dt1)
+
+summary(lmm1)
+summary(lmm2)
+```
+
+# additional grouping in dependence example 
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+df.dependence = tibble(participant = 1:20,
+                       group = rep(c(0, 1), each = 10),
+                       condition1 = rnorm(20),
+                       condition2 = condition1 + group + rnorm(20, mean = 0.2, sd = 0.1)) %>% 
+  pivot_longer(cols = starts_with("condition"),
+               names_to = "condition",
+               values_to = "value")
+
+
+# fit the model
+fit = lmer(formula = value ~ 1 + condition + (1 | group) + (1 | group:participant),
+           data = df.dependence)
+
+fit %>% 
+  summary()
+
+
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  geom_point(aes(y = fitted,
+                 color = as.factor(group))) + 
+  geom_line(aes(y = fitted,
+                color = as.factor(group))) +
+  labs(color = "group")
 ```
 
 
