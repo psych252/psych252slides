@@ -1,7 +1,7 @@
 ---
 title: "Class 20"
 author: "Tobias Gerstenberg"
-date: "February 23rd, 2022"
+date: "February 28th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,12 +13,14 @@ output:
 
 # Linear mixed effects models 4
 
-## Learning goals 
+## Learning goals
 
 - Some worked examples. 
-- Doing follow-up tests with the emmeans package
+- Doing follow-up tests with the `emmeans` package
+- Simulating, plotting, and analyzing models with different random effects structures
+- Bootstrapping confidence intervals for fixed effects 
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")       # for knitting RMarkdown 
@@ -48,9 +50,9 @@ opts_chunk$set(comment = "",
 options(dplyr.summarise.inform = F)
 ```
 
-## Load data sets 
+## Load data sets
 
-### Sleep data 
+### Sleep data
 
 ```{r}
 # load sleepstudy data set 
@@ -70,13 +72,13 @@ df.sleep = df.sleep %>%
                    reaction = 245))
 ```
 
-### Reasoning data 
+### Reasoning data
 
 ```{r}
 df.reasoning = sk2011.1
 ```
 
-### Weight loss data 
+### Weight loss data
 
 ```{r}
 data("weightloss", package = "datarium")
@@ -90,7 +92,7 @@ df.weightloss = weightloss %>%
   arrange(id)
 ```
 
-### Politness data 
+### Politness data
 
 ```{r}
 df.politeness = read_csv("data/politeness_data.csv") %>% 
@@ -101,7 +103,7 @@ df.politeness = read_csv("data/politeness_data.csv") %>%
 
 Just like with the linear model `lm()`, we can use linear contrasts to test more specific hypotheses with `lmer()`. The `emmeans()` function from the `emmeans` package will be our friend. 
 
-### Sleep study 
+### Sleep study
 
 Let's ask some more specific question aboust the sleep study. 
 
@@ -146,7 +148,7 @@ df.sleep %>%
   summarize(reaction = mean(reaction))
 ```
 
-### Weight loss study 
+### Weight loss study
 
 For the weight loss data set, we want to check: 
 
@@ -199,7 +201,7 @@ Because we only had one observation in each cell of our design, the ANOVA was ap
 
 Both contrasts are significant. 
 
-### Politeness study 
+### Politeness study
 
 For the politeness study, we'll be interested in one particular contrast: 
 
@@ -241,11 +243,16 @@ ggplot(data = df.politeness,
 We fit the model and compute the contrasts. 
 
 ```{r, message=FALSE}
-fit = lmer(formula = frequency ~ 1 + attitude * gender + (1 | subject) + (1 | scenario),
+fit = lmer(formula = frequency ~ 1 + attitude * gender + 
+             (1 + attitude | subject) + 
+             (1 + attitude | scenario),
            data = df.politeness)
 
 fit %>% 
-  emmeans(specs = pairwise ~ attitude + gender,
+  joint_tests()
+
+fit %>% 
+  emmeans(specs = pairwise ~ attitude + gender, 
           adjust = "none")
 ```
 
@@ -263,7 +270,7 @@ aov_ez(id = "subject",
 
 This approach ignores the variation across scenarios (and just computed the mean instead). Arguably, the `lmer()` approach is better here as it takes all of the data into account. 
 
-## Mixtures of participants 
+## Mixtures of participants
 
 What if we have groups of participants who differ from each other? Let's generate data for which this is the case.
 
@@ -484,11 +491,344 @@ The `lmer()` fails here. It uses one normal distribution to model the variance b
 
 We will later see that it's straightforward in Bayesian models to explicitly model heterogeneity in variance. 
 
-## Bootstrapping 
+## Simulating different random effects structures  
+
+The examples below are taken from [this post](https://rpsychologist.com/r-guide-longitudinal-lme-lmer#power-analysis-and-simulating-these-models). 
+
+### Two-level model
+
+```{r two-level-model, echo=FALSE, fig.cap="Two-level model", out.width="95%"}
+include_graphics("figures/two_level.png")
+```
+
+#### Conditional model 
+
+
+##### Cimulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10
+b1 = 10
+sd_participant = 2
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_participant), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition)) %>% 
+  ungroup() %>% 
+  mutate(value = b0 + b1 * condition + intercept_participant + 
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+##### Plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+##### Fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition + (1 | participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+
+##### Simulate and plot new data
+
+```{r}
+set.seed(1)
+
+fit %>% 
+  simulate() %>% 
+  bind_cols(df.data) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = timepoint,
+                       y = sim_1,
+                       group = participant)) +
+  geom_point(alpha = 0.5,
+             color = "blue") +
+  geom_line(alpha = 0.5,
+            color = "blue") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+
+```
+
+#### Conditional growth model 
+
+##### Simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10 # intercept 
+b1 = 10 # condition
+b2 = 2 # time 
+b3 = 3 # interaction
+sd_participant = 2
+sd_time = 2
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_participant), 
+                                             each = n_timepoints),
+                 time_participant = rep(rnorm(n_participants, sd = sd_time), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition)) %>% 
+  ungroup() %>% 
+  mutate(value = b0 + intercept_participant + 
+           b1 * condition + 
+           (b2  + time_participant) * timepoint +  
+           b3 * condition * timepoint +
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+##### Plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+##### Fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition * timepoint + (1 + timepoint | participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+
+##### Data with individual model predictions 
+
+```{r}
+df.plot = fit %>% 
+  augment() %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+         
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  # geom_point(alpha = 0.5) +
+  # geom_line(alpha = 0.5) +
+  geom_point(mapping = aes(y = .fitted),
+             alpha = 0.3,
+             color = "red") +
+  geom_line(mapping = aes(y = .fitted),
+             alpha = 0.3,
+             color = "red") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+##### Data with overall model predictions 
+
+```{r}
+df.model = ggpredict(model = fit, 
+                     terms = c("timepoint", "condition"),
+                     type = "fixed") %>% 
+  rename(timepoint = x,
+         condition = group) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.2) +
+  geom_line(alpha = 0.2) +
+  geom_ribbon(data = df.model,
+              mapping = aes(ymin = conf.low,
+                            ymax = conf.high,
+                            y = predicted,
+                            group = NA),
+              fill = "red",
+              alpha = 0.4) +
+  geom_point(data = df.model,
+             mapping = aes(y = predicted,
+                           group = NA),
+             color = "red",
+             size = 3) +
+  geom_line(data = df.model,
+            mapping = aes(y = predicted,
+                          group = NA),
+            color = "red",
+            linewidth = 1) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+##### Simulate and plot new data
+
+```{r}
+set.seed(1)
+
+fit %>% 
+  simulate() %>% 
+  bind_cols(df.data) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = timepoint,
+                       y = sim_1,
+                       group = participant)) +
+  geom_point(alpha = 0.5,
+             color = "blue") +
+  geom_line(alpha = 0.5,
+            color = "blue") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+
+```
+
+### Three-level model 
+
+```{r three-level-model, echo=FALSE, fig.cap="Three-level model", out.width="95%"}
+include_graphics("figures/three_level.png")
+```
+
+##### Simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_therapists = 6
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10 # intercept 
+b1 = 10 # condition
+b2 = 2 # time 
+b3 = 3 # interaction
+sd_intercept_therapist = 3
+sd_intercept_participant = 2
+sd_time_therapist = 2
+sd_time_participant = 1
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants,
+                                                   sd = sd_intercept_participant), 
+                                             each = n_timepoints),
+                 time_participant = rep(rnorm(n_participants, sd = sd_time_participant), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition),
+         therapist = ifelse(condition == 0, sample(x = 1:(n_therapists/2),
+                                                   size = 1),
+                        sample(x = ((n_therapists/2)+1):n_therapists,
+                               size = 1))) %>% 
+  ungroup() %>% 
+  group_by(therapist) %>%
+  mutate(intercept_therapist = rnorm(1, sd = sd_intercept_therapist),
+         time_therapist = rnorm(1, sd = sd_time_therapist)) %>%
+  ungroup() %>% 
+  mutate(value = b0 + intercept_therapist + intercept_participant + 
+           b1 * condition + 
+           (b2 + time_therapist + time_participant) * timepoint +  
+           b3 * condition * timepoint +
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+##### Plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint),
+         therapist = as.factor(therapist))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant,
+                     color = therapist)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+##### Fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition * timepoint + 
+             (1 + timepoint | therapist) + 
+             (1 + timepoint | therapist:participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+
+
+## Bootstrapping
 
 Bootstrapping is a good way to estimate our uncertainty on the parameter estimates in the model. 
 
-### Linear model 
+### Linear model
 
 Let's briefly review how to do bootstrapping in a simple linear model. 
 
@@ -505,7 +845,8 @@ df.boot = df.sleep %>%
   bootstrap(n = 100,
             id = "id") %>% 
   mutate(fit = map(.x = strap,
-                   .f = ~ lm(formula = reaction ~ 1 + days, data = .)),
+                   .f = ~ lm(formula = reaction ~ 1 + days,
+                             data = .x)),
          tidy = map(.x = fit, 
                     .f = tidy)) %>% 
   unnest(tidy) %>% 
@@ -538,7 +879,7 @@ ggplot(data = df.sleep,
   geom_point(alpha = 0.3)
 ```
 
-#### bootmer() function
+### Linear mixed effects model 
 
 For the linear mixed effects model, we can use the `bootmer()` function to do bootstrapping. 
 
@@ -555,9 +896,14 @@ boot.lmer = bootMer(fit.lmer,
                     nsim = 100)
 
 # compute confidence interval 
-boot.ci(boot.lmer, index = 2, type = "perc")
+boot.ci(boot.lmer,
+        index = 2,
+        type = "perc")
+```
+Let's plot the distribution of estimates.
 
-# plot estimates 
+```{r}
+# plot distribution of estimates 
 boot.lmer$t %>% 
   as_tibble() %>% 
   clean_names() %>% 
@@ -573,7 +919,29 @@ boot.lmer$t %>%
   coord_cartesian(expand = F)
 ```
 
-## Session info 
+And let's look at the predictions together with the data. 
+
+```{r}
+df.boot_lmer = boot.lmer$t %>% 
+  as_tibble() %>% 
+  clean_names() %>% 
+  mutate(id = 1:n())
+
+ggplot(data = df.sleep,
+       mapping = aes(x = days,
+                     y = reaction)) + 
+  geom_abline(data = df.boot_lmer,
+              aes(intercept = intercept,
+                  slope = days,
+                  group = id),
+              alpha = 0.1) +
+  geom_point(alpha = 0.3)
+```
+
+As you'll notice, once we take the dependence in the data into account, the bootstrapped confidence interval is wider than when we ignore the dependence. 
+
+
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

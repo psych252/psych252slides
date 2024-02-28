@@ -25,6 +25,7 @@ library("lme4")       # for linear mixed effects models
 library("MASS")       # for additional function (e.g. multivariate Gaussian)
 library("janitor")    # for cleaning column names
 library("emmeans")    # for conditional effects 
+library("ggeffects")  # for conditional effects 
 library("tidyverse")  # for everything else 
 
 theme_set(theme_classic() + #set the theme 
@@ -1267,21 +1268,31 @@ set.seed(1)
 df.dependence = tibble(participant = 1:20,
                        group = rep(c(0, 1), each = 10),
                        condition1 = rnorm(20),
-                       condition2 = condition1 + group + rnorm(20, mean = 0.2, sd = 0.1)) %>% 
+                       condition2 = condition1 + group + rnorm(n = 20,
+                                                               mean = 0.2,
+                                                               sd = 0.1)) %>% 
   pivot_longer(cols = starts_with("condition"),
                names_to = "condition",
                values_to = "value")
 
-
 # fit the model
-fit = lmer(formula = value ~ 1 + condition + (1 | group) + (1 | group:participant),
+fit1 = lmer(formula = value ~ 1 + condition + (1 | group) + (1 | group:participant),
            data = df.dependence)
 
-fit %>% 
+fit2 = lmer(formula = value ~ 1 + condition + (1 | group:participant),
+           data = df.dependence)
+
+fit3 = lmer(formula = value ~ 1 + condition + (1 | participant),
+           data = df.dependence)
+
+fit4 = lmer(formula = value ~ 1 + condition + (1 | group) + (1 | participant),
+           data = df.dependence)
+
+fit4 %>% 
   summary()
 
 
-fit %>% 
+fit1 %>% 
   augment() %>% 
   clean_names() %>% 
   ggplot(data = .,
@@ -1297,4 +1308,446 @@ fit %>%
   labs(color = "group")
 ```
 
+# controlling for covariate after random assignment 
 
+- model in which there is an overall positive effect of condition
+- the effect is negative within each group
+- one group is more frequent in one condition than the other group 
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+b0 = 1
+b1 = -1
+b2 = 5
+b3 = 0 
+sd_residual = 1
+sd_participant = 0.5 
+p_group1 = 0.8
+
+df.data = tibble(participant = rep(1:n_participants, each = 2),
+                 condition = rep(0:1, times = n_participants),
+                 group = rep(rbinom(n = n_participants, size = 1, prob = p_group1), each = 2),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_participant), each = 2)) %>% 
+  mutate(value = b0 + b1 * condition + b2 * group + b3 * condition * group + intercept_participant + rnorm(n_participants, sd = sd_residual))
+
+
+# fit the model
+fit = lmer(formula = value ~ 1 + condition + (1 | group) + (1 | group:participant),
+           data = df.data)
+
+# fit = lmer(formula = value ~ 1 + condition * group +  (1 | participant),
+#            data = df.data)
+
+fit %>% 
+  summary()
+
+fit %>% 
+  augment() %>% 
+  clean_names() %>% 
+  ggplot(data = .,
+         mapping = aes(x = condition,
+                       y = value,
+                       group = participant,
+                       color = as.factor(group))) +
+  geom_point(alpha = 0.2) +
+  geom_line(alpha = 0.2) 
+  # geom_point(aes(y = fitted,
+  #                color = as.factor(group))) + 
+  # geom_line(aes(y = fitted,
+  #               color = as.factor(group))) +
+  # labs(color = "group")
+
+```
+
+# increasingly complex linear mixed effects models 
+
+## two-level model
+
+### conditional model 
+
+#### simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10
+b1 = 10
+sd_participant = 2
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_participant), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition)) %>% 
+  ungroup() %>% 
+  mutate(value = b0 + b1 * condition + intercept_participant + 
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+#### plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+#### fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition + (1 | participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+#### simulate and plot new data
+
+```{r}
+set.seed(1)
+
+fit %>% 
+  simulate() %>% 
+  bind_cols(df.data) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = timepoint,
+                       y = sim_1,
+                       group = participant)) +
+  geom_point(alpha = 0.5,
+             color = "blue") +
+  geom_line(alpha = 0.5,
+            color = "blue") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+
+```
+### conditional growth model 
+
+#### simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10 # intercept 
+b1 = 10 # condition
+b2 = 2 # time 
+b3 = 3 # interaction
+sd_participant = 2
+sd_time = 2
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_participant), 
+                                             each = n_timepoints),
+                 time_participant = rep(rnorm(n_participants, sd = sd_time), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition)) %>% 
+  ungroup() %>% 
+  mutate(value = b0 + intercept_participant + 
+           b1 * condition + 
+           (b2  + time_participant) * timepoint +  
+           b3 * condition * timepoint +
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+#### plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+#### fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition * timepoint + (1 + timepoint | participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+
+#### data with individual model predictions 
+
+```{r}
+df.plot = fit %>% 
+  augment() %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+         
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  # geom_point(alpha = 0.5) +
+  # geom_line(alpha = 0.5) +
+  geom_point(mapping = aes(y = .fitted),
+             alpha = 0.3,
+             color = "red") +
+  geom_line(mapping = aes(y = .fitted),
+             alpha = 0.3,
+             color = "red") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+#### data with overall model predictions 
+
+```{r}
+df.model = ggpredict(model = fit, 
+                     terms = c("timepoint", "condition"),
+                     type = "fixed") %>% 
+  rename(timepoint = x,
+         condition = group) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant)) +
+  geom_point(alpha = 0.2) +
+  geom_line(alpha = 0.2) +
+  geom_ribbon(data = df.model,
+              mapping = aes(ymin = conf.low,
+                            ymax = conf.high,
+                            y = predicted,
+                            group = NA),
+              fill = "red",
+              alpha = 0.4) +
+  geom_point(data = df.model,
+             mapping = aes(y = predicted,
+                           group = NA),
+             color = "red",
+             size = 3) +
+  geom_line(data = df.model,
+            mapping = aes(y = predicted,
+                          group = NA),
+            color = "red",
+            linewidth = 1) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+
+
+#### simulate and plot new data
+
+```{r}
+set.seed(1)
+
+fit %>% 
+  simulate() %>% 
+  bind_cols(df.data) %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint)) %>% 
+  ggplot(data = .,
+         mapping = aes(x = timepoint,
+                       y = sim_1,
+                       group = participant)) +
+  geom_point(alpha = 0.5,
+             color = "blue") +
+  geom_line(alpha = 0.5,
+            color = "blue") +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+
+```
+
+## three-level model 
+
+### same therapists in treatment and control 
+
+#### simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_therapists = 6
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10 # intercept 
+b1 = 10 # condition
+b2 = 2 # time 
+b3 = 3 # interaction
+sd_intercept_therapist = 3
+sd_intercept_participant = 2
+sd_time_therapist = 2
+sd_time_participant = 1
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 therapist = rep(1:n_therapists, each = n_participants * n_timepoints / n_therapists),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_therapist = rep(rnorm(n_therapists, sd = sd_intercept_therapist), 
+                                             each = n_participants * n_timepoints  / n_therapists),
+                 time_therapist = rep(rnorm(n_therapists, sd = sd_time_therapist), 
+                                             each = n_participants * n_timepoints  / n_therapists),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_intercept_participant), 
+                                             each = n_timepoints),
+                 time_participant = rep(rnorm(n_participants, sd = sd_time_participant), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition)) %>% 
+  ungroup() %>% 
+  mutate(value = b0 + intercept_therapist + intercept_participant + 
+           b1 * condition + 
+           (b2  + time_participant + time_therapist) * timepoint +  
+           b3 * condition * timepoint +
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+#### plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint),
+         therapist = as.factor(therapist))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant,
+                     color = therapist)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+#### fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition * timepoint + (1 + timepoint | therapist) + 
+             (1 + timepoint | participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
+
+### different therapists in treatment and control 
+
+#### simulate the data
+
+```{r}
+set.seed(1)
+
+n_participants = 100
+n_therapists = 6
+n_timepoints = 3
+n_conditions = 2
+p_condition = 0.5
+b0 = 10 # intercept 
+b1 = 10 # condition
+b2 = 2 # time 
+b3 = 3 # interaction
+sd_intercept_therapist = 3
+sd_intercept_participant = 2
+sd_time_therapist = 2
+sd_time_participant = 1
+sd_residual = 1
+
+df.data = tibble(participant = rep(1:n_participants, each = n_timepoints),
+                 timepoint = rep(1:n_timepoints, times = n_participants),
+                 intercept_participant = rep(rnorm(n_participants, sd = sd_intercept_participant), 
+                                             each = n_timepoints),
+                 time_participant = rep(rnorm(n_participants, sd = sd_time_participant), 
+                                             each = n_timepoints)) %>% 
+  group_by(participant) %>% 
+  mutate(condition = rbinom(n = 1, size = 1, prob = p_condition),
+         therapist = ifelse(condition == 0, sample(x = 1:(n_therapists/2),
+                                                   size = 1),
+                        sample(x = ((n_therapists/2)+1):n_therapists,
+                               size = 1))) %>% 
+  ungroup() %>% 
+  group_by(therapist) %>%
+  mutate(intercept_therapist = rnorm(1, sd = sd_intercept_therapist),
+         time_therapist = rnorm(1, sd = sd_time_therapist)) %>%
+  ungroup() %>% 
+  mutate(value = b0 + intercept_therapist + intercept_participant + 
+           b1 * condition + 
+           (b2 + time_therapist + time_participant) * timepoint +  
+           b3 * condition * timepoint +
+           rnorm(n_participants * n_timepoints, sd = sd_residual))
+```
+
+#### plot the data 
+
+```{r}
+df.plot = df.data %>% 
+  mutate(condition = factor(condition,
+                            levels = c(0, 1),
+                            labels = c("control", "treatment")),
+         timepoint = as.factor(timepoint),
+         therapist = as.factor(therapist))
+
+ggplot(data = df.plot,
+       mapping = aes(x = timepoint,
+                     y = value,
+                     group = participant,
+                     color = therapist)) +
+  geom_point(alpha = 0.5) +
+  geom_line(alpha = 0.5) +
+  facet_grid(~ condition) +
+  labs(x = "timepoint")
+```
+#### fit the model 
+
+```{r}
+fit = lmer(formula = value ~ 1 + condition * timepoint + 
+             (1 + timepoint | therapist) + 
+             (1 + timepoint | therapist:participant),
+           data = df.data)
+
+fit %>% 
+  summary()
+```
