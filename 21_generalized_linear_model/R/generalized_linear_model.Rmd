@@ -1,7 +1,7 @@
 ---
 title: "Class 21"
 author: "Tobias Gerstenberg"
-date: "February 25th, 2022"
+date: "March 1st, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -16,9 +16,9 @@ output:
 install.packages(c("titanic", "effects", "nlme")
 ```
 
-# Generalized linear model 
+# Generalized linear model
 
-## Learning goals 
+## Learning goals
 
 - Logistic regression. 
 - Logit transform. 
@@ -30,7 +30,7 @@ install.packages(c("titanic", "effects", "nlme")
 - Reporting results.
 - Mixed effects logistic regression.
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown 
@@ -40,7 +40,7 @@ library("janitor")    # for cleaning column names
 library("broom")      # for tidying up linear models 
 library("lme4")       # for linear mixed effects models
 library("boot")       # for bootstrapping (also has an inverse logit function)
-library("ggeffects")  # for showing effects in linear, generalized linear, and other models
+library("ggeffects")  # for computing marginal effects 
 library("afex")       # for significance testing of mixed effects models 
 library("emmeans")    # for the joint_tests() function
 library("tidyverse")  # for wrangling, plotting, etc. 
@@ -54,7 +54,7 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
-## Load data set 
+## Load data set
 
 ```{r}
 df.titanic = titanic_train %>% 
@@ -78,7 +78,7 @@ df.titanic %>%
                 full_width = F)
 ```
 
-## Logistic regression 
+## Logistic regression
 
 Let's see if we can predict whether or not a passenger survived based on the price of their ticket. 
 
@@ -155,7 +155,7 @@ $$
 $$
 In R, we can use `log(x)` to calculate the natural logarithm $\ln(x)$, and `exp(x)` to calculate `e^x`. 
 
-### Interpreting the parameters 
+### Interpreting the parameters
 
 ```{r}
 fit.glm %>% 
@@ -198,7 +198,7 @@ fit.glm %>%
 Here, we see that the intercept is $p = 0.28$. That is, the predicted chance of survival for someone who didn't pay any fare at all is 28% according to the model. Interpreting the slope is a little more tricky. Let's look at a situation first where we have a binary predictor. 
 
 
-#### Logit transform 
+#### Logit transform
 
 Here is a visualization of what the odds and log odds transformation look like.
 
@@ -306,7 +306,7 @@ fit.glm %>%
   mutate(`p(survival)` = inv.logit(prediction))
 ```
 
-### Several predictors 
+### Several predictors
 
 Let's fit a logistic regression that predicts the probability of survival based both on the passenger's sex and what fare they paid (allowing for an interaction of the two predictors): 
 
@@ -406,14 +406,14 @@ inv.logit(fit.glm3_no_outlier$coefficients[1] +
 
 With the outlier removed, the predicted probability of survival for a male passenger who paid $200 decreases from 49% to 47%. 
 
-### Using the "ggeffects" package 
+### Using the "ggeffects" package
 
 The "ggeffects" package helps with the interpretation of the results. It applies the inverse logit transform for us, and shows the predictions for a range of cases. 
 
 ```{r}
 # show effects 
 ggeffect(model = fit.glm,
-         terms = "fare [0, 100, 200, 300, 400, 500]")
+         terms = "fare [1, 100, 200, 300, 400, 500]")
 ```
 
 I've used the `[]` construction to specify for what values of the predictor `fare`, I'd like get the predicted values. Here, the prediction is marginalized across both women and men. 
@@ -422,7 +422,7 @@ We can also get a plot of the model predictions like so:
 
 ```{r}
 ggeffect(model = fit.glm,
-         terms = "fare [0, 100, 200, 300, 400, 500]") %>% 
+         terms = "fare [1, 100, 200, 300, 400, 500]") %>% 
   plot()
 ```
 
@@ -460,7 +460,9 @@ b1 = 1
 df.data = tibble(x = rnorm(n = sample_size),
                  y = b0 + b1 * x,
                  p = inv.logit(y)) %>% 
-  mutate(response = rbinom(n(), size = 1, p = p))
+  mutate(response = rbinom(n(),
+                           size = 1,
+                           p = p))
 
 # fit model 
 fit = glm(formula = response ~ 1 + x,
@@ -472,6 +474,7 @@ fit %>%
   summary()
 
 df.data %>% 
+  head(10) %>% 
   kable(digits = 2) %>% 
   kable_styling(bootstrap_options = "striped",
                 full_width = F)
@@ -491,7 +494,7 @@ ggplot(data = df.data,
   labs(y = "p(response)")
 ```
 
-#### Calculate the model's likelihood 
+### Calculate the model's likelihood
 
 To calculate the likelihood of the data for a given logistic model, we look at the actual response, and the probability of the predicted response, and then determine the likelihood of the observation assuming a Bernoulli process. To get the overall likelihood of the data, we then multiply the likelihood of each data point (or take the logs first and then the sum to get the log-likelihood). 
 
@@ -546,7 +549,9 @@ fit.augmented = glm(formula = survived ~ 1 + sex + fare,
                     data = df.titanic)
 
 # likelihood ratio test
-anova(fit.compact, fit.augmented, test = "LRT")
+anova(fit.compact,
+      fit.augmented,
+      test = "LRT")
 ```
 
 Note that in order to get a p-value out of this, we need to specify what statistical test we'd like to run. In this case, we use the likelihood ratio test ("LRT").
@@ -562,7 +567,7 @@ glm(formula = survived ~ 1 + sex + fare,
 
 Notice that the F.ratio reported using `joint_tests()` (201.881) is not quite the same as the deviance value that we get through the likelihood ratio test (233.26). You can read more about why these two can come apart [here](https://stats.stackexchange.com/questions/400101/using-emmeans-with-clmm-to-look-at-joint-effects). 
 
-## Logistic mixed effects model 
+## Logistic mixed effects model
 
 Just like we can build linear mixed effects models using `lmer()` instead of `lm()`, we can also build a logistic mixed effects regression using `glmer()` instead of `glm()`. 
 
@@ -637,17 +642,20 @@ fit_c =  glmer(repeatgr ~ 1 +  minority + (1 | school_nr),
 anova(fit_a, fit_c, test = "LRT")
 ```
 
+## Additional information
 
+### Misc 
 
-## Additional information 
+- [Nice logistic regression explainer](https://cims.nyu.edu/~brenden/courses/labincp/chapters/14/00-logisticregression.html)
+- [StatQuest: Logistic regression](https://www.youtube.com/watch?v=yIYKR4sgzI8)
 
-### Datacamp 
+### Datacamp
 
 - [Multiple and logistic regression](https://www.datacamp.com/courses/multiple-and-logistic-regression)
 - [Generalized linear models in R](https://www.datacamp.com/courses/generalized-linear-models-in-r)
 - [Categorical data in the tidyverse](https://www.datacamp.com/courses/categorical-data-in-the-tidyverse)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

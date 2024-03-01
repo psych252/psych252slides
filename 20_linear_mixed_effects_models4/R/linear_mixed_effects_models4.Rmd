@@ -691,25 +691,28 @@ ggplot(data = df.plot,
        mapping = aes(x = timepoint,
                      y = value,
                      group = participant)) +
-  geom_point(alpha = 0.2) +
-  geom_line(alpha = 0.2) +
+  # geom_point(alpha = 0.2) +
+  # geom_line(alpha = 0.2) +
   geom_ribbon(data = df.model,
               mapping = aes(ymin = conf.low,
                             ymax = conf.high,
                             y = predicted,
                             group = NA),
               fill = "red",
-              alpha = 0.4) +
-  geom_point(data = df.model,
-             mapping = aes(y = predicted,
-                           group = NA),
-             color = "red",
-             size = 3) +
-  geom_line(data = df.model,
-            mapping = aes(y = predicted,
-                          group = NA),
-            color = "red",
-            linewidth = 1) +
+              alpha = 0.2) +
+  geom_smooth(method = "lm",
+              mapping = aes(group = NA),
+              color = "blue") + 
+  # geom_line(data = df.model,
+  #           mapping = aes(y = predicted,
+  #                         group = NA),
+  #           color = "red",
+  #           linewidth = 1) +
+  # geom_point(data = df.model,
+  #            mapping = aes(y = predicted,
+  #                          group = NA),
+  #            color = "red",
+  #            size = 3) +
   facet_grid(~ condition) +
   labs(x = "timepoint")
 ```
@@ -823,7 +826,6 @@ fit %>%
   summary()
 ```
 
-
 ## Bootstrapping
 
 Bootstrapping is a good way to estimate our uncertainty on the parameter estimates in the model. 
@@ -900,6 +902,7 @@ boot.ci(boot.lmer,
         index = 2,
         type = "perc")
 ```
+
 Let's plot the distribution of estimates.
 
 ```{r}
