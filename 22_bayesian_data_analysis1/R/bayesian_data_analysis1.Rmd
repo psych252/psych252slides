@@ -1,7 +1,7 @@
 ---
 title: "Class 22"
 author: "Tobias Gerstenberg"
-date: "February 28th, 2022"
+date: "March 4th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,22 +13,23 @@ output:
 
 ```{r, eval=FALSE, include=FALSE}
 # Note: To get greta to work on my mac, I had to run the following commands 
+# This doesn't seem to be working on my M1 mac ... :/ 
 devtools::install_github("greta-dev/greta")
 greta::install_tensorflow(method = "conda",
                           version = "1.14.0",
                           extra_packages = "tensorflow-probability==0.7.0")
 ```
 
-# Bayesian data analysis
+# Bayesian data analysis 1
 
-## Learning goals 
+## Learning goals
 
 - Doing Bayesian inference "by hand"
 - Understanding the effect that prior, likelihood, and sample size have on the posterior. 
 - Doing Bayesian data analysis with `greta`
   - A simple linear regression.
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")      # for knitting RMarkdown
@@ -52,7 +53,7 @@ opts_chunk$set(comment = "",
 
 ## Doing Bayesian inference "by hand"
 
-### Sequential updating based on the Beta distribution 
+### Sequential updating based on the Beta distribution
 
 ```{r}
 # data 
@@ -67,7 +68,7 @@ failure = c(0, cumsum(1 - data))
 fun.plot_beta = function(success, failure){
   ggplot(data = tibble(x = c(0, 1)),
          mapping = aes(x = x)) +
-    stat_function(fun = "dbeta",
+    stat_function(fun = dbeta,
                   args = list(shape1 = success + 1, shape2 = failure + 1),
                   geom = "area",
                   color = "black",
@@ -87,7 +88,7 @@ plots = map2(success, failure, ~ fun.plot_beta(.x, .y))
 wrap_plots(plots, ncol = 3)
 ```
 
-### Coin flip example 
+### Coin flip example
 
 Is the coin biased? 
 
@@ -148,7 +149,7 @@ df.coins %>%
 
 ### Bayesian inference by discretization
 
-#### Effect of the prior 
+#### Effect of the prior
 
 ```{r, fig.cap="Illustration of how the prior affects the posterior."}
 # grid
@@ -202,7 +203,7 @@ df.prior_effect %>%
         axis.line = element_blank())
 ```
 
-#### Effect of the likelihood 
+#### Effect of the likelihood
 
 ```{r, fig.cap="Illustration of how the likelihood of the data affects the posterior."}
 # grid
@@ -253,7 +254,7 @@ df.likelihood_effect %>%
   
 ```
 
-#### Effect of the sample size  
+#### Effect of the sample size
 
 ```{r}
 # grid
@@ -306,11 +307,11 @@ df.sample_size_effect %>%
         axis.line = element_blank())
 ```
 
-## Doing Bayesian inference with Greta 
+## Doing Bayesian inference with Greta
 
 You can find out more about how get started with "greta" here: [https://greta-stats.org/articles/get_started.html](https://greta-stats.org/articles/get_started.html). Make sure to install the development version of "greta" (as shown in the "install-packages" code chunk above: `devtools::install_github("greta-dev/greta")`).
 
-### Attitude data set 
+### Attitude data set
 
 ```{r}
 # load the attitude data set 
@@ -326,7 +327,7 @@ ggplot(data = df.attitude,
   geom_point()
 ```
 
-### Frequentist analysis 
+### Frequentist analysis
 
 ```{r}
 # fit model 
@@ -354,7 +355,7 @@ ggplot(data = df.attitude,
 
 #### Fit the model
 
-```{r}
+```{r, eval=FALSE}
 set.seed(1)
 
 # variables & priors
@@ -374,14 +375,14 @@ m = model(b0, b1, sd)
 
 Visualize the model as graph: 
 
-```{r}
+```{r, eval=FALSE}
 # plotting
 plot(m)
 ```
 
 Draw samples from the posterior distribution: 
 
-```{r, message=FALSE, cache=TRUE}
+```{r, message=FALSE, cache=TRUE, eval=FALSE}
 set.seed(1)
 
 # sampling
@@ -396,7 +397,7 @@ df.draws = tidy_draws(draws) %>%
 
 These are the priors I used for the intercept, regression weights, and the standard deviation of the Gaussian likelihood function:  
 
-```{r}
+```{r, eval=FALSE}
 # Gaussian
 ggplot(tibble(x = c(-30, 30)),
        aes(x = x)) +
@@ -417,7 +418,7 @@ ggplot(tibble(x = c(0, 30)),
 
 This is what the posterior looks like for the three parameters in the model: 
 
-```{r}
+```{r, eval=FALSE}
 df.draws %>% 
   select(draw:sd) %>% 
   pivot_longer(cols = -draw,
@@ -440,9 +441,10 @@ df.draws %>%
         axis.line = element_blank(),
         strip.text.x = element_blank())
 ```
-#### Credible interval vs. confidence interval 
 
-```{r}
+#### Credible interval vs. confidence interval
+
+```{r, eval=FALSE}
 fit.lm %>% 
   tidy(conf.int = T) %>% 
   ggplot(mapping = aes(y = term,
@@ -454,12 +456,11 @@ fit.lm %>%
 ```
 
 
-
-#### Visualize model predictions 
+#### Visualize model predictions
 
 Let's take some samples from the posterior to visualize the model predictions: 
 
-```{r}
+```{r, eval=FALSE}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints, 
                      y = rating)) + 
@@ -472,11 +473,11 @@ ggplot(data = df.attitude,
   geom_point() 
 ```
 
-#### Posterior predictive check 
+#### Posterior predictive check
 
 Let's make an animation that illustrates what predicted data sets (based on samples from the posterior) would look like: 
 
-```{r, message=FALSE}
+```{r, message=FALSE, eval=FALSE}
 p = df.draws %>% 
   slice_sample(n = 10) %>%  
   mutate(complaints = list(seq(min(df.attitude$complaints),
@@ -504,11 +505,11 @@ animate(p,
 # anim_save("posterior_predictive.gif")
 ```
 
-#### Prior predictive check 
+#### Prior predictive check
 
 And let's illustrate what data we would have expected to see just based on the information that we encoded in our priors. 
 
-```{r, message=FALSE}
+```{r, message=FALSE, eval=FALSE}
 sample_size = 10
 
 p = tibble(b0 = rnorm(sample_size, mean = 0, sd = 10),
@@ -538,7 +539,14 @@ animate(p,
 # anim_save("prior_predictive.gif")
 ```
 
-## Session info 
+## Additional resources
+
+### Books and chapters
+
+- [Bayes rules book](https://www.bayesrulesbook.com/)
+
+
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded. 
 

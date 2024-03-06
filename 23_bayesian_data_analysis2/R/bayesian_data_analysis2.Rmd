@@ -1,7 +1,7 @@
 ---
 title: "Class 23"
 author: "Tobias Gerstenberg"
-date: "March 2nd, 2022"
+date: "March 6th, 2024"
 output:
   bookdown::html_document2:
     toc: true
@@ -13,7 +13,7 @@ output:
 
 # Bayesian data analysis 2
 
-## Learning goals 
+## Learning goals
 
 - Building Bayesian models with `brms`.
 	- Model evaluation: 
@@ -21,7 +21,7 @@ output:
 		- Testing hypotheses. 
 	- Inference evaluation: Did things work out? 
 
-## Load packages and set plotting theme  
+## Load packages and set plotting theme
 
 ```{r, message=FALSE}
 library("knitr")       # for knitting RMarkdown 
@@ -60,7 +60,7 @@ options(dplyr.summarise.inform = F)
 options(ggplot2.discrete.color = RColorBrewer::brewer.pal(9,"Set1"))
 ```
 
-## Load data sets 
+## Load data sets
 
 ```{r, message=FALSE}
 # poker 
@@ -101,9 +101,9 @@ df.politeness = read_csv("data/politeness_data.csv") %>%
   rename(pitch = frequency)
 ```
 
-## Poker 
+## Poker
 
-### 1. Visualize the data 
+### 1. Visualize the data
 
 Let's visualize the data first. 
 
@@ -132,7 +132,7 @@ df.poker %>%
 
 ### 2. Specify and fit the model
 
-#### Frequentist model 
+#### Frequentist model
 
 And let's now fit a simple (frequentist) ANOVA model. You have multiple options to do so: 
 
@@ -162,7 +162,7 @@ fit.lm_poker %>%
 
 All three options give the same result. Personally, I like Option 3 the best. 
 
-#### Bayesian model 
+#### Bayesian model
 
 Now, let's fit a Bayesian regression model using the `brm()` function (starting with a simple model that only considers `hand` as a predictor):
 
@@ -254,7 +254,7 @@ fit.brm_poker_full %>%
 
 One thing worth noticing: by default, "brms" centers the predictors which makes it easier to assign a default prior over the intercept. 
 
-### 3. Model evaluation 
+### 3. Model evaluation
 
 #### a) Did the inference work?
 
@@ -292,14 +292,14 @@ variables = fit.brm_poker %>%
   .[1:4]
 
 fit.brm_poker %>% 
-  posterior_samples() %>% 
+  as_draws() %>% 
   mcmc_acf(pars = variables,
            lags = 4)
 ```
 
 Looking good! The autocorrelation should become very small as the lag increases (indicating that we are getting independent samples from the posterior). 
 
-###### When things go wrong 
+###### When things go wrong
 
 Let's try to fit a model to very little data (just two observations) with extremely uninformative priors: 
 
@@ -398,12 +398,12 @@ Looking mostly good!
 
 #### b) Visualize model predictions
 
-##### Posterior predictive check 
+##### Posterior predictive check
 
 To check whether the model did a good job capturing the data, we can simulate what future data the Bayesian model predicts, now that it has learned from the data we feed into it.  
 
 ```{r}
-pp_check(fit.brm_poker, nsamples = 100)
+pp_check(fit.brm_poker, ndraws = 100)
 ```
 
 This looks good! The predicted shaped of the data based on samples from the posterior distribution looks very similar to the shape of the actual data.  
@@ -438,7 +438,7 @@ p = ggplot(data = df.predictive_samples,
 animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 ```
 
-##### Prior predictive check 
+##### Prior predictive check
 
 ```{r}
 fit.brm_poker_prior = brm(formula = balance ~ 0 + Intercept + hand * skill,
@@ -488,15 +488,14 @@ animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
 
 ### 4. Interpret the model parameters
 
-#### Visualize the posteriors 
+#### Visualize the posteriors
 
 Let's visualize what the posterior for the different parameters looks like. We use the `stat_halfeye()` function from the "tidybayes" package to do so: 
 
 
-```{r}
+```{r, warning=FALSE}
 fit.brm_poker %>% 
-  posterior_samples() %>% 
-  clean_names() %>% 
+  as_draws_df() %>%
   select(starts_with("b_"), sigma) %>%
   pivot_longer(cols = everything(),
                names_to = "variable",
@@ -508,14 +507,13 @@ fit.brm_poker %>%
   theme(axis.title.y = element_blank())
 ```
 
-#### Compute highest density intervals 
+#### Compute highest density intervals
 
 To compute the MAP (maximum a posteriori probability) estimate and highest density interval, we use the `mean_hdi()` function that comes with the "tidybayes" package.
 
-```{r}
+```{r, warning=FALSE}
 fit.brm_poker %>% 
-  posterior_samples() %>% 
-  clean_names() %>% 
+  as_draws_df() %>%
   select(starts_with("b_"), sigma) %>% 
   mean_hdi() %>% 
   pivot_longer(cols = -c(.width:.interval),
@@ -536,9 +534,9 @@ One key advantage of Bayesian over frequentist analysis is that we can test hypo
 
 We may ask, for example, what the probability is that the parameter for the difference between a bad hand and a neutral hand (`b_handneutral`) is greater than 0. Let's plot the posterior distribution together with the criterion: 
 
-```{r}
+```{r,warning=FALSE}
 fit.brm_poker %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   select(b_handneutral) %>% 
   pivot_longer(cols = everything(),
                names_to = "variable",
@@ -592,7 +590,7 @@ Let's double check one example, and calculate the result directly based on the p
 
 ```{r}
 df.hypothesis = fit.brm_poker %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   clean_names() %>% 
   select(starts_with("b_")) %>% 
   mutate(neutral = b_intercept + b_handneutral,
@@ -663,7 +661,7 @@ fit.brm_poker %>%
 
 # directly computing from the posterior
 fit.brm_poker %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   clean_names() %>% 
   mutate(contrast = (b_intercept + b_handneutral) * 2 - (b_intercept + b_intercept + b_handgood)) %>% 
   summarize(contrast = mean(contrast))
@@ -707,7 +705,7 @@ aov_ez(id = "participant",
        data = df.poker)
 ```
 
-#### Bayes factor 
+#### Bayes factor
 
 Another way of testing hypothesis is via the Bayes factor. Let's fit the two models we are interested in comparing with each other: 
 
@@ -731,7 +729,7 @@ bayes_factor(fit.brm_poker_bf2, fit.brm_poker_bf1)
 
 Bayes factors don't have a very good reputation (see here and here). Instead, the way to go these days appears to be via approximate leave one out cross-validation. 
 
-#### Approximate leave one out cross-validation 
+#### Approximate leave one out cross-validation
 
 ```{r}
 fit.brm_poker_bf1 = add_criterion(fit.brm_poker_bf1,
@@ -749,7 +747,7 @@ loo_compare(fit.brm_poker_bf1,
 ```
 
 
-## Sleep study 
+## Sleep study
 
 ### 1. Visualize the data
 
@@ -767,7 +765,7 @@ ggplot(data = df.sleep %>%
 
 ### 2. Specify and fit the model
 
-#### Frequentist analysis 
+#### Frequentist analysis
 
 ```{r}
 fit.lmer_sleep = lmer(formula = reaction ~ 1 + days + (1 + days | subject),
@@ -778,7 +776,7 @@ fit.lmer_sleep %>%
 ```
 
 
-#### Bayesian analysis 
+#### Bayesian analysis
 
 ```{r}
 fit.brm_sleep = brm(formula = reaction ~ 1 + days + (1 + days | subject),
@@ -789,7 +787,7 @@ fit.brm_sleep = brm(formula = reaction ~ 1 + days + (1 + days | subject),
 
 ### 3. Model evaluation
 
-#### a) Did the inference work? 
+#### a) Did the inference work?
 
 ```{r, fig.height=16, fig.width=8}
 fit.brm_sleep %>% 
@@ -803,22 +801,22 @@ fit.brm_sleep %>%
 
 ```{r}
 pp_check(fit.brm_sleep,
-         nsamples = 100)
+         ndraws = 100)
 ```
 
-### 4. Interpret the parameters 
+### 4. Interpret the parameters
 
 ```{r}
 fit.brm_sleep %>% 
   tidy(conf.method = "HPDinterval")
 ```
 
-#### Summary of posterior distributions 
+#### Summary of posterior distributions
 
-```{r}
+```{r, warning=FALSE}
 # all parameters
 fit.brm_sleep %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   select(-c(lp__, contains("["))) %>%
   pivot_longer(cols = everything(),
                names_to = "variable",
@@ -834,7 +832,7 @@ fit.brm_sleep %>%
 
 # just the parameter of interest
 fit.brm_sleep %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   select(b_days) %>%
   ggplot(data = .,
          mapping = aes(x = b_days)) +
@@ -843,11 +841,11 @@ fit.brm_sleep %>%
   theme(text = element_text(size = 12))
 ```
 
-### 5. Test specific hypotheses 
+### 5. Test specific hypotheses
 
 Here, we were just interested in how the number of days of sleep deprivation affected reaction time (and we can see that by inspecting the posterior for the `days` predictor in the model). 
 
-### 6. Report results 
+### 6. Report results
 
 #### Model prediction with posterior draws (aggregate)
 
@@ -988,9 +986,9 @@ animate(p, nframes = 10, fps = 1, width = 800, height = 600, res = 96, type = "c
 # anim_save("sleep_posterior_predictive.gif")
 ```
 
-## Titanic study 
+## Titanic study
 
-### 1. Visualize that data 
+### 1. Visualize the data
 
 ```{r, message=FALSE}
 df.titanic %>% 
@@ -1007,9 +1005,9 @@ df.titanic %>%
   scale_color_brewer(palette = "Set1")
 ```
 
-### 2. Specify and fit the model 
+### 2. Specify and fit the model
 
-#### Frequentist analysis 
+#### Frequentist analysis
 
 ```{r}
 fit.glm_titanic = glm(formula = survived ~ 1 + fare * sex,
@@ -1030,9 +1028,9 @@ fit.brm_titanic = brm(formula = survived ~ 1 + fare * sex,
                       seed = 1)
 ```
 
-### 3. Model evaluation 
+### 3. Model evaluation
 
-#### a) Did the inference work? 
+#### a) Did the inference work?
 
 ```{r, fig.height=8, fig.width=10}
 fit.brm_titanic %>% 
@@ -1046,7 +1044,7 @@ fit.brm_titanic %>%
 
 ```{r}
 pp_check(fit.brm_titanic,
-         nsamples = 100)
+         ndraws = 100)
 ```
 
 Let's visualize what the posterior predictive would have looked like for a linear model (instead of a logistic model). 
@@ -1058,14 +1056,14 @@ fit.brm_titanic_linear = brm(formula = survived ~ 1 + fare * sex,
                              seed = 1)
 
 pp_check(fit.brm_titanic_linear,
-         nsamples = 100)
+         ndraws = 100)
 ```
 
-### 4. Interpret the parameters 
+### 4. Interpret the parameters
 
-```{r}
+```{r,warning=FALSE}
 fit.brm_titanic %>% 
-  posterior_samples() %>% 
+  as_draws_df() %>% 
   select(-lp__) %>%
   pivot_longer(cols = everything(),
                names_to = "variable",
@@ -1089,7 +1087,7 @@ fit.brm_titanic %>%
   plot()
 ```
 
-### 5. Test specific hypotheses 
+### 5. Test specific hypotheses
 
 Difference between men and women in survival? 
 
@@ -1107,7 +1105,7 @@ fit.brm_titanic %>%
            var = "fare")
 ```
 
-### 6. Report results 
+### 6. Report results
 
 ```{r}
 df.model = add_linpred_draws(newdata = expand_grid(sex = c("female", "male"),
@@ -1133,11 +1131,13 @@ ggplot(data = df.titanic,
   scale_color_brewer(palette = "Set1")
 ```
 
-## Politeness data 
+## Politeness data
+
+The data is drawn from @winter2012phonetic, and this section follows the excellent tutorial by @franke2019bayesian.
 
 (I'm skipping some of the steps of our recipe for Bayesian data analysis here.)
 
-### 1. Visualize the data 
+### 1. Visualize the data
 
 ```{r}
 ggplot(data = df.politeness,
@@ -1155,14 +1155,14 @@ ggplot(data = df.politeness,
 
 ### 2. Specify and fit the model
 
-#### Frequentist analysis 
+#### Frequentist analysis
 
 ```{r}
 fit.lm_polite = lm(formula = pitch ~ gender * attitude,
                    data = df.politeness)
 ```
 
-#### Bayesian analysis 
+#### Bayesian analysis
 
 ```{r}
 fit.brm_polite = brm(formula = pitch ~ gender * attitude, 
@@ -1172,9 +1172,9 @@ fit.brm_polite = brm(formula = pitch ~ gender * attitude,
 ```
 
 
-### 5. Test specific hypotheses 
+### 5. Test specific hypotheses
 
-#### Frequentist 
+#### Frequentist
 
 ```{r}
 fit.lm_polite %>% 
@@ -1193,7 +1193,7 @@ fit.lm_polite %>%
 
 There was a significant difference of attitude for female participants but not for male participants. 
 
-#### Bayesian 
+#### Bayesian
 
 Let's whether there was a main effect of gender.
 
@@ -1287,15 +1287,16 @@ fit.brm_polite %>%
 ```
 
 
-## Additional resources 
+## Additional resources
 
+- [Bayesian regression: Theory & Practice](https://michael-franke.github.io/Bayesian-Regression/)
 - [Tutorial on visualizing brms posteriors with tidybayes](https://mjskay.github.io/tidybayes/articles/tidy-brms.html)
 - [Hypothetical outcome plots](https://mucollective.northwestern.edu/files/2018-HOPsTrends-InfoVis.pdf)
 - [Visual MCMC diagnostics](https://cran.r-project.org/web/packages/bayesplot/vignettes/visual-mcmc-diagnostics.html#general-mcmc-diagnostics)
 - [Visualization of different MCMC algorithms](https://chi-feng.github.io/mcmc-demo/)
 - [Article describing the different inference algorithms](https://elevanth.org/blog/2017/11/28/build-a-better-markov-chain/)
 
-## Session info 
+## Session info
 
 Information about this R session including which version of R was used, and what packages were loaded.
 
