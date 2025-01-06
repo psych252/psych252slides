@@ -62,13 +62,13 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> I appreciated going through the different tools we'll use for this class, and making clear what is helpful for what. I also appreciated the expectation setting through showing past reviews.
+> First half with Nilam was slower, and second half with Tobi went a little too quickly (had to pull up the slides and backread to understand course logistics)
 
-> Good overview! It gave me confidence for the course without making it sound falsely easy :)
+> I liked that we had a glimpse about the whole course. I'd like to perhaps add a bit of content to the first class so people understand better what the class look like.
 
-> I feel a little sad that we are being taught R at stats classes :(
+> I appreciated the humor, and the deep overview of class expectations. I would like for next class to mention the possible topics of data & projects we'll be working on. For ex: I'm a qualitative researcher, and don't even know yet how to formulate a research question with quantitative data in mind. Thinking about the final project is daunting since I don't even know what topics I could use for that project. Briefly discussing strategies to deal with this would be super helpful!
 
-> 	I think it was great! Maybe would add: candidate strategies for approaching the class depending on a) overall coding experience, b) r experience, c) stats experience, etc
+> The pace was right and I liked the mix of humor and good music!
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -79,5 +79,5 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- consider adding candidate strategies for approaching the class depending on a) overall coding experience, b) r experience, c) stats experience, etc
+- consider adding some more content examples to the first class 
 
