@@ -1,7 +1,7 @@
 ---
 title: "Class 2"
 author: "Tobias Gerstenberg"
-date: "January 10th, 2024"
+date: "January 8, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -106,7 +106,7 @@ This way you don't have to scroll horizontally. At the same time, avoid writing 
 ```{r, eval=FALSE}
 ggplot(data = diamonds, mapping = aes(x = cut, y = price)) +
   stat_summary(fun = "mean", geom = "bar", color = "black", fill = "lightblue", width = 0.85) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", size = 1.5) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "linerange", linewidth = 1.5) +
   labs(title = "Price as a function of quality of cut", subtitle = "Note: The price is in US dollars", tag = "A", x = "Quality of the cut", y = "Price")
 ```
 
@@ -125,7 +125,7 @@ ggplot(data = diamonds,
   # display the error bars
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1.5) +
+               linewidth = 1.5) +
   # change labels
   labs(title = "Price as a function of quality of cut",
        subtitle = "Note: The price is in US dollars", # we might want to change this later
@@ -371,7 +371,7 @@ vignette("ggplot2-specs")
 
 Make a scatter plot that shows the relationship between the variables `depth` (on the x-axis), and `table` (on the y-axis). Take a look at the description for the `diamonds` dataset so you know what these different variables mean. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make practice plot 1 here
 ```
 
@@ -381,7 +381,7 @@ include_graphics("figures/vis1_practice_plot1.png")
 
 __Advanced__: A neat trick to get a better sense for the data here is to add transparency. Your plot should look like the one shown in Figure \@ref(fig:practice-plot1a).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make advanced practice plot 1 here
 ```
 
@@ -477,7 +477,7 @@ Let's take a look at two more principles for plotting data that are extremely he
 
 Make a bar plot that shows the average `price` of diamonds (on the y-axis) as a function of their `clarity` (on the x-axis). Also add error bars. Your plot should look like the one shown in Figure \@ref(fig:practice-plot2).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make practice plot 2 here
 ```
 
@@ -487,7 +487,7 @@ include_graphics("figures/vis1_practice_plot2.png")
 
 __Advanced__: Try to make the plot shown in Figure \@ref(fig:practice-plot2a).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make advanced practice plot 2 here
 ```
 
@@ -575,7 +575,7 @@ So, still somewhat surprisingly, diamonds with the worst color (J) are more expe
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make practice plot 3 here
 ```
 
@@ -585,7 +585,7 @@ include_graphics("figures/vis1_practice_plot3.png")
 
 __Advanced__: Try to recreate the plot show in in Figure \@ref(fig:practice-plot3a).
 
-```{r}
+```{r fig.height=6, fig.width=14}
 # make advanced practice plot 3 here
 ```
 
@@ -710,7 +710,7 @@ Figure \@ref(fig:stretching-it) is stretching it in terms of how much informatio
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 # make practice plot 4 here
 ```
 

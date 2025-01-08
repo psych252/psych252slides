@@ -37,6 +37,7 @@ ggplot(data = df.pace,
   geom_bar(stat = "identity", fill = "lightblue", color = "black") +
   labs(y = "number of students", x = "", title = "How was the pace of today's class?")
 ```
+
 # Happiness
 
 ```{r, echo=FALSE}

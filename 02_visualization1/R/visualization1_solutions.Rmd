@@ -66,7 +66,7 @@ include_graphics("figures/vis1_practice_plot1a.png")
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot2).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
@@ -81,7 +81,7 @@ include_graphics("figures/vis1_practice_plot2.png")
 ```
 Recreate the plot shown in Figure \@ref(fig:practice-plot2a).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 ggplot(data = df.diamonds,
        mapping = aes(x = clarity,
                      y = price)) +
@@ -91,7 +91,7 @@ ggplot(data = df.diamonds,
                fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1) +
+               linewidth = 1) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1)))
 ```
 
@@ -103,23 +103,24 @@ include_graphics("figures/vis1_practice_plot2a.png")
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot3).
 
-```{r}
+```{r fig.height=6, fig.width=8}
 ggplot(data = df.diamonds, 
        mapping = aes(x = color,
                      y = price,
                      group = clarity,
                      color = clarity)) +
   stat_summary(fun.data = "mean_cl_boot",
-               geom = "pointrange",
-               size = 1) + 
+               geom = "linerange",
+               linewidth = 1) + 
   stat_summary(fun = "mean",
                geom = "line",
-               size = 2)
+               linewidth = 2)
 ```
 
 ```{r practice-plot3, out.width="90%", fig.align="center", fig.cap="Practice plot 3.", echo=F}
 include_graphics("figures/vis1_practice_plot3.png")
 ```
+
 Recreate the plot shown in Figure \@ref(fig:practice-plot3a).
 
 ```{r fig.height=6, fig.width=14}
@@ -153,7 +154,7 @@ include_graphics("figures/vis1_practice_plot3a.png")
 
 Recreate the plot shown in Figure \@ref(fig:practice-plot4).
 
-```{r, warning=F}
+```{r fig.height=6, fig.width=8}
 ggplot(data = df.diamonds,
        mapping = aes(x = color,
                      y = price,
