@@ -1,7 +1,7 @@
 ---
 title: "Class 3"
 author: "Tobias Gerstenberg"
-date: "January 12, 2024"
+date: "January 10, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -27,7 +27,7 @@ In this lecture, we will lift our `ggplot2` skills to the next level!
 
 ## Install and load packages, load data, set theme
 
-Let's first install the new packages that you might not have yet. 
+Let's first install the new packages that you might not have yet.  
 
 ```{r, eval=FALSE}
 install.packages(c("gganimate", "gapminder", "ggridges", "devtools", "png", "gifski", "patchwork"))
@@ -359,9 +359,11 @@ ggplot(data = df.plot,
                alpha = 0.2,
                linetype = 0) +
   # draw lines connecting the means
-  stat_summary(fun = "mean", geom = "line") +
+  stat_summary(fun = "mean",
+               geom = "line") +
   # draw means as points
-  stat_summary(fun = "mean", geom = "point") +
+  stat_summary(fun = "mean",
+               geom = "point") +
   # add the city names
   geom_text(data = df.text,
             mapping = aes(label = city),
@@ -390,7 +392,8 @@ ggplot(data = df.plot,
        y = "Median house sale price") + 
   theme(title = element_text(size = 16),
         legend.position = "none",
-        plot.margin = margin(r = 1, unit = "in"))
+        plot.margin = margin(r = 1,
+                             unit = "in"))
 ```
 
 ## Customizing plots
@@ -426,8 +429,12 @@ ggplot(data = df.diamonds,
                geom = "linerange",
                linewidth = 1.5) + 
   # adjust what to show on the y-axis
-  scale_y_continuous(breaks = seq(from = 0, to = 4000, by = 1000),
-                     labels = str_c("$", seq(from = 0, to = 4000, by = 1000))) + 
+  scale_y_continuous(breaks = seq(from = 0,
+                                  to = 4000,
+                                  by = 1000),
+                     labels = str_c("$", seq(from = 0,
+                                             to = 4000,
+                                             by = 1000))) + 
   # adjust the range of both axes
   coord_cartesian(xlim = c(0.25, 5.75),
                   ylim = c(0, 5000),
@@ -442,11 +449,14 @@ ggplot(data = df.diamonds,
     # adjust the text size 
     text = element_text(size = 20), 
     # add some space at top of x-title 
-    axis.title.x = element_text(margin = margin(t = 0.2, unit = "inch")), 
+    axis.title.x = element_text(margin = margin(t = 0.2,
+                                                unit = "inch")), 
     # add some space t the right of y-title
-    axis.title.y = element_text(margin = margin(r = 0.1, unit = "inch")), 
+    axis.title.y = element_text(margin = margin(r = 0.1,
+                                                unit = "inch")), 
     # add some space underneath the subtitle and make it gray
-    plot.subtitle = element_text(margin = margin(b = 0.3, unit = "inch"),
+    plot.subtitle = element_text(margin = margin(b = 0.3,
+                                                 unit = "inch"),
                                  color = "gray70"),  
     # make the plot tag bold 
     plot.tag = element_text(face = "bold"), 
@@ -507,7 +517,7 @@ ggplot(data = df.diamonds,
                width = 0.85) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1.5) +
+               linewidth = 1.5) +
   labs(x = "cut")
 ```
 
@@ -672,7 +682,8 @@ p1 + (p2 + p3) +
   plot_layout(ncol = 1) &
   plot_annotation(tag_levels = "A") & 
   theme_classic() &
-  theme(plot.tag = element_text(face = "bold", size = 20))
+  theme(plot.tag = element_text(face = "bold",
+                                size = 20))
 
 # ggsave("figures/combined_plot.png", width = 10, height = 6)
 ```
@@ -700,7 +711,8 @@ p = ggplot(data = df.diamonds,
   stat_summary_2d(fun = "mean",
                   geom = "tile",
                   color = "black") +
-  scale_fill_gradient(low = "white", high = "black")
+  scale_fill_gradient(low = "white",
+                      high = "black")
 print(p)
 
 build = ggplot_build(p)
@@ -741,7 +753,8 @@ ggplot(data = gapminder,
                      y = lifeExp,
                      size = pop,
                      colour = country)) +
-  geom_point(alpha = 0.7, show.legend = FALSE) +
+  geom_point(alpha = 0.7,
+             show.legend = FALSE) +
   geom_text(data = gapminder %>% 
               filter(country %in% c("United States", "China", "India")), 
             mapping = aes(label = country),
@@ -755,7 +768,9 @@ ggplot(data = gapminder,
   theme_classic() +
   theme(text = element_text(size = 23)) +
   # Here come the gganimate specific bits
-  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "life expectancy") +
+  labs(title = "Year: {frame_time}",
+       x = "GDP per capita",
+       y = "life expectancy") +
   transition_time(year) +
   ease_aes("linear")
 # anim_save(filename = "figures/life_gdp_animation.gif") # to save the animation

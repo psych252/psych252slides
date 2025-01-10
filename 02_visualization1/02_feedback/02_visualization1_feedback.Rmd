@@ -64,11 +64,11 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> I liked the explanation on editing options like softwrap, keyboard shortcuts and {r eval} which I did not know about before. Maybe TAs could walk around and help out whenever a student is facing issues. These could be package download issues or other issues so that all students are on the same page while following the tutorial
+> I really appreciated the tutorial-style introduction to R -- in the past, I've had to figure out much of these syntax things in a new language by a combination of Googling and trial-and-error. I did have difficulty making my RStudio setup mirror what the instructor showed-- a slower introduction to the different panels in RStudio and how they can be arranged would have helped!
 
-> When showing us tips and tricks at the beginning, it would have helped me if you paused to make sure we all got it. There were a couple times when I looked down at my screen for a couple seconds and then never got to see where you clicked to do something. The rest of the class was great!
+> i liked the interactive aspects of lecture. i wish there wre mroe frequent check ins with the audience about questions.
 
-> It was good! I think it might have been fun to get slightly trickier "advanced" plotting exercises :)
+> For coding-heavy classes, it may benefit from having a different classroom if possible? Less lecture-ish and more workshop/CS classroom? Maybe somewhere will be available once the data sci building opens :)
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -79,5 +79,6 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- make some more tricky "advanced" plotting exercises next time
+- maybe give a more complete tour of the RStudio interface (and/or make sure that that's covered in the R tutorial in section)
+
 
