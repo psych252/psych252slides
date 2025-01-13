@@ -1,7 +1,7 @@
 ---
 title: "Class 4"
 author: "Tobias Gerstenberg"
-date: "January 17th, 2024"
+date: "January 13th, 2025"
 output: 
   bookdown::html_document2:
     toc: true
@@ -178,7 +178,7 @@ Lists are a very flexible data format. You can put almost anything in a list.
 Table \@ref(tab:logical-operators) shows the comparison operators that result in logical outputs. 
 
 ```{r logical-operators, echo=FALSE}
-operators = c("`==`", "`!=`", "`>`, `<`", "`>=`, `<=`", "`&`, `|`, `!`", "`%in%`")
+operators = c("`==`", "`!=`", "`>`, `<`", "`>=`, `<=`", "`&`, <code>&#124;</code>, `!`", "`%in%`")
 explanation = c("equal to", "not equal to", "greater/less than", 
                 "greater/less than or equal", "logical operators: and, or, not", 
                 "checks whether an element is in an object")
@@ -419,7 +419,7 @@ data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
 # calculate root mean squared error
-rmse = sqrt(mean((prediction-data)^2))
+rmse = sqrt(mean((prediction - data)^2))
 print(rmse)
 ```
 
@@ -430,7 +430,7 @@ data = c(1, 3, 4, 2, 5)
 prediction = c(1, 2, 2, 1, 4)
 
 # calculate root mean squared error the pipe way 
-rmse = (prediction-data)^2 %>% 
+rmse = (prediction - data)^2 %>% 
   mean() %>% 
   sqrt() %>% 
   print() 
@@ -734,7 +734,9 @@ We can rename some of the columns using `select()` like so:
 
 ```{r}
 df.starwars %>% 
-  select(person = name, height, mass_kg = mass)
+  select(person = name,
+         height,
+         mass_kg = mass)
 ```
 
 #### `where()`
@@ -862,7 +864,7 @@ For example, the following code changes all the numeric columns to character col
 
 ```{r}
 df.starwars %>% 
-  mutate(across(.cols = where(~ is.numeric(.)),
+  mutate(across(.cols = where(fn = ~ is.numeric(.)),
                 .fns = ~ as.character(.)))
 ```
 
@@ -870,7 +872,7 @@ Or we could round all the numeric columns to one digit:
 
 ```{r}
 df.starwars %>% 
-  mutate(across(.cols = where(~ is.numeric(.)),
+  mutate(across(.cols = where(fn = ~ is.numeric(.)),
                 .fns = ~ round(., digits = 1)))
 ```
 
