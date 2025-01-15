@@ -1,7 +1,7 @@
 ---
 title: "Class 5"
 author: "Tobias Gerstenberg"
-date: "January 19th, 2024"
+date: "January 15, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -41,7 +41,6 @@ opts_chunk$set(comment = "")
 # suppresses warning about grouping 
 options(dplyr.summarise.inform = F)
 ```
-
 
 ## Wrangling data (continued)
 
@@ -446,7 +445,7 @@ Take a look at the `join` help file to see other operations for combining two or
 
 #### Practice 3
 
-Load these three data frames first: 
+Load these two data frames first: 
 
 ```{r}
 set.seed(1)
@@ -465,7 +464,6 @@ Create a new data frame called `df.join` that combines the information from both
 # write your code here
 
 ```
-
 
 ### Dealing with missing data
 
@@ -539,7 +537,8 @@ We can also directly tell the `complete()` function to replace the `NA` values v
 
 ```{r}
 df.stocks %>% 
-  complete(year, qtr, fill = list(return = 0))
+  complete(year, qtr,
+           fill = list(return = 0))
 ```
 
 This specifies that we would like to replace any `NA` in the `return` column with `0`. Again, if we had multiple columns with `NA`s, we could speficy for each column separately how to replace it. 
@@ -567,7 +566,6 @@ kable(tibble(`file type` = file_type,
       align = c("r", "l", "l"))
 ```
 
-
 The `foreign` [package](https://cran.r-project.org/web/packages/foreign/index.html) helps with importing data that was saved in SPSS, Stata, or Minitab. 
 
 For data in a json format, I highly recommend the `tidyjson` [package](https://github.com/sailthru/tidyjson).  
@@ -585,7 +583,7 @@ The `read_csv()` function gives us information about how each column was parsed.
 And let's take a quick peek at the data: 
 
 ```{r}
-df.csv %>% glimpse()
+glimpse(df.csv)
 ```
 
 The data frame contains a bunch of movies with information about their genre, director, rating, etc. 
@@ -599,7 +597,8 @@ RData is a data format native to R. Since this format can only be read by R, it'
 We read (or load) an RData file in the following way:
 
 ```{r}
-load("data/test.RData", verbose = TRUE)
+load("data/test.RData",
+     verbose = TRUE)
 ```
 
 I've set the `verbose = ` argument to `TRUE` here so that the `load()` function tells me what objects it added to the environment. This is useful for checking whether existing objects were overwritten. 
@@ -614,7 +613,8 @@ To save a data frame as a csv file, we simply write:
 df.test = tibble(x = 1:3,
                  y = c("test1", "test2", "test3"))
 
-write_csv(df.test, file = "data/test.csv")
+write_csv(df.test,
+          file = "data/test.csv")
 ```
 
 Just like for reading in data, the `readr` package has a number of other functions for saving data. Just type `write_` in the console below and take a look at the autocomplete suggestions.
@@ -624,13 +624,16 @@ Just like for reading in data, the `readr` package has a number of other functio
 To save objects as an RData file, we write: 
 
 ```{r}
-save(df.test, file = "data/test.RData")
+save(df.test,
+     file = "data/test.RData")
 ```
 
 We can add multiple objects simply by adding them at the beginning, like so: 
 
 ```{r}
-save(df.test, df.starwars, file = "data/test_starwars.RData")
+save(df.test,
+     df.starwars,
+     file = "data/test_starwars.RData")
 ```
 
 ## Additional resources
@@ -642,7 +645,7 @@ save(df.test, df.starwars, file = "data/test_starwars.RData")
 
 ### Data camp courses
 
--   [Joining tables](https://www.datacamp.com/courses/joining-data-in-r-with-dplyr)
+-   [joining tables](https://www.datacamp.com/courses/joining-data-in-r-with-dplyr)
 -   [writing functions](https://www.datacamp.com/courses/writing-functions-in-r)
 -   [importing data 1](https://www.datacamp.com/courses/importing-data-in-r-part-1)
 -   [importing data 2](https://www.datacamp.com/courses/importing-data-in-r-part-2)

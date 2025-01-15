@@ -708,8 +708,10 @@ Or use a variable for column selection:
 columns = c("name", "height", "species")
 
 df.starwars %>% 
-  select(one_of(columns)) # useful when using a variable for column selection
+  select(columns) 
 ```
+
+Here, you just have to make sure that the variable `columns` doesn't share the name with one of the column names in your data frame (otherwise, it would just select the column in the data frame with that name). 
 
 We can also _deselect_ (multiple) columns:
 

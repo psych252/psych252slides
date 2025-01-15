@@ -11,6 +11,7 @@
 
 <meta name="author" content="Tobias Gerstenberg" />
 
+<meta name="date" content="2025-01-15" />
 
 <title>Class 5</title>
 
@@ -235,7 +236,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -246,7 +247,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -427,7 +428,7 @@ display: none;
 
 <h1 class="title toc-ignore">Class 5</h1>
 <h4 class="author">Tobias Gerstenberg</h4>
-<h4 class="date">January 19th, 2024</h4>
+<h4 class="date">January 15, 2025</h4>
 
 </div>
 
@@ -1049,7 +1050,7 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Take a look at the <code>join</code> help file to see other operations for combining two or more data frames into one (make sure to look at the one from the <code>dplyr</code> package).</p>
 <div id="practice-3" class="section level4" number="5.4.3.1">
 <h4><span class="header-section-number">5.4.3.1</span> Practice 3</h4>
-<p>Load these three data frames first:</p>
+<p>Load these two data frames first:</p>
 <div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
 <span id="cb60-2"><a href="#cb60-2" tabindex="-1"></a></span>
 <span id="cb60-3"><a href="#cb60-3" tabindex="-1"></a>df.judgments <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">participant =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">each =</span> <span class="dv">5</span>),</span>
@@ -1135,7 +1136,8 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Note how now, the data frame contains an additional row in which <code>year = 2016</code>, <code>qtr = 1</code> and <code>return = NA</code> even though we didn’t originally specify this.</p>
 <p>We can also directly tell the <code>complete()</code> function to replace the <code>NA</code> values via passing a list to its <code>fill</code> argument like so:</p>
 <div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" tabindex="-1"></a>df.stocks <span class="sc">%&gt;%</span> </span>
-<span id="cb75-2"><a href="#cb75-2" tabindex="-1"></a>  <span class="fu">complete</span>(year, qtr, <span class="at">fill =</span> <span class="fu">list</span>(<span class="at">return =</span> <span class="dv">0</span>))</span></code></pre></div>
+<span id="cb75-2"><a href="#cb75-2" tabindex="-1"></a>  <span class="fu">complete</span>(year, qtr,</span>
+<span id="cb75-3"><a href="#cb75-3" tabindex="-1"></a>           <span class="at">fill =</span> <span class="fu">list</span>(<span class="at">return =</span> <span class="dv">0</span>))</span></code></pre></div>
 <pre><code># A tibble: 8 × 3
    year   qtr return
   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
@@ -1205,7 +1207,7 @@ dbl (8): year, duration, gross, budget, cast_facebook_likes, votes, reviews,...
 ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <p>The <code>read_csv()</code> function gives us information about how each column was parsed. Here, we have some columns that are characters (such as <code>title</code> and <code>genre</code>), and some columns that are numeric (such as <code>year</code> and <code>duration</code>). Note that it says <code>double()</code> in the specification but double and numeric are identical.</p>
 <p>And let’s take a quick peek at the data:</p>
-<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" tabindex="-1"></a>df.csv <span class="sc">%&gt;%</span> <span class="fu">glimpse</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" tabindex="-1"></a><span class="fu">glimpse</span>(df.csv)</span></code></pre></div>
 <pre><code>Rows: 2,961
 Columns: 11
 $ title               &lt;chr&gt; &quot;Over the Hill to the Poorhouse&quot;, &quot;The Broadway Me…
@@ -1226,7 +1228,8 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5, 6
 <h3><span class="header-section-number">5.5.2</span> RData</h3>
 <p>RData is a data format native to R. Since this format can only be read by R, it’s not a good format for sharing data. However, it’s a useful format that allows us to flexibly save and load R objects. For example, consider that we always start our script by reading in and structuring data, and that this takes quite a while. One thing we can do is to save the output of intermediate steps as an RData object, and then simply load this object (instead of re-running the whole routine every time).</p>
 <p>We read (or load) an RData file in the following way:</p>
-<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;data/test.RData&quot;</span>, <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;data/test.RData&quot;</span>,</span>
+<span id="cb81-2"><a href="#cb81-2" tabindex="-1"></a>     <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <pre><code>Loading objects:
   df.test</code></pre>
 <p>I’ve set the <code>verbose =</code> argument to <code>TRUE</code> here so that the <code>load()</code> function tells me what objects it added to the environment. This is useful for checking whether existing objects were overwritten.</p>
@@ -1240,15 +1243,19 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5, 6
 <div class="sourceCode" id="cb83"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" tabindex="-1"></a>df.test <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
 <span id="cb83-2"><a href="#cb83-2" tabindex="-1"></a>                 <span class="at">y =</span> <span class="fu">c</span>(<span class="st">&quot;test1&quot;</span>, <span class="st">&quot;test2&quot;</span>, <span class="st">&quot;test3&quot;</span>))</span>
 <span id="cb83-3"><a href="#cb83-3" tabindex="-1"></a></span>
-<span id="cb83-4"><a href="#cb83-4" tabindex="-1"></a><span class="fu">write_csv</span>(df.test, <span class="at">file =</span> <span class="st">&quot;data/test.csv&quot;</span>)</span></code></pre></div>
+<span id="cb83-4"><a href="#cb83-4" tabindex="-1"></a><span class="fu">write_csv</span>(df.test,</span>
+<span id="cb83-5"><a href="#cb83-5" tabindex="-1"></a>          <span class="at">file =</span> <span class="st">&quot;data/test.csv&quot;</span>)</span></code></pre></div>
 <p>Just like for reading in data, the <code>readr</code> package has a number of other functions for saving data. Just type <code>write_</code> in the console below and take a look at the autocomplete suggestions.</p>
 </div>
 <div id="rdata-1" class="section level3" number="5.6.2">
 <h3><span class="header-section-number">5.6.2</span> RData</h3>
 <p>To save objects as an RData file, we write:</p>
-<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" tabindex="-1"></a><span class="fu">save</span>(df.test, <span class="at">file =</span> <span class="st">&quot;data/test.RData&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb84"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" tabindex="-1"></a><span class="fu">save</span>(df.test,</span>
+<span id="cb84-2"><a href="#cb84-2" tabindex="-1"></a>     <span class="at">file =</span> <span class="st">&quot;data/test.RData&quot;</span>)</span></code></pre></div>
 <p>We can add multiple objects simply by adding them at the beginning, like so:</p>
-<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" tabindex="-1"></a><span class="fu">save</span>(df.test, df.starwars, <span class="at">file =</span> <span class="st">&quot;data/test_starwars.RData&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb85"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" tabindex="-1"></a><span class="fu">save</span>(df.test,</span>
+<span id="cb85-2"><a href="#cb85-2" tabindex="-1"></a>     df.starwars,</span>
+<span id="cb85-3"><a href="#cb85-3" tabindex="-1"></a>     <span class="at">file =</span> <span class="st">&quot;data/test_starwars.RData&quot;</span>)</span></code></pre></div>
 </div>
 </div>
 <div id="additional-resources" class="section level2" number="5.7">
@@ -1263,7 +1270,7 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5, 6
 <div id="data-camp-courses" class="section level3" number="5.7.2">
 <h3><span class="header-section-number">5.7.2</span> Data camp courses</h3>
 <ul>
-<li><a href="https://www.datacamp.com/courses/joining-data-in-r-with-dplyr">Joining tables</a></li>
+<li><a href="https://www.datacamp.com/courses/joining-data-in-r-with-dplyr">joining tables</a></li>
 <li><a href="https://www.datacamp.com/courses/writing-functions-in-r">writing functions</a></li>
 <li><a href="https://www.datacamp.com/courses/importing-data-in-r-part-1">importing data 1</a></li>
 <li><a href="https://www.datacamp.com/courses/importing-data-in-r-part-2">importing data 2</a></li>
@@ -1293,13 +1300,13 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5, 6
 </div>
 <div id="session-info" class="section level2" number="5.8">
 <h2><span class="header-section-number">5.8</span> Session info</h2>
-<pre><code>R version 4.3.2 (2023-10-31)
-Platform: aarch64-apple-darwin20 (64-bit)
-Running under: macOS Sonoma 14.1.2
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Sequoia 15.2
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -1312,21 +1319,21 @@ attached base packages:
 
 other attached packages:
  [1] lubridate_1.9.3 forcats_1.0.0   stringr_1.5.1   dplyr_1.1.4    
- [5] purrr_1.0.2     readr_2.1.4     tidyr_1.3.0     tibble_3.2.1   
- [9] ggplot2_3.4.4   tidyverse_2.0.0 knitr_1.45     
+ [5] purrr_1.0.2     readr_2.1.5     tidyr_1.3.1     tibble_3.2.1   
+ [9] ggplot2_3.5.1   tidyverse_2.0.0 knitr_1.49     
 
 loaded via a namespace (and not attached):
- [1] bit_4.0.5         gtable_0.3.4      jsonlite_1.8.8    crayon_1.5.2     
- [5] compiler_4.3.2    tidyselect_1.2.0  parallel_4.3.2    jquerylib_0.1.4  
- [9] scales_1.3.0      yaml_2.3.8        fastmap_1.1.1     R6_2.5.1         
-[13] generics_0.1.3    bookdown_0.37     munsell_0.5.0     bslib_0.6.1      
-[17] pillar_1.9.0      tzdb_0.4.0        rlang_1.1.2       utf8_1.2.4       
-[21] stringi_1.8.3     cachem_1.0.8      xfun_0.41         sass_0.4.8       
-[25] bit64_4.0.5       timechange_0.2.0  cli_3.6.2         withr_2.5.2      
-[29] magrittr_2.0.3    digest_0.6.33     grid_4.3.2        vroom_1.6.5      
-[33] rstudioapi_0.15.0 hms_1.1.3         lifecycle_1.0.4   vctrs_0.6.5      
-[37] evaluate_0.23     glue_1.6.2        fansi_1.0.6       colorspace_2.1-0 
-[41] rmarkdown_2.25    tools_4.3.2       pkgconfig_2.0.3   htmltools_0.5.7  </code></pre>
+ [1] bit_4.0.5         gtable_0.3.5      jsonlite_1.8.8    crayon_1.5.3     
+ [5] compiler_4.4.2    tidyselect_1.2.1  parallel_4.4.2    jquerylib_0.1.4  
+ [9] scales_1.3.0      yaml_2.3.10       fastmap_1.2.0     R6_2.5.1         
+[13] generics_0.1.3    bookdown_0.42     munsell_0.5.1     bslib_0.7.0      
+[17] pillar_1.9.0      tzdb_0.4.0        rlang_1.1.4       utf8_1.2.4       
+[21] stringi_1.8.4     cachem_1.1.0      xfun_0.49         sass_0.4.9       
+[25] bit64_4.0.5       timechange_0.3.0  cli_3.6.3         withr_3.0.2      
+[29] magrittr_2.0.3    digest_0.6.36     grid_4.4.2        vroom_1.6.5      
+[33] rstudioapi_0.16.0 hms_1.1.3         lifecycle_1.0.4   vctrs_0.6.5      
+[37] evaluate_0.24.0   glue_1.8.0        fansi_1.0.6       colorspace_2.1-0 
+[41] rmarkdown_2.29    tools_4.4.2       pkgconfig_2.0.3   htmltools_0.5.8.1</code></pre>
 </div>
 </div>
 

@@ -64,11 +64,9 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> I like the style of the R tutorials that start from the very basics. These are helpful and encouraging to work in R
+> If the TAs can reposition themselves around the room so they can better see us holding blue notes up for help that would be great. Thank you!
 
-> It was useful to go through R syntax (it felt slow for me but I imagine for those new to programming it was fast). Could be helpful to include secondary activities for people who already have the skill!
-
-> I really liked all the demonstrations in today's class! I feel like it was a great pace!
+> I liked that there were more instructions before the practice
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -79,5 +77,4 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- mark more clearly in the files what's optional and what's necessary to know 
-- maybe include secondary activities for people who already have the relevant skills 
+- make sure that TAs walk around so that they can see whether students have questions / need help with coding 
