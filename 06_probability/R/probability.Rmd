@@ -1,7 +1,7 @@
 ---
 title: "Class 6"
 author: "Tobias Gerstenberg"
-date: "January 22nd, 2024"
+date: "January 16th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -166,7 +166,7 @@ df.letters %>%
 ```{r}
 ggplot(data = df.letters,
        mapping = aes(x = n_correct)) + 
-  geom_bar(aes(y = stat(count)/sum(count)),
+  geom_bar(aes(y = after_stat(count)/sum(count)),
            color = "black",
            fill = "lightblue") +
   scale_y_continuous(labels = scales::percent,
@@ -216,6 +216,10 @@ where = c("study", "kitchen", "conservatory",
 df.clue = expand_grid(who = who,
                       what = what,
                       where = where)
+
+#How many possible combinations? 
+#count number of rows in df.clue
+nrow(df.clue)
 
 df.suspects = df.clue %>% 
   distinct(who) %>% 
@@ -364,13 +368,13 @@ digraph dot{
 
 ```{r}
 # prior probability of the disease
-p.D = 0.0001
+p.D = 0.01
 
 # sensitivity of the test 
-p.T_given_D = 0.999
+p.T_given_D = 0.95
 
 # specificity of the test 
-p.notT_given_notD = 0.999
+p.notT_given_notD = 0.95
 p.T_given_notD = (1 - p.notT_given_notD)
 
 # posterior given a positive test result 
