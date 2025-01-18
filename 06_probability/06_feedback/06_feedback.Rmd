@@ -1,6 +1,6 @@
 ---
 title: "06_probability"
-author: "Tobias Gerstenberg"
+author: "Nilam Ram"
 output: 
   html_document:
     theme: cosmo
@@ -22,7 +22,7 @@ theme_set(theme_classic() +
 
 <!-- # Pace -->
 
-```{r, echo=FALSE, include=FALSE, eval=FALSE}
+```{r, echo=FALSE}
 df.pace = read_csv("data/How was the pace of today's class-.csv",
                    skip = 1,
                    show_col_types = FALSE) %>% 
@@ -64,10 +64,6 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> If there was recordings of this classes (from the previous years), it will be great. Gives us a chance to relook at the content.
-
-> I really liked the examples and when we were solving the problems! I think it would be nice to walk through the little screenshots of R code a little slower if possible!
-
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
          skip = 1,
@@ -77,6 +73,4 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- share recordings of previous classes 
-- walk through code examples a little slower (maybe even switch to RStudio to illustrate)
 
