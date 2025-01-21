@@ -1,7 +1,7 @@
 ---
 title: "Class 7"
 author: "Tobias Gerstenberg"
-date: "January 24th, 2024"
+date: "January 21st, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -635,7 +635,7 @@ ggplot(data = df.samples,
 # remove all variables with tmp in their name 
 rm(list = str_subset(string = ls(), pattern = "tmp."))
 ```
-## Pinguin exercise 
+## Penguin exercise 
 
 Assume that we have a population of penguins whose height is distribution according to a Gamma distribution with a `shape` parameter of 50, and `rate` parameter of 1. 
 
