@@ -1,7 +1,7 @@
 ---
 title: "Class 8"
 author: "Tobias Gerstenberg"
-date: "January 26th, 2024"
+date: "January 23rd, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -103,7 +103,7 @@ df.sample = sample(df.population$numbers,
 
 # draw a plot of the sample
 ggplot(data = df.sample,
-       mapping = aes(x = number, y = stat(density))) + 
+       mapping = aes(x = number, y = after_stat(density))) + 
   geom_histogram(binwidth = 0.5, 
                  fill = "lightblue",
                  color = "black") +
@@ -176,7 +176,7 @@ df.plot = df.sampling_distribution_means
 
 ggplot(data = df.plot,
        mapping = aes(x = mean)) + 
-  geom_histogram(aes(y = stat(density)),
+  geom_histogram(aes(y = after_stat(density)),
                  binwidth = 0.05, 
                  fill = "lightblue",
                  color = "black") +
@@ -258,25 +258,25 @@ ggplot(data = df.sample,
 ```
 
 
-Let's plot the bootstrapped sampling distribution: 
+Let's plot the bootstrapped sampling distribution of the mean: 
 
 ```{r}
 # plot the bootstrapped sampling distribution
 ggplot(data = df.bootstrap, 
        mapping = aes(x = average)) +
-  geom_histogram(aes(y = stat(density)),
+  geom_histogram(aes(y = after_stat(density)),
                  color = "black",
                  fill = "lightblue",
                  binwidth = 0.05) + 
   # stat_density(geom = "line",
-  #              size = 1.5,
+  #              linewidth = 1.5,
   #              bw = 0.1,
   #              color = "blue",
   #              linetype = 2) +
   stat_function(fun = ~ dnorm(.,
                               mean = mean(df.sample$number),
                               sd = sd(df.sample$number / sqrt(nrow(df.sample)))),
-                size = 2) +
+                linewidth = 2) +
   labs(x = "mean") +
   scale_y_continuous(expand = expansion(mult = c(0, 0.01)))
 ```
@@ -293,7 +293,7 @@ df.bootstrap %>%
                 full_width = F)
 ```
 
-Neat, as we can see, the mean and standard deviation of the bootstrapped sampling distribution are very close to the sampling distribution that we generated from the population distribution. 
+Neat, as we can see, the mean and standard deviation of the bootstrapped sampling distribution of the mean are very close to the sampling distribution that we generated from the (original) population distribution. 
 
 ## Understanding p-values
 
@@ -306,7 +306,7 @@ What we are really interested in is the probability of a hypothesis given the da
 
 Instead, we define a null hypothesis, construct a sampling distribution that tells us what we would expect the test statistic of interest to look like if the null hypothesis were true. We reject the null hypothesis in case our observed result would be unlikely if the null hypothesis were true. 
 
-An intutive way for illustrating (this rather unintuitive procedure) is the permutation test. 
+An intuitive way for illustrating (this rather un-intuitive procedure) is the permutation test. 
 
 ### Permutation test
 
@@ -351,7 +351,7 @@ ggplot(data = df.permutation,
              alpha = 0.5) + 
   stat_summary(fun.data = mean_cl_boot, 
                geom = "linerange", 
-               size = 1) +
+               linewidth = 1) +
   stat_summary(fun = "mean", 
                geom = "point", 
                shape = 21, 
@@ -403,7 +403,7 @@ ggplot(data = df.permutation,
                                         width = 0.1)) +
   stat_summary(fun.data = mean_cl_boot,
                geom = "linerange",
-               size = 1) +
+               linewidth = 1) +
   stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
@@ -438,14 +438,14 @@ df.permutations = tibble(permutation = 1:n_permutations,
 
 #plot the distribution of the differences 
 ggplot(data = df.permutations, aes(x = mean_difference)) +
-  geom_histogram(aes(y = stat(density)),
+  geom_histogram(aes(y = after_stat(density)),
                  color = "black",
                  fill = "lightblue",
                  binwidth = 0.05) + 
   stat_density(geom = "line",
-               size = 1.5,
+               linewidth = 1.5,
                bw = 0.2) +
-  geom_vline(xintercept = difference_actual, color = "red", size = 2) +
+  geom_vline(xintercept = difference_actual, color = "red", linewidth = 2) +
   labs(x = "difference between means") +
   scale_x_continuous(breaks = seq(-1.5, 1.5, 0.5),
                      labels = seq(-1.5, 1.5, 0.5),
@@ -500,7 +500,7 @@ ggplot(data = tibble(x = c(mean - 3 * sd, mean + 3 * sd)),
        mapping = aes(x = x)) + 
   stat_function(fun = ~ dnorm(.,mean = mean, sd = sd),
                 color = "black",
-                size = 2) + 
+                linewidth = 2) + 
   geom_vline(xintercept = qnorm(c(0.025, 0.975), mean = mean, sd = sd),
              linetype = 2)
   # labs(x = "performance")
@@ -511,7 +511,7 @@ Distribution of differences in means
 ```{r}
 ggplot(data = df.ttest,
        mapping = aes(x = difference)) + 
-  geom_density(size = 1) + 
+  geom_density(linewidth = 1) + 
   geom_vline(xintercept = quantile(df.ttest$difference,
                                    probs = c(0.025, 0.975)),
              linetype = 2) 
@@ -522,10 +522,10 @@ t-distribution
 ```{r}
 ggplot(data = df.ttest,
        mapping = aes(x = tstatistic)) + 
-  stat_function(fun = ~ dt(., df = sample_size * 2 - 2),
+  stat_function(fun = ~ dt(., df = sample_size * 2 - 2), #this is like qnorm(), but for t-distribution
                 color = "red",
-                size = 2) +
-  geom_density(size = 1) + 
+                linewidth = 2) +
+  geom_density(linewidth = 1) + 
   geom_vline(xintercept = qt(c(0.025, 0.975), df = sample_size * 2 - 2),
              linetype = 2) + 
   scale_x_continuous(limits = c(-4, 4),
@@ -667,7 +667,7 @@ quantile(bootstraps, prob = c(0.025, 0.975))
 
 ggplot(data = as_tibble(bootstraps),
        mapping = aes(x = value)) + 
-  geom_density(size = 1) + 
+  geom_density(linewidth = 1) + 
   geom_vline(xintercept = quantile(bootstraps,
                                    probs = c(0.025, 0.975)),
              linetype = 2) 
