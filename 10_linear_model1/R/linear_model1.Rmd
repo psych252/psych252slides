@@ -1,7 +1,7 @@
 ---
 title: "Class 10"
 author: "Tobias Gerstenberg"
-date: "January 31st, 2024"
+date: "January 29th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -379,7 +379,8 @@ Illustration of the residuals for the compact model:
 
 ```{r}
 # fit the model 
-lm.compact = lm(happiness ~ 1, data = df.regression)
+lm.compact = lm(formula = happiness ~ 1,
+                data = df.regression)
 
 # store the model information
 df.compact_summary = tidy(lm.compact)
@@ -410,7 +411,8 @@ Illustration of the residuals for the augmented model:
 
 ```{r}
 # fit the model 
-lm.augmented = lm(happiness ~ chocolate, data = df.regression)
+lm.augmented = lm(formula = happiness ~ 1 + chocolate,
+                  data = df.regression)
 
 # store the model information
 df.augmented_summary = tidy(lm.augmented)
@@ -533,7 +535,8 @@ df.plot = df.credit %>%
   mutate(income_centered = income - mean(income)) %>% 
   select(balance, income, income_centered)
 
-fit = lm(balance ~ 1 + income_centered, data = df.plot)
+fit = lm(formula = balance ~ 1 + income_centered,
+         data = df.plot)
 
 ggplot(data = df.plot,
        mapping = aes(x = income_centered,
@@ -553,7 +556,8 @@ ggplot(data = df.plot,
 Let's fit the model and take a look at the model summary: 
 
 ```{r}
-fit = lm(balance ~ 1 + income, data = df.credit) 
+fit = lm(formula = balance ~ 1 + income,
+         data = df.credit) 
 
 fit %>% 
   summary()
