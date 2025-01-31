@@ -1,7 +1,7 @@
 ---
 title: "Class 11"
 author: "Tobias Gerstenberg"
-date: "February 2nd, 2024"
+date: "January 31st, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -176,15 +176,9 @@ Now that we've explored the correlations, let's have a go at the multiple regres
 We'll first take another look at the pairwise relationships: 
 
 ```{r}
-tmp.x = "tv"
-# tmp.x = "radio"
-# tmp.x = "newspaper"
-# tmp.y = "radio"
-tmp.y = "radio"
-# tmp.y = "tv"
-
-ggplot(df.ads, 
-       aes_string(x = tmp.x, y = tmp.y)) + 
+ggplot(data = df.ads, 
+       mapping = aes(x = tv,
+                     y = radio)) + 
   stat_smooth(method = "lm",
               color = "black",
               fullrange = T) +
@@ -194,10 +188,10 @@ ggplot(df.ads,
            y = Inf,
            hjust = -0.5,
            vjust = 1.5,
-           label = str_c("r = ", cor(df.ads[[tmp.x]], df.ads[[tmp.y]]) %>% 
+           label = str_c("r = ", cor(df.ads$tv, df.ads$radio) %>% 
                            round(2) %>%  # round 
                            str_remove("^0+") # remove 0
-                         ),
+           ),
            size = 8) +
   theme(text = element_text(size = 30))
 ```
@@ -210,8 +204,10 @@ Let's see whether adding radio ads is worth it (over and above having TV ads).
 
 ```{r}
 # fit the models 
-fit_c = lm(sales ~ 1 + tv, data = df.ads)
-fit_a = lm(sales ~ 1 + tv + radio, data = df.ads)
+fit_c = lm(formula = sales ~ 1 + tv,
+           data = df.ads)
+fit_a = lm(formula = sales ~ 1 + tv + radio,
+           data = df.ads)
 
 # do the F test
 anova(fit_c, fit_a)
@@ -222,7 +218,8 @@ It's worth it!
 Let's evaluate how well the model actually does. We do this by taking a look at the residual plot, and check whether the residuals are normally distributed.
 
 ```{r}
-tmp.fit = lm(sales ~ 1 + tv + radio, data = df.ads)
+tmp.fit = lm(formula = sales ~ 1 + tv + radio,
+             data = df.ads)
 
 df.plot = tmp.fit %>% 
   augment() %>% 
@@ -238,13 +235,6 @@ ggplot(df.plot,
 ggplot(df.plot, 
        aes(x = resid)) + 
   stat_density(geom = "line")
-
-# QQ plot 
-ggplot(df.plot,
-       aes(sample = resid)) + 
-  geom_qq() + 
-  geom_qq_line() 
-
 ```
 
 There is a slight non-linear trend in the residuals. We can also see that the residuals aren't perfectly normally distributed. We'll see later what we can do about this ... 
@@ -266,16 +256,22 @@ As we can see, the model almost explains 90% of the variance. That's very decent
 Here is a way of visualizing how both tv ads and radio ads affect sales: 
 
 ```{r}
-df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+df.plot = lm(formula = sales ~ 1 + tv + radio,
+             data =  df.ads) %>% 
   augment() %>% 
   clean_names()
 
-df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+df.tidy = lm(formula = sales ~ 1 + tv + radio,
+             data =  df.ads) %>% 
   tidy()
 
-ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
+ggplot(data = df.plot,
+       mapping = aes(x = radio,
+                     y = sales,
+                     color = tv)) + 
   geom_point() +
-  scale_color_gradient(low = "gray80", high = "black") +
+  scale_color_gradient(low = "gray80",
+                       high = "black") +
   theme(legend.position = c(0.1, 0.8))
 ```
 
@@ -284,14 +280,19 @@ We used color here to encode TV ads (and the x-axis for the radio ads).
 In addition, we might want to illustrate what relationship between radio ads and sales the model predicts for three distinct values for TV ads. Like so: 
 
 ```{r}
-df.plot = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+df.plot = lm(formula = sales ~ 1 + tv + radio,
+             data =  df.ads) %>% 
   augment() %>% 
   clean_names()
 
-df.tidy = lm(sales ~ 1 + tv + radio, data =  df.ads) %>% 
+df.tidy = lm(formula = sales ~ 1 + tv + radio,
+             data =  df.ads) %>% 
   tidy()
 
-ggplot(df.plot, aes(x = radio, y = sales, color = tv)) + 
+ggplot(data = df.plot,
+       mapping = aes(x = radio,
+                     y = sales,
+                     color = tv)) + 
   geom_point() +
   geom_abline(intercept = df.tidy$estimate[1] + df.tidy$estimate[2] * 200,
               slope = df.tidy$estimate[3]) +
@@ -314,7 +315,6 @@ fit_a %>%
     kable(digits = 2) %>% 
     kable_styling(bootstrap_options = "striped",
                 full_width = F)
-  
 ```
 
 #### Standardizing the predictors
@@ -333,7 +333,6 @@ df.ads %>%
   kable(digits = 2) %>% 
   kable_styling(bootstrap_options = "striped",
                 full_width = F)
-
 ```
 
 We can standardize (z-score) variables using the `scale()` function.
@@ -342,8 +341,8 @@ We can standardize (z-score) variables using the `scale()` function.
 # tmp.variable = "tv"
 tmp.variable = "tv_scaled" 
 
-ggplot(df.ads,
-       aes(x = .data[[tmp.variable]])) +
+ggplot(data = df.ads,
+       mapping = aes(x = .data[[tmp.variable]])) +
   stat_density(geom = "line",
                size = 1) + 
   annotate(geom = "text", 
@@ -370,8 +369,10 @@ Let's compare a compact model that only predicts the mean, with a model that use
 
 ```{r}
 # fit the models
-fit_c = lm(balance ~ 1, data = df.credit)
-fit_a = lm(balance ~ 1 + student, data = df.credit)
+fit_c = lm(formula = balance ~ 1,
+           data = df.credit)
+fit_a = lm(formula = balance ~ 1 + student,
+           data = df.credit)
 
 # run the F test 
 anova(fit_c, fit_a)
@@ -387,9 +388,9 @@ The `summary()` shows that it's worth it: the augmented model explains a signifc
 Let's visualize the model predictions. Here is the compact model: 
 
 ```{r}
-ggplot(df.credit,
-       aes(x = index, 
-           y = balance)) +
+ggplot(data = df.credit,
+       mapping = aes(x = index, 
+                     y = balance)) +
   geom_hline(yintercept = mean(df.credit$balance),
              size = 1) +
   geom_segment(aes(xend = index,
@@ -407,10 +408,10 @@ df.fit = fit_a %>%
   tidy() %>% 
   mutate(estimate = round(estimate,2))
 
-ggplot(df.credit,
-       aes(x = index, 
-           y = balance,
-           color = student)) +
+ggplot(data = df.credit,
+       mapping = aes(x = index, 
+                     y = balance,
+                     color = student)) +
   geom_hline(yintercept = df.fit$estimate[1],
              size = 1,
              color = "#E41A1C") +
@@ -419,13 +420,13 @@ ggplot(df.credit,
              color = "#377EB8") +
   geom_segment(data = df.credit %>%
                  filter(student == "No"),
-                 aes(xend = index,
+               aes(xend = index,
                    yend = df.fit$estimate[1]),
                alpha = 0.1,
                color = "#E41A1C") +
   geom_segment(data = df.credit %>%
                  filter(student == "Yes"),
-                 aes(xend = index,
+               aes(xend = index,
                    yend = df.fit$estimate[1] + df.fit$estimate[2]),
                alpha = 0.1,
                color = "#377EB8") +
@@ -479,11 +480,12 @@ To report the results, we could show a plot like this:
 ```{r}
 df.plot = df.credit
 
-ggplot(df.plot,
-       aes(x = student,
-           y = balance)) +
+ggplot(data = df.plot,
+       mapping = aes(x = student,
+                     y = balance)) +
   geom_point(alpha = 0.1,
-             position = position_jitter(height = 0, width = 0.1)) +
+             position = position_jitter(height = 0,
+                                        width = 0.1)) +
   stat_summary(fun.data = "mean_cl_boot",
                size = 1)
 ```
@@ -504,8 +506,10 @@ Now let's take a look at a case where we have one continuous and one categorical
 
 ```{r}
 # fit the models
-fit_c = lm(balance ~ 1 + income, df.credit)
-fit_a = lm(balance ~ 1 + income + student, df.credit)
+fit_c = lm(formula = balance ~ 1 + income,
+           data = df.credit)
+fit_a = lm(formula = balance ~ 1 + income + student,
+           data = df.credit)
 
 # run the F test 
 anova(fit_c, fit_a)
@@ -522,10 +526,12 @@ df.augment = fit_c %>%
   augment() %>% 
   clean_names()
 
-ggplot(df.augment,
-       aes(x = income,
-           y = balance)) + 
-  geom_smooth(method = "lm", se = F, color = "black") +
+ggplot(data = df.augment,
+       mapping = aes(x = income,
+                     y = balance)) + 
+  geom_smooth(method = "lm",
+              se = F,
+              color = "black") +
   geom_segment(aes(xend = income,
                    yend = fitted),
                alpha = 0.3) +
@@ -544,21 +550,21 @@ df.augment = fit_a %>%
   augment() %>% 
   clean_names()
 
-ggplot(df.augment,
-       aes(x = income,
-           y = balance,
-           group = student,
-           color = student)) + 
+ggplot(data = df.augment,
+       mapping = aes(x = income,
+                     y = balance,
+                     group = student,
+                     color = student)) + 
   geom_segment(data = df.augment %>% 
                  filter(student == "No"),
-               aes(xend = income,
-                   yend = fitted),
+               mapping = aes(xend = income,
+                             yend = fitted),
                color = "#E41A1C",
                alpha = 0.3) +
   geom_segment(data = df.augment %>% 
                  filter(student == "Yes"),
-               aes(xend = income,
-                   yend = fitted),
+               mapping = aes(xend = income,
+                             yend = fitted),
                color = "#377EB8",
                alpha = 0.3) +
   geom_abline(intercept = df.tidy$estimate[1],
@@ -573,7 +579,6 @@ ggplot(df.augment,
   scale_color_brewer(palette = "Set1") +
   theme(legend.position = c(0.1, 0.9)) +
   guides(color = guide_legend(reverse = T))
-
 ```
 
 The augmented model predicts two lines again, each with the same slope (but the intercept differs).
@@ -609,8 +614,10 @@ Let's check:
 
 ```{r}
 # fit models 
-fit_c = lm(formula = balance ~ income + student, data = df.credit)
-fit_a = lm(formula = balance ~ income * student, data = df.credit)
+fit_c = lm(formula = balance ~ income + student,
+           data = df.credit)
+fit_a = lm(formula = balance ~ income * student,
+           data = df.credit)
 
 # F-test 
 anova(fit_c, fit_a)
