@@ -22,7 +22,7 @@ theme_set(theme_classic() +
 
 # Pace
 
-```{r, echo=FALSE, eval=FALSE, include=FALSE}
+```{r}
 df.pace = read_csv("data/How was the pace of today's class-.csv",
                    skip = 1,
                    show_col_types = FALSE) %>% 
@@ -41,7 +41,7 @@ ggplot(data = df.pace,
 
 # Happiness
 
-```{r, echo=FALSE, eval=FALSE, include=FALSE}
+```{r}
 df.happy = read_csv("data/How happy were you with today's class overall-.csv",
                     skip = 1,
                     show_col_types = FALSE) %>% 
@@ -64,6 +64,11 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
+> Would be helpful to go backwards on each term. For example if you explain the use of a standard deviation also explain what would happen if you removed that or if you set it to a larger or smaller value
+
+> Might just be me but I have trouble seeing the red laser pointer on the screen. Could you try using your mouse or even your hand as well? Thanks!
+
+> I think we need more worked examples
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
