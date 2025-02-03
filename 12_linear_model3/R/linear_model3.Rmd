@@ -1,7 +1,7 @@
 ---
 title: "Class 12"
 author: "Tobias Gerstenberg"
-date: "February 5th, 2024"
+date: "February 2nd, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -91,7 +91,7 @@ df.poker %>%
              position = position_jitter(height = 0, width = 0.1)) + 
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1) + 
+               linewidth = 1) + 
   stat_summary(fun = "mean",
                geom = "point",
                shape = 21,
@@ -118,7 +118,7 @@ The F-test reported by the ANOVA compares the fitted model with a compact model 
 ```{r}
 # fit the models 
 fit_c = lm(formula = balance ~ 1, data = df.poker)
-fit_a = lm(formula = balance ~ hand, data = df.poker)
+fit_a = lm(formula = balance ~ 1 + hand, data = df.poker)
 
 # compare via F-test
 anova(fit_c, fit_a)
@@ -170,8 +170,8 @@ df.plot = df.poker %>%
 
 df.tidy = fit_a %>% 
   tidy() %>% 
-  select(where(is.numeric)) %>% 
-  mutate(across(.fns = ~ round(., digits = 2)))
+  #select(where(is.numeric)) %>% 
+  mutate(across(.cols = where(is.numeric), .fns = ~ round(., digits = 2)))
 
 df.augment = fit_a %>% 
   augment() %>%
@@ -190,21 +190,21 @@ ggplot(data = df.plot,
                              y = df.tidy$estimate[1],
                              yend = df.tidy$estimate[1]),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[3],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[3]),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = df.augment,
                aes(xend = hand_jitter,
                    y = balance,
@@ -249,27 +249,27 @@ ggplot(data = df.plot,
                              y = df.means$bad,
                              yend = df.means$bad),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                mapping = aes(x = 1.6,
                              xend = 2.4,
                              y = df.means$neutral,
                              yend = df.means$neutral),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                mapping = aes(x = 2.6,
                              xend = 3.4,
                              y = df.means$good,
                              yend = df.means$good),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(mapping = aes(xend = hand_jitter,
                              y = mean_group,
                              yend = mean_grand),
                alpha = 0.3) +
   geom_hline(yintercept = mean(df.poker$balance),
-             size = 1) + 
+             linewidth = 1) + 
   labs(y = "balance") + 
   scale_color_manual(values = c("red", "orange", "green")) + 
   scale_x_continuous(breaks = 1:3, labels = c("bad", "neutral", "good")) + 
@@ -345,7 +345,7 @@ Are bad hands different from neutral hands?
 ```{r}
 df.poker %>% 
   filter(hand %in% c("bad", "neutral")) %>% 
-  lm(formula = balance ~ hand, 
+  lm(formula = balance ~ 1 + hand, 
      data = .) %>% 
   summary()
 ```
@@ -355,7 +355,7 @@ Are neutral hands different from good hands?
 ```{r}
 df.poker %>% 
   filter(hand %in% c("neutral", "good")) %>% 
-  lm(formula = balance ~ hand, 
+  lm(formula = balance ~ 1 + hand, 
      data = .) %>% 
   summary()
 ```
@@ -365,7 +365,7 @@ Doing the same thing by recoding our hand factor and taking "neutral" to be the 
 ```{r}
 df.poker %>% 
   mutate(hand = fct_relevel(hand, "neutral")) %>% 
-  lm(formula = balance ~ hand,
+  lm(formula = balance ~ 1 + hand,
      data = .) %>% 
   summary()
 ```
@@ -375,7 +375,7 @@ df.poker %>%
 Let's first run the model 
 
 ```{r}
-fit = lm(formula = balance ~ hand, 
+fit = lm(formula = balance ~ 1 + hand, 
          data = df.poker)
 
 fit %>%
@@ -462,27 +462,27 @@ ggplot(data = df.plot,
                    y = df.means$bad,
                    yend = df.means$bad),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.means$neutral,
                    yend = df.means$neutral),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.means$good,
                    yend = df.means$good),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(aes(xend = hand_jitter,
                    y = mean_group,
                    yend = mean_grand),
                alpha = 0.3) +
   geom_hline(yintercept = mean(df.poker$balance),
-             size = 1) + 
+             linewidth = 1) + 
   labs(y = "balance") + 
   scale_color_manual(values = c("red", "orange", "green")) + 
   scale_x_continuous(breaks = 1:3, labels = c("bad", "neutral", "good")) + 
@@ -496,7 +496,7 @@ ggplot(data = df.plot,
 ```{r}
 set.seed(1)
 
-fit_a = lm(formula = balance ~ hand,
+fit_a = lm(formula = balance ~ 1 + hand,
            data = df.poker)
 
 df.plot = df.poker %>% 
@@ -505,8 +505,8 @@ df.plot = df.poker %>%
 
 df.tidy = fit_a %>% 
   tidy() %>% 
-  select(where(is.numeric)) %>% 
-  mutate(across(.fns = ~ round(., digits = 2)))
+  #select(where(is.numeric)) %>% 
+  mutate(across(.cols = where(is.numeric), .fns = ~ round(., digits = 2)))
 
 df.augment = fit_a %>% 
   augment() %>%
@@ -524,21 +524,21 @@ ggplot(data = df.plot,
                    y = df.tidy$estimate[1],
                    yend = df.tidy$estimate[1]),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[3],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[3]),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = df.augment,
                aes(xend = hand_jitter,
                    y = balance,
@@ -579,7 +579,7 @@ ggplot(data = df.poker,
                size = 3,
                fill = "black") +
   scale_shape_manual(values = c(21, 22)) +
-  guides(shape = F)
+  guides(shape = "none")
   
 ```
 
@@ -607,7 +607,7 @@ ggplot(data = df.poker,
                size = 3) +
   scale_fill_manual(values = c("red", "orange", "green")) +
   scale_shape_manual(values = c(21, 22)) +
-  guides(fill = F)
+  guides(fill = "none")
   
 ```
 
@@ -616,7 +616,8 @@ ggplot(data = df.poker,
 For N-way ANOVAs, we need to be careful about what sums of squares we are using. The standard (based on the SPSS output) is to use type III sums of squares. We set this up in the following way: 
 
 ```{r}
-lm(formula = balance ~ hand * skill,
+lm(formula = balance ~ 1 + hand * skill,
+   #formula = balance ~ 1 + hand + skill + hand:skill, #alternative formula notation
    data = df.poker,
    contrasts = list(hand = "contr.sum",
                     skill = "contr.sum")) %>% 
@@ -691,7 +692,7 @@ ggplot(df.data,
                position = position_dodge(0.9)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1,
+               linewidth = 1,
                position = position_dodge(0.9)) +
   scale_fill_brewer(palette = "Set1")
 ```
@@ -752,7 +753,7 @@ ggplot(df.data,
                position = position_dodge(0.9)) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1,
+               linewidth = 1,
                position = position_dodge(0.9)) +
   scale_fill_brewer(palette = "Set1")
 ```
@@ -771,7 +772,8 @@ lm(formula = rating ~ 1 + condition + treatment + condition:treatment,
 Let's fit the model first:
 
 ```{r}
-fit = lm(formula = balance ~ hand * skill, 
+fit = lm(formula = balance ~ 1 + hand * skill,
+         #formula = balance ~ 1 + hand + skill + hand:skill, #alternative formula notation
          data = df.poker)
 
 fit %>%
@@ -826,20 +828,20 @@ ggplot(data = df.plot,
                    y = df.means$average,
                    yend = df.means$average),
                color = "black",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.means$expert,
                    yend = df.means$expert),
                color = "gray50",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(aes(xend = skill_jitter,
                    y = mean_group,
                    yend = mean_grand),
                alpha = 0.3) +
   geom_hline(yintercept = mean(df.poker$balance),
-             size = 1) + 
+             linewidth = 1) + 
   labs(y = "balance") + 
   scale_color_manual(values = c("black", "gray50")) + 
   scale_x_continuous(breaks = 1:2, labels = c("average", "expert")) + 
@@ -854,7 +856,9 @@ ggplot(data = df.plot,
 Let's fit a two-way ANOVA with the interaction term. 
 
 ```{r}
-fit = lm(formula = balance ~ hand * skill, data = df.poker)
+fit = lm(formula = balance ~ 1 + hand * skill,
+         #formula = balance ~ 1 + hand + skill + hand:skill,
+         data = df.poker)
 fit %>% 
   anova()
 ```
