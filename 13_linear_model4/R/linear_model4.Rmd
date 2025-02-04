@@ -1,7 +1,7 @@
 ---
 title: "Class 13"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2024"
+date: "February 4th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -73,42 +73,42 @@ For the standard `anova()` function, the order of the independent predictors mat
 There are two reasons for why this happens. 
 
 1) In an unbalanced design, the predictors in the model aren't uncorrelated anymore. 
-2) The standard `anova()` function computes Type I (sequential) sums of squares. 
+2) The standard `anova()` function computes Type I (sequential) sums of squares by default. 
 
 Sequential sums of squares means that the predictors are added to the model in the order in which the are specified. 
 
 ```{r}
 # one order 
-lm(formula = balance ~ skill + hand, 
+lm(formula = balance ~ 1 + skill + hand, 
          data = df.poker.unbalanced) %>% 
   anova()
 
 # another order 
-lm(formula = balance ~ hand + skill, 
+lm(formula = balance ~ 1 + hand + skill, 
          data = df.poker.unbalanced) %>% 
   anova()
 ```
 
-We should compute an ANOVA with type 3 sums of squares, and set the contrast to sum contrasts. I like to use the `joint_tests()` function from the "emmeans" package for doing so. It does both of these things for us. 
+Because the choice of order is sometimes arbitrary, or the factors were manipulated simultaneosuly, the field has generally moved on to compute an ANOVA with type 3 sums of squares, and set the contrast to sum contrasts. I like to use the `joint_tests()` function from the "emmeans" package for doing so. It does both of these things for us. 
 
 ```{r}
 # one order
-lm(formula = balance ~ hand * skill,
+lm(formula = balance ~ 1 + skill * hand,
    data = df.poker.unbalanced) %>% 
   joint_tests()
 
 # another order
-lm(formula = balance ~ skill + hand,
+lm(formula = balance ~ 1 + hand * skill,
    data = df.poker.unbalanced) %>% 
   joint_tests()
 ```
 
-Now, the order of the independent variables doesn't matter anymore. 
+Now, the order of the independent variables doesn't matter anymore. Type 3 sums of squares is good!
 
 Alternatively,we can also use the `aov_ez()` function from the `afex` package. 
 
 ```{r}
-lm(formula = balance ~ skill * hand,
+lm(formula = balance ~ 1 + skill * hand,
    data = df.poker.unbalanced) %>% 
   joint_tests()
 
@@ -122,7 +122,7 @@ fit$Anova
 ## Interpreting parameters (very important!)
 
 ```{r}
-fit = lm(formula = balance ~ skill * hand,
+fit = lm(formula = balance ~ 1 + skill * hand,
          data = df.poker)
 
 fit %>% 
@@ -131,7 +131,7 @@ fit %>%
 
 > Important: The t-statistic for `skillexpert` is not telling us that there is a main effect of skill. Instead, it shows the difference between `skill = average` and `skill = expert` when all other predictors in the model are 0!!
 
-Here, this parameter just captures whether there is a significant difference between average and skilled players **when they have a bad hand** (because that's the reference category here). Let's check that this is true. 
+Here, this parameter just captures whether there is a significant difference between average and skilled players, **when they have a bad hand** (because the reference category for the hand variable is the 'bad' category). Let's check that this is true. 
 
 ```{r}
 df.poker %>% 
@@ -153,13 +153,15 @@ Here is a linear contrast that assumes that there is a linear relationship betwe
 df.poker = df.poker %>% 
   mutate(hand_contrast = factor(hand,
                                 levels = c("bad", "neutral", "good"),
-                                labels = c(-1, 0, 1)),
+                                labels = c(-1, 0, 1)), #these are structured as point along a line
          hand_contrast = hand_contrast %>% 
            as.character() %>% 
            as.numeric())
 
-fit.contrast = lm(formula = balance ~ hand_contrast,
+fit.contrast = lm(formula = balance ~ 1 + hand_contrast,
                   data = df.poker)
+
+summary(fit.contrast)
 ```
 
 Here is a visualization of the model prediction together with the residuals. 
@@ -190,21 +192,21 @@ ggplot(data = df.plot,
                    y = df.tidy$estimate[1]-df.tidy$estimate[2],
                    yend = df.tidy$estimate[1]-df.tidy$estimate[2]),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1],
                    yend = df.tidy$estimate[1]),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = df.augment,
                aes(xend = hand_jitter,
                    y = balance,
@@ -216,6 +218,8 @@ ggplot(data = df.plot,
   theme(legend.position = "none",
         axis.title.x = element_blank())
 ```
+
+Notice that the distance between the levels is equivalent. For each additional 1 point difference on the hand_contrast variable, the predicted balance is 3.5425 higher (as we see from the lm() results.) 
 
 ### Hypothetical data
 
@@ -234,7 +238,7 @@ sample_size = 20
 
 # generate data 
 df.development = tibble(
-  group = rep(c("3-4", "5-6", "7-8"), each = sample_size),
+  group = rep(c("3-4", "5-6", "7-8"), each = sample_size), #age groups
   performance = NA) %>% 
   mutate(performance = ifelse(group == "3-4",
                               rnorm(sample_size,
@@ -263,12 +267,12 @@ df.development = tibble(
 Let's define a linear contrast using the `emmeans` package, and test whether it's significant. 
 
 ```{r}
-fit = lm(formula = performance ~ group,
+fit = lm(formula = performance ~ 1 + group,
          data = df.development)
 
 fit %>% 
   emmeans("group",
-          contr = list(linear = c(-0.5, 0, 0.5)),
+          contr = list(linear = c(-0.5, 0, 0.5)), #these are equidistant points on a line
           adjust = "bonferroni") %>% 
   pluck("contrasts")
 ```
@@ -312,13 +316,13 @@ ggplot(data = df.plot,
 
 ```
 
-With contrast
+With linear contrast
 
 ```{r linear-contrast-model, fig.cap="Predictions of the linear contrast model"}
 # make example reproducible 
 set.seed(1)
 
-fit = lm(formula = performance ~ group_contrast,
+fit = lm(formula = performance ~ 1 + group_contrast,
          data = df.development)
 
 df.plot = df.development %>% 
@@ -327,8 +331,8 @@ df.plot = df.development %>%
 
 df.tidy = fit %>% 
   tidy() %>% 
-  select(where(is.numeric)) %>% 
-  mutate(across(.fns = ~ round(. , 2)))
+  #select(where(is.numeric)) %>% 
+  mutate(across(.cols = where(is.numeric), .fns = ~ round(. , 2)))
 
 df.augment = fit %>% 
   augment() %>%
@@ -346,21 +350,21 @@ ggplot(data = df.plot,
                    y = df.tidy$estimate[1]-df.tidy$estimate[2],
                    yend = df.tidy$estimate[1]-df.tidy$estimate[2]),
                color = "red",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 1.6,
                    xend = 2.4,
                    y = df.tidy$estimate[1],
                    yend = df.tidy$estimate[1]),
                color = "orange",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = NULL,
                aes(x = 2.6,
                    xend = 3.4,
                    y = df.tidy$estimate[1] + df.tidy$estimate[2],
                    yend = df.tidy$estimate[1] + df.tidy$estimate[2]),
                color = "green",
-               size = 1) +
+               linewidth = 1) +
   geom_segment(data = df.augment,
                aes(xend = group_jitter,
                    y = performance,
@@ -372,6 +376,8 @@ ggplot(data = df.plot,
   theme(legend.position = "none",
         axis.title.x = element_blank())
 ```
+
+Here, we can see that the linear assumption invoked by the linear contrast may not be a good representation of the data. The age gradient doesn't seem to be linear. 
 
 Results figure
 
@@ -385,21 +391,21 @@ df.development %>%
   stat_summary(fun.data = "mean_cl_boot",
                shape = 21, 
                fill = "white",
-               size = 0.75)
+               linewidth = 0.75)
 ```
 
-Here we test some more specific hypotheses: the the two youngest groups of children are different from the oldest group, and that the 3 year olds are different from the 5 year olds. 
+Here we test some more specific hypotheses: the the two youngest groups of children are different from the oldest group, and that the 3 year olds are different from the 5 year olds. These are helpful for probing that non-linearity. 
 
 ```{r}
 #  fit the linear model 
-fit = lm(formula = performance ~ group,
+fit = lm(formula = performance ~ 1 + group,
          data = df.development)
 
 # check factor levels 
 levels(df.development$group)
 
 # define the contrasts of interest 
-contrasts = list(young_vs_old = c(-0.5, -0.5, 1),
+contrasts = list(young_vs_old = c(-0.5, -0.5, 1), #notice that each row sums to zero
                  three_vs_five = c(-0.5, 0.5, 0))
 
 # compute significance test on contrasts 
@@ -415,7 +421,7 @@ fit %>%
 Post-hoc tests for a single predictor (using the poker data set). 
 
 ```{r}
-fit = lm(formula = balance ~ hand,
+fit = lm(formula = balance ~ 1 + hand,
          data = df.poker)
 
 # post hoc tests 
@@ -429,7 +435,7 @@ Post-hoc tests for two predictors (:
 
 ```{r}
 # fit the model
-fit = lm(formula = balance ~ hand + skill,
+fit = lm(formula = balance ~ 1 + hand + skill,
          data = df.poker)
 
 # post hoc tests 
@@ -441,7 +447,7 @@ fit %>%
 
 
 ```{r}
-fit = lm(formula = balance ~ hand,
+fit = lm(formula = balance ~ 1 + hand,
          data = df.poker)
 
 # comparing each to the mean 
@@ -466,7 +472,10 @@ fit %>%
 
 model.matrix(fit) %>% 
   as_tibble() %>% 
-  distinct()
+  distinct() %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F)
 
 df.poker %>% 
   select(participant, hand, balance) %>% 
