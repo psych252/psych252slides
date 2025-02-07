@@ -1,0 +1,77 @@
+---
+title: "16_causation"
+author: "Tobias Gerstenberg"
+output: 
+  html_document:
+    theme: cosmo
+    highlight: tango
+---
+
+```{r include=FALSE}
+library("knitr")
+library("DT")
+library("janitor")
+library("tidyverse")
+
+opts_chunk$set(echo = TRUE)
+
+theme_set(theme_classic() + 
+            theme(text = element_text(size = 20),
+                  panel.grid.major.y = element_line(color = "gray90")))
+```
+
+# Pace
+
+```{r, echo=FALSE}
+df.pace = read_csv("data/How was the pace of today's class-.csv",
+                   skip = 1,
+                   show_col_types = FALSE) %>% 
+  clean_names() %>%  
+  mutate(response = factor(response, levels = c("much too slow", "a little too slow", "just right", "a little too fast", "much too fast"),
+                           labels = c("much\ntoo slow", "a little\ntoo slow", "just right", "a little\ntoo fast", "much\ntoo fast"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.pace,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", fill = "lightblue", color = "black") +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How was the pace of today's class?")
+```
+
+# Happiness
+
+```{r, echo=FALSE}
+df.happy = read_csv("data/How happy were you with today's class overall-.csv",
+                    skip = 1,
+                    show_col_types = FALSE) %>% 
+  clean_names() %>% 
+  filter(!str_detect(response, "Click")) %>% # remove response outside of the click regions 
+  mutate(response = as.numeric(response),
+         response = factor(response, levels = 1:5,
+                           labels = c("very\nunhappy", "unhappy", "neutral", "happy", "very\nhappy"))) %>% 
+  count(response,
+        .drop = F)
+
+ggplot(data = df.happy,
+       mapping = aes(x = response, y = n)) + 
+  geom_bar(stat = "identity", aes(fill = response), color = "black", show.legend = F) +
+  scale_fill_manual(values = c("red", "orange", "yellow", "lightgreen", "green")) +
+  scale_y_continuous(breaks = seq(0, 40, 2)) + 
+  labs(y = "number of students", x = "", title = "How happy were you with today's class overall?") +
+  theme(title = element_text(size = 18))
+```
+
+# What did you like? What can be improved? 
+
+
+```{r echo=FALSE, message=FALSE}
+read_csv("data/What did you like about today's class- What could be improved next time-.csv",
+         skip = 1,
+         show_col_types = FALSE) %>% 
+  datatable()
+```
+
+# What to do next time
+
+

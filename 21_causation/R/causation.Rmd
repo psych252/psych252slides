@@ -1,0 +1,1278 @@
+---
+title: "Class 16"
+author: "Tobias Gerstenberg"
+date: "02/16/2024"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+bibliography: [references.bib]  
+---
+
+```{r install-packages, echo=FALSE, eval=FALSE, include=FALSE}
+install.packages(c("mediation", "multilevel", "rsvg", "DiagrammeRsvg"))
+```
+
+# Causation
+
+Some of these notes are adapted from this tutorial: [Mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
+
+## Learning goals
+
+- Understanding what controlling for variables means. 
+- Learning a graphical procedure that helps identify when it's good vs. bad to control for variables. 
+- Simulating a mediation analysis.
+- Baron and Kenny's (1986) steps for mediation. 
+- Testing the significance of a mediation. 
+  - Sobel test. 
+  - Bootstrapping. 
+  - Bayesian approach. 
+- Limitations of mediation analysis. 
+- Simulating a moderator effect. 
+
+## Recommended reading
+
+- @fiedler2011mediation
+- @mackinnon2007mediationa
+
+## Load packages and set plotting theme
+
+```{r load-packages, message=FALSE}
+library("knitr")         # for knitting RMarkdown 
+library("kableExtra")    # for making nice tables
+library("janitor")       # for cleaning column names
+library("mediation")     # for mediation and moderation analysis 
+library("multilevel")    # Sobel test
+library("broom")         # tidying up regression results
+library("DiagrammeR")    # for drawing diagrams
+library("DiagrammeRsvg") # for exporting pdfs of graphs 
+library("rsvg")          # for exporting pdfs of graphs 
+library("tidyverse")     # for wrangling, plotting, etc. 
+```
+
+```{r set-theme}
+theme_set(theme_classic() + #set the theme 
+            theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+options(dplyr.summarise.inform = FALSE) # Disable summarize ungroup messages
+```
+
+## Bayesian networks
+
+### Sprinkler example
+
+```{r probability-19, echo=FALSE}
+grViz("
+digraph dot{
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 10,
+    fillcolor = lightblue,
+    fixedsize=true,
+    width = 0.8
+    ]
+  
+  # edges between nodes
+  edge [color = black,
+        fontname = 'Helvetica',
+        fontsize = 10]
+  1 -> 2 [label = '']
+  1 -> 3 [label = '']
+  2 -> 4 [label = ''] 
+  3 -> 4 [label = '']
+  
+  # labels for each node
+  1 [label = 'Cloudy']
+  2 [label = 'Sprinkler']
+  3 [label = 'Rain']
+  4 [label = 'Wet grass']
+  }"
+)
+```
+
+```{r probability-20}
+# cloudy 
+df.cloudy = tibble(`p(C)` = 0.5)
+
+df.cloudy %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F,
+                font_size = 20)
+
+# sprinkler given cloudy 
+df.sprinkler_given_cloudy = tibble(C = c("F", "T"),
+                                   `p(S)`= c(0.5, 0.1))
+
+df.sprinkler_given_cloudy %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F,
+                font_size = 20)
+
+# rain given cloudy 
+df.rain_given_cloudy = tibble(C = c("F", "T"),
+                              `p(R)`= c(0.2, 0.8))
+
+df.rain_given_cloudy %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F,
+                font_size = 20)
+
+# wet given sprinkler and rain  
+df.rain_given_sprinkler_and_rain = tibble(
+  S = rep(c("F", "T"), 2),
+  R = rep(c("F", "T"), each = 2),
+  `p(W)`= c(0, 0.9, 0.9, 0.99)
+)
+
+df.rain_given_sprinkler_and_rain %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = "striped",
+                full_width = F,
+                font_size = 20)
+```
+
+## Controlling for variables
+
+### Illustration of the d-separation algorithm
+
+- Question: Are D and E independent? 
+
+#### Full DAG
+
+```{r, warning=F, message=F}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  a [label = 'A' pos = '0,0!']
+  b [label = 'B'  pos = '2,0!']
+  c [label = 'C' pos = '1,-1!']
+  d [label = 'D' pos = '0,-2!']
+  e [label = 'E' pos = '2,-2!']
+  f [label = 'F' pos = '1,-3!']
+  g [label = 'G' pos = '0,-4!']
+  
+  # edges between nodes
+  edge [color = black]
+  a -> c
+  b -> c
+  c -> {d e}
+  d -> f
+  f -> g
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/dag.pdf")
+
+# show plot
+g
+```
+
+#### Draw the ancestral graph
+
+```{r, warning=F, message=F}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  a [label = 'A' pos = '0,0!']
+  b [label = 'B'  pos = '2,0!']
+  c [label = 'C' pos = '1,-1!']
+  d [label = 'D' pos = '0,-2!']
+  e [label = 'E' pos = '2,-2!']
+  
+  # edges between nodes
+  edge [color = black]
+  a -> c
+  b -> c
+  c -> {d e}
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/ancestral_graph.pdf")
+
+# show plot
+g
+```
+
+#### "Moralize" the ancestral graph by "marrying" any parents, and disorient by replacing arrows with edges
+
+```{r, warning=F, message=F}
+g = grViz("
+graph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  a [label = 'A' pos = '0,0!']
+  b [label = 'B'  pos = '2,0!']
+  c [label = 'C' pos = '1,-1!']
+  d [label = 'D' pos = '0,-2!']
+  e [label = 'E' pos = '2,-2!']
+  
+  # edges between nodes
+  edge [color = black]
+  a -- c
+  b -- c
+  c -- {d e}
+  
+  edge [color = black]
+  a -- b
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/moralize_and_disorient.pdf")
+
+# show plot
+g
+```
+
+- For the case in which we check whether D and E are independent conditioned on C
+
+```{r, warning=F, message=F}
+g = grViz("
+graph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  a [label = 'A' pos = '0,0!']
+  b [label = 'B'  pos = '2,0!']
+  d [label = 'D' pos = '0,-2!']
+  e [label = 'E' pos = '2,-2!']
+  
+  # edges between nodes
+  edge [color = black]
+
+  edge [color = black]
+  a -- b
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+## export as pdf 
+#g %>% 
+#  export_svg %>% 
+#  charToRaw %>% 
+#  rsvg_pdf("figures/moralize_and_disorient2.pdf")
+
+# show plot
+g
+```
+
+
+### Good controls
+
+#### Common cause (with direct link between X and Y)
+
+##### DAG
+
+```{r, warning=F, message=F}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1,1!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> y
+  z -> {x y}
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/common_cause1.pdf")
+
+# show plot
+g
+```
+
+##### Regression
+
+```{r}
+set.seed(1)
+
+n = 1000
+b_zx = 2
+b_xy = 2
+b_zy = 2
+sd = 1
+
+df = tibble(z = rnorm(n = n, sd = sd),
+            x = b_zx * z + rnorm(n = n, sd = sd),
+            y = b_zy * z + b_xy * x + rnorm(n = n, sd = sd))
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+##### Moralize and disorient the ancestral graph
+
+```{r, warning=F, message=F}
+g = grViz("
+graph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1,1!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -- y
+  z -- {x y}
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/common_cause1_undirected.pdf")
+#   # rsvg_pdf("figures/common_cause1_undirected2.pdf")
+
+# show plot
+g
+```
+
+#### Common effect (with direct link between X and Y)#### Common cause (without direct link between X and Y)
+
+##### DAG
+
+```{r}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1,1!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  z -> {x y}
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/common_cause2.pdf")
+
+# show plot
+g
+```
+
+##### Regression
+
+```{r}
+set.seed(1)
+n = 1000
+b_zx = 2
+b_zy = 2
+sd = 1
+
+df = tibble(z = rnorm(n = n, sd = sd),
+            x = b_zx * z + rnorm(n = n, sd = sd),
+            y = b_zy * z + rnorm(n = n, sd = sd))
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+### Bad controls
+
+#### Common effect
+
+##### DAG
+
+```{r}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1,-1!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> z
+  y -> z
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# export as pdf 
+# g %>%
+#   export_svg %>%
+#   charToRaw %>%
+#   rsvg_pdf("figures/common_effect.pdf")
+
+# show plot
+g
+```
+
+##### Regression
+
+```{r}
+set.seed(1)
+
+n = 1000
+b_xz = 2
+b_yz = 2
+sd = 1
+
+df = tibble(x = rnorm(n = n, sd = sd),
+            y = rnorm(n = n, sd = sd),
+            z = x * b_xz + y * b_yz + rnorm(n = n, sd = sd))
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+##### Moralize and disorient the ancestral graph
+
+```{r}
+g = grViz("
+graph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1,-1!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -- y
+  x -- z
+  y -- z
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# export as pdf 
+# g %>%
+#   export_svg %>%
+#   charToRaw %>%
+#   rsvg_pdf("figures/common_effect_undirected1.pdf")
+#   rsvg_pdf("figures/common_effect_undirected2.pdf")
+
+# show plot
+g
+```
+
+#### Causal chain 1
+
+##### DAG
+
+```{r}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '1, 0!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> z
+  z -> y
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# # export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/causal_chain.pdf")
+
+# show plot
+g
+```
+
+##### Regression
+
+```{r}
+set.seed(1)
+n = 20
+b_xz = 2
+b_zy = 2
+sd = 1
+
+df = tibble(x = rnorm(n = n, sd = sd),
+            z = x * b_xz + rnorm(n = n, sd = sd),
+            y = z * b_zy + rnorm(n = n, sd = sd))
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+#### Causal chain 2
+
+##### DAG
+
+```{r}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '1,0!']
+  z [label = 'Z' pos = '2, 0!', fontcolor = 'red']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> y
+  y -> z
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# # export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/causal_chain2.pdf")
+
+# show plot
+g
+```
+
+##### Regression
+
+```{r}
+set.seed(1)
+n = 20
+b_xy = 2
+b_yz = 2
+sd = 1
+
+df = tibble(x = rnorm(n = n, sd = sd),
+            y = x * b_xy + rnorm(n = n, sd = sd),
+            z = y * b_yz + rnorm(n = n, sd = sd),)
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+#### Bias amplification
+
+##### DAG
+
+```{r}
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  y [label = 'Y'  pos = '2,0!']
+  z [label = 'Z' pos = '-1, 1!', fontcolor = 'red']
+  u [label = 'U' pos = '1, 1!', fillcolor = 'white']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> y
+  z -> x
+  u -> {x y}
+  
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+")
+
+# # export as pdf 
+# g %>% 
+#   export_svg %>% 
+#   charToRaw %>% 
+#   rsvg_pdf("figures/bias_amplification.pdf")
+
+# show plot
+g
+```
+
+#### Regression
+
+```{r}
+set.seed(1)
+n = 20
+b_xy = 2
+b_ux = 2
+b_uy = 2
+b_zx = 2
+sd = 1
+
+df = tibble(u = rnorm(n = n, sd = sd),
+            z = rnorm(n = n, sd = sd),
+            x = u * b_ux + z * b_zx + rnorm(n = n, sd = sd),
+            y = u * b_uy + x * b_xy + rnorm(n = n, sd = sd))
+
+# without control
+lm(formula = y ~ x,
+   data = df) %>% 
+  summary()
+
+# with control
+lm(formula = y ~ x + z,
+   data = df) %>% 
+  summary()
+```
+
+## Mediation
+
+```{r mediation, echo=FALSE, out.width="75%", fig.cap="__Basic mediation model__. c = the total effect of X on Y; c = c’ + ab; c’ = the direct effect of X on Y after controlling for M; c’ = c - ab; ab = indirect effect of X on Y."}
+include_graphics("figures/mediation.png")
+```
+
+Mediation tests whether the effects of __X__ (the independent variable) on __Y__ (the dependent variable) operate through a third variable, __M__ (the mediator). In this way, mediators explain the causal relationship between two variables or "how" the relationship works, making it a very popular method in psychological research.
+
+Figure \@ref(fig:mediation) shows the standard mediation model. Perfect mediation occurs when the effect of __X__ on __Y__ decreases to 0 with __M__ in the model. Partial mediation occurs when the effect of __X__ on __Y__ decreases by a nontrivial amount (the actual amount is up for debate) with __M__ in the model.
+
+__Important__: Both mediation and moderation assume that the DV __did not CAUSE the mediator/moderator__.
+
+### Generate data
+
+```{r}
+# make example reproducible
+set.seed(123)
+
+# number of participants
+n = 100 
+
+# generate data
+df.mediation = tibble(x = rnorm(n, 75, 7), # grades
+  m = 0.7 * x + rnorm(n, 0, 5), # self-esteem
+  y = 0.4 * m + rnorm(n, 0, 5)) # happiness
+```
+
+### Method 1: Baron & Kenny’s (1986) indirect effect method
+
+The @baron1986moderator method is among the original methods for testing for mediation but tends to have low statistical power. 
+
+__The three steps__:
+
+1. Estimate the relationship between $X$ and $Y$ (hours since dawn on degree of wakefulness). Path “c” must be significantly different from 0; must have a total effect between the IV & DV. 
+
+2. Estimate the relationship between $X$ and $M$ (hours since dawn on coffee consumption). Path “a” must be significantly different from 0; IV and mediator must be related.
+
+3. Estimate the relationship between $M$ and $Y$ controlling for $X$ (coffee consumption on wakefulness, controlling for hours since dawn). Path “b” must be significantly different from 0; mediator and DV must be related. The effect of $X$ on $Y$ decreases with the inclusion of $M$ in the model. 
+
+
+#### Total effect
+
+Total effect of X on Y (not controlling for M).
+
+```{r}
+# fit the model
+fit.y_x = lm(formula = y ~ 1 + x,
+            data = df.mediation)
+
+# summarize the results
+fit.y_x %>% 
+  summary()
+```
+
+#### Path a
+
+```{r}
+fit.m_x = lm(formula = m ~ 1 + x,
+            data = df.mediation)
+
+fit.m_x %>% 
+  summary()
+```
+
+#### Path b and c'
+
+Effect of M on Y controlling for X. 
+
+```{r}
+fit.y_mx = lm(formula = y ~ 1 + m + x,
+            data = df.mediation)
+
+fit.y_mx %>% 
+  summary()
+```
+
+#### Interpretation
+
+```{r}
+fit.y_x %>% 
+  tidy() %>% 
+  mutate(path = "c") %>% 
+  bind_rows(fit.m_x %>% 
+              tidy() %>% 
+              mutate(path = "a"),
+            fit.y_mx %>% 
+              tidy() %>% 
+              mutate(path = c("(Intercept)", "b", "c'"))) %>% 
+  filter(term != "(Intercept)") %>% 
+  mutate(significance = p.value < .05,
+         dv = ifelse(path %in% c("c'", "b"), "y", "m")) %>% 
+  select(path, iv = term, dv, estimate, p.value, significance)
+```
+
+Here we find that our total effect model shows a significant positive relationship between hours since dawn (X) and wakefulness (Y). Our Path A model shows that hours since down (X) is also positively related to coffee consumption (M). Our Path B model then shows that coffee consumption (M) positively predicts wakefulness (Y) when controlling for hours since dawn (X). 
+
+Since the relationship between hours since dawn and wakefulness is no longer significant when controlling for coffee consumption, this suggests that coffee consumption does in fact mediate this relationship. However, this method alone does not allow for a formal test of the indirect effect so we don’t know if the change in this relationship is truly meaningful.
+
+### Method 2: Sobel Test
+
+The Sobel Test tests whether the indirect effect from X via M to Y is significant. 
+
+```{r}
+# run the sobel test
+fit.sobel = sobel(pred = df.mediation$x,
+                  med = df.mediation$m,
+                  out = df.mediation$y)
+
+# calculate the p-value 
+(1 - pnorm(fit.sobel$z.value))*2
+```
+
+The relationship between "hours since dawn" and "wakefulness" is significantly mediated by "coffee consumption".
+
+The Sobel Test is largely considered an outdated method since it assumes that the indirect effect (ab) is normally distributed and tends to only have adequate power with large sample sizes. Thus, again, it is highly recommended to use the mediation bootstrapping method instead.
+
+### Method 3: Bootstrapping
+
+The "mediation" packages uses the more recent bootstrapping method of @preacher2004spss to address the power limitations of the Sobel Test.
+
+This method does not require that the data are normally distributed, and is particularly suitable for small sample sizes. 
+
+```{r}
+# bootstrapped mediation 
+fit.mediation = mediate(model.m = fit.m_x,
+                        model.y = fit.y_mx,
+                        treat = "x",
+                        mediator = "m",
+                        boot = T)
+
+# summarize results
+summary(fit.mediation)
+```
+
+- ACME = Average causal mediation effect 
+- ADE = Average direct effect
+- Total effect = ACME + ADE 
+
+Plot the results: 
+
+```{r}
+plot(fit.mediation)
+```
+
+#### Interpretation
+
+The `mediate()` function gives us our Average Causal Mediation Effects (ACME), our Average Direct Effects (ADE), our combined indirect and direct effects (Total Effect), and the ratio of these estimates (Prop. Mediated). The ACME here is the indirect effect of M (total effect - direct effect) and thus this value tells us if our mediation effect is significant.
+
+### Be careful about mediation!
+
+Different causal structures can lead to the same "mediation" effects. So it's difficult to tell from a pattern of regression results what the relationships between variables is. 
+
+Here are three different causal structures that lead to similar effects 
+
+```{r}
+set.seed(1)
+
+n = 100 # number of observations
+
+# causal chain
+df.causal_chain = tibble(x = rnorm(n, 0, 1), 
+                         z = 2 * x + rnorm(n, 0, 1),
+                         y = 2 * z + rnorm(n, 0, 1)) 
+
+# visualize the graph 
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  z [label = 'Z'  pos = '1,1!']
+  y [label = 'Y' pos = '2,0!']
+  
+  # edges between nodes
+  edge [color = black]
+  x -> z
+  z -> y
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+g
+
+# fit models 
+fit.yx = lm(formula = y ~ 1 + x,
+    data = df.causal_chain)
+
+fit.zx = lm(formula = z ~ 1 + x,
+    data = df.causal_chain)
+
+fit.yxz = lm(formula = y ~ 1 + x + z,
+    data = df.causal_chain)
+
+# print models 
+summary(fit.yx)
+summary(fit.zx)
+summary(fit.yxz)
+
+# mediation analysis 
+fit.m = mediate(model.m = fit.zx,
+              model.y = fit.yxz,
+              treat = "x",
+              mediator = "z",
+              boot = T)
+
+summary(fit.m)
+```
+
+```{r}
+set.seed(1)
+
+n = 100 # number of observations
+
+# common cause
+df.common_cause = tibble(z = rnorm(n, 0, 1),
+                         x = 2 * z + rnorm(n, 0, 1), 
+                         y = 2 * z + rnorm(n, 0, 1)) 
+
+# visualize the graph 
+g = grViz("
+digraph neato {
+  
+  graph[layout = neato]
+  
+  # general settings for all nodes
+  node [
+    shape = circle,
+    style = filled,
+    color = black,
+    label = ''
+    fontname = 'Helvetica',
+    fontsize = 16,
+    fillcolor = lightblue
+    ]
+  
+  # labels for each node
+  x [label = 'X' pos = '0,0!']
+  z [label = 'Z'  pos = '1,1!']
+  y [label = 'Y' pos = '2,0!']
+  
+  # edges between nodes
+  edge [color = black]
+  z -> x
+  z -> y
+
+  # direction in which arrows are drawn (from left to right)
+  rankdir = LR
+}
+") 
+g
+
+# fit models 
+fit.yx = lm(formula = y ~ 1 + x,
+    data = df.common_cause)
+
+fit.zx = lm(formula = z ~ 1 + x,
+    data = df.common_cause)
+
+fit.yxz = lm(formula = y ~ 1 + x + z,
+    data = df.common_cause)
+
+# print models 
+summary(fit.yx)
+summary(fit.zx)
+summary(fit.yxz)
+
+# mediation analysis 
+fit.m = mediate(model.m = fit.zx,
+                model.y = fit.yxz,
+                treat = "x",
+                mediator = "z",
+                boot = T)
+
+summary(fit.m)
+```
+
+Both models here lead to the same pattern of "mediation". However, only the first one is a chain: X-->Z-->Y. The second one is a common cause X<--Z-->Y (where X does not cause Y). 
+
+## Moderation
+
+```{r moderation, echo=FALSE, out.width="75%", fig.cap="__Basic moderation model__."}
+include_graphics("figures/moderation.png")
+```
+
+Moderation can be tested by looking for significant interactions between the moderating variable (Z) and the IV (X). Notably, it is important to mean center both your moderator and your IV to reduce multicolinearity and make interpretation easier.
+
+### Generate data
+
+```{r}
+# make example reproducible 
+set.seed(123)
+
+# number of participants
+n  = 100 
+
+df.moderation = tibble(x  = abs(rnorm(n = n,
+                                      mean = 6,
+                                      sd = 4)), # hours of sleep
+                       x1 = abs(rnorm(n = n,
+                                      mean = 60, 
+                                      sd = 30)), # adding some systematic variance to our DV
+                       z  = rnorm(n = n, 
+                                  mean = 30, 
+                                  sd = 8), # ounces of coffee consumed
+                       y  = abs((-0.8 * x) * (0.2 * z) - 0.5 * x - 0.4 * x1 + 10 + 
+                                  rnorm(n, 0, 3))) # attention Paid
+```
+
+### Moderation analysis
+
+```{r}
+# scale the predictors 
+df.moderation = df.moderation %>%
+  mutate(across(.cols = c(x, z), 
+                .fns = ~ scale(.)[,]))
+
+# run regression model with interaction 
+fit.moderation = lm(formula = y ~ 1 + x * z,
+                    data = df.moderation)
+
+# summarize result 
+fit.moderation %>% 
+  summary()
+```
+
+#### Visualize result
+
+```{r}
+# generate data grid with three levels of the moderator 
+df.newdata = df.moderation %>% 
+  expand(x = c(min(x), 
+               max(x)), 
+         z = c(mean(z) - sd(z),
+               mean(z),
+               mean(z) + sd(z))) %>% 
+  mutate(moderator = rep(c("low", "average", "high"), nrow(.)/3))
+
+# predictions for the three levels of the moderator 
+df.prediction = fit.moderation %>% 
+  augment(newdata = df.newdata) %>% 
+  mutate(moderator = factor(moderator, levels = c("high", "average", "low")))
+
+# visualize the result 
+df.moderation %>% 
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_point() + 
+  geom_line(data = df.prediction,
+            mapping = aes(y = .fitted,
+                          group = moderator,
+                          color = moderator),
+            size = 1) +
+  labs(x = "hours of sleep (z-scored)",
+       y = "attention paid",
+       color = "coffee consumed") + 
+  scale_color_brewer(palette = "Set1")
+```
+
+```{r}
+df.prediction %>% 
+  head(9) %>% 
+  kable(digits = 2) %>% 
+  kable_styling(bootstrap_options = "striped",
+              full_width = F)
+
+```
+
+
+## Additional resources
+
+### Books
+
+- [Introduction to Mediation, Moderation, and Conditional Process Analysis (Second Edition): A Regression-Based Approach](https://www.guilford.com/books/Introduction-to-Mediation-Moderation-and-Conditional-Process-Analysis/Andrew-Hayes/9781462534654)
+  - [Recoded with BRMS and Tidyverse](https://bookdown.org/connect/#/apps/1523/access)
+
+### Tutorials
+
+- [R tutorial on mediation and moderation](https://ademos.people.uic.edu/Chapter14.html)
+- [R tutorial on moderated mediation](https://ademos.people.uic.edu/Chapter15.html)
+- [Path analysis with brms](http://www.imachordata.com/bayesian-sem-with-brms/)
+- [Understanding d-separation](http://web.mit.edu/jmn/www/6.034/d-separation.pdf)
+
+### Misc
+
+- [Judea Pearl on good, bad, and neutral controls](http://causality.cs.ucla.edu/blog/index.php/2019/08/14/a-crash-course-in-good-and-bad-control/)
+- [Mike Frank on covariates vs. confounds](http://babieslearninglanguage.blogspot.com/2019/10/confounds-and-covariates.html)
+
+## Session info
+
+Information about this R session including which version of R was used, and what packages were loaded. 
+
+```{r session}
+sessionInfo()
+```

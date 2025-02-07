@@ -1,0 +1,95 @@
+---
+title: "Class 15"
+author: "Tobias Gerstenberg"
+date: "February 12th, 2024"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=14"]
+---
+
+# Model comparison
+
+## Load packages and set plotting theme
+
+```{r, message=FALSE}
+library("knitr")      # for knitting RMarkdown
+library("modelr")     # for cross-validation
+library("tidyverse")  # for wrangling, plotting, etc.
+```
+
+```{r}
+theme_set(theme_classic() + #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               results = "hold")
+```
+
+## Crossvalidation example 
+
+### Generate pilot data
+
+```{r}
+# make example reproducible 
+set.seed(1)
+
+# parameters
+sample_size = 20
+b0 = 1
+b1 = 2
+b2 = 3
+sd = 0.5
+
+# sample
+df.data = tibble(participant = 1:sample_size,
+                 x = runif(sample_size, min = 0, max = 1),
+                 y = b0 + b1*x + b2*x^2 + rnorm(sample_size, sd = sd)) 
+```
+
+### Visualize data
+
+```{r}
+ggplot(data = df.data,
+       mapping = aes(x = x,
+                     y = y)) +
+  geom_point(size = 2) +
+  geom_smooth(method = "lm",
+              se = F,
+              formula = y ~ poly(x,
+                                 degree = 2,
+                                 raw = TRUE))
+```
+### Perform crossvalidation
+
+```{r}
+df.cross = df.data %>% 
+  # crossv_loo() %>%
+  crossv_mc(n = 50, test = 0.5) %>%
+  # crossv_kfold(k = 3) %>%
+  mutate(model_simple = map(.x = train,
+                            .f = ~ lm(y ~ 1 + x,
+                                      data = .x)),
+         model_correct = map(.x = train,
+                             .f = ~ lm(y ~ 1 + x + I(x^2),
+                                       data = .x)),
+         model_complex = map(.x = train,
+                             .f = ~ lm(y ~ 1 + x + I(x^2) + I(x^3),
+                                       data = .x))) %>% 
+  pivot_longer(cols = contains("model"),
+               names_to = "index",
+               values_to = "model") %>% 
+  mutate(rmse = map2_dbl(.x = model,
+                         .y = test,
+                         .f = ~ rmse(.x, .y)))
+
+df.cross %>% 
+  group_by(index) %>% 
+  summarize(mean_rmse = mean(rmse),
+            low = quantile(rmse, 0.1),
+            high = quantile(rmse, 0.9))
+```
+

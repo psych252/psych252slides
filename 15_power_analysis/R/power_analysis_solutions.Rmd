@@ -1,0 +1,241 @@
+---
+title: "Class 14: Solutions"
+author: "Tobias Gerstenberg"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    theme: cosmo
+    highlight: tango
+    pandoc_args: ["--number-offset=13"]
+---
+
+# Power analysis
+
+## Load packages and set plotting theme  
+
+```{r load-packages, message=FALSE}
+library("knitr")      # for knitting RMarkdown 
+library("broom")      # for tidying up model fits
+library("pwr")        # for power calculations
+library("tictoc")     # for measuring execution time 
+library("tidyverse")  # for wrangling, plotting, etc. 
+```
+
+```{r set-theme}
+theme_set(theme_classic() + #set the theme 
+    theme(text = element_text(size = 20))) #set the default text size
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+```
+
+## Practice 1 -- Having fun with `map()`
+
+Use the `map2_dbl()` function to create a new variable in this data frame that's the maximum of each row across columns `a` and `b`. 
+
+```{r}
+df = tibble(a = c(12, 14, 52, 23, 23),
+            b = c(29, 12, 4, 48, 37))
+
+tic() # start timer
+df %>% 
+  mutate(max = map2_dbl(.x = a,
+                        .y = b,
+                        .f = ~ max(.x, .y)))
+toc() # end timer
+```
+
+Using `map()` is considerably faster than rowwise grouping. 
+
+```{r}
+n = 1000000
+
+df = tibble(a = rnorm(n = n),
+            b = rnorm(n = n))
+
+# using map()
+tic() 
+df1 = df %>% 
+  mutate(max = map2_dbl(.x = a,
+                        .y = b,
+                        .f = ~ max(.x, .y)))
+toc() 
+
+# alternative 
+tic()
+df2 = df %>%
+  rowwise() %>%
+  mutate(max = max(a, b)) %>% 
+  ungroup()
+toc()
+```
+
+## Practice 2 -- Simulation of an interaction effect
+
+Try to run a simulation to determine how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction based on the following pilot data set:  
+
+```{r}
+set.seed(1)
+# population parameters 
+b0 = 1
+b1 = 2
+b2 = 3
+b1_2 = -2
+sd = 2
+n = 10 
+
+df.linear = tibble(x = runif(n = n),
+                   y = rep(c(0, 1), each = n/2),
+                   z = b0 + b1 * x + b2 * y + b1_2 * x * y + rnorm(n = n, sd = sd))
+```
+
+Let's visualize the pilot data first: 
+
+```{r}
+ggplot(data = df.linear,
+       mapping = aes(x = x,
+                     y = z,
+                     group = y,
+                     fill = as.factor(y),
+                     color = as.factor(y))) + 
+  geom_smooth(method = "lm",
+              se = F,
+              show.legend = F) +
+  geom_point(shape = 21,
+             color = "black",
+             show.legend = F)
+```
+
+Let's estimate the parameters based on our sample: 
+
+```{r}
+# parameter estimates for the coefficients based on the sample 
+b = lm(formula = z ~ x * y,
+       data = df.linear) %>% 
+  tidy() %>% 
+  select(term, estimate, p.value)
+
+# parameter estimate of the residual standard deviation 
+sigma = lm(formula = z ~ x * y,
+           data = df.linear) %>% 
+  glance() %>% 
+  pull(sigma)
+```
+
+Run a power analysis to see how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
+
+Here is the basic strategy: 
+
+- Try to closely emulate what we've been doing for the independent samples t-test above.
+- However, this time, we have a different way of generating the data (namely by using the regression equation: $z \sim b_0 + b_1 \cdot x + b_2 \cdot y + b_{1\_2} \cdot x \cdot y + e)$, where $e \sim N(0, \sigma)$.
+- Fit the model first to extract the parameter estimates, and sigma. 
+- Then use these parameters to generate new data assuming that `x` is a continuous predictor between 0 and 1 (`x = runif(n = n)`) and `y` is a binary, dummy-coded variable (`y = rep(c(0, 1), each = n/2)`).
+- Extract the coefficients of each model fit, and check whether the interaction is significant. 
+- Make a plot that shows how power changes with the sample size n. 
+
+```{r, message=FALSE}
+set.seed(1)
+
+# fit the model 
+fit = lm(formula = z ~ x * y,
+         data = df.linear)
+
+# extract beta coefficients 
+b = fit %>% 
+  tidy() %>% 
+  pull(estimate)
+
+# extract the residual standard deviation 
+sigma = fit %>% 
+  glance() %>% 
+  pull(sigma)
+
+# number of simulations
+n_simulations = 50
+
+# run simulation 
+df.power3 = expand_grid(n = seq(10, 500, 50),
+                        simulation = 1:n_simulations) %>%
+  mutate(index = 1:n()) %>% 
+  group_by(index, n, simulation) %>% 
+  mutate(data = list(tibble(x = runif(n = n),
+                            y = rep(c(0, 1), each = n/2),
+                            z = b[1] + b[2] * x + b[3] * y + b[4] * x * y + rnorm(n = n, sd = sigma)))) %>% 
+  group_by(index, n, simulation) %>% 
+  mutate(fit = map(.x = data, 
+                   .f = ~ lm(formula = z ~ x * y,
+                             data = .x))) %>% 
+  mutate(coef = map(.x = fit,
+                    .f = ~ tidy(.x))) %>% 
+  select(simulation, n, index, coef) %>% 
+  unnest(cols = coef) %>% 
+  filter(term == "x:y") %>% 
+  group_by(n) %>% 
+  summarize(power = sum(p.value < 0.05) / n())
+
+# visualize results
+ggplot(data = df.power3, 
+       mapping = aes(x = n,
+                     y = power)) +
+  geom_hline(yintercept = seq(0, 1, 0.1),
+             linetype = 2,
+             color = "gray50",
+             linewidth = 0.1) + 
+  geom_smooth(method = "loess",
+              color = "black") +
+  geom_point(shape = 21)
+```
+
+Run the same power analysis this time assuming the ground truth parameters from the population (rather than the parameters that we've estimated from the sample). 
+
+```{r, message=FALSE}
+set.seed(1)
+
+# population parameters 
+b0 = 1
+b1 = 2
+b2 = 3
+b1_2 = -2
+sd = 2
+n_simulations = 50
+
+# run simulation 
+df.power4 = expand_grid(n = seq(10, 1000, 50),
+                        simulation = 1:n_simulations) %>%
+  mutate(index = 1:n()) %>% 
+  group_by(index, n, simulation) %>% 
+  mutate(data = list(tibble(x = runif(n = n),
+                            y = rep(c(0, 1), each = n/2),
+                            z = b0 + b1 * x + b2 * y + b1_2 * x * y + rnorm(n = n, sd = sd)))) %>% 
+  mutate(fit = map(.x = data, 
+                   .f = ~ lm(formula = z ~ x * y,
+                             data = .x))) %>% 
+  mutate(coef = map(.x = fit, 
+                    .f = ~ tidy(.x))) %>% 
+  select(simulation, n, index, coef) %>% 
+  unnest(cols = coef) %>% 
+  filter(term == "x:y") %>% 
+  group_by(n) %>% 
+  summarize(power = sum(p.value < 0.05) / n())
+
+# visualize results
+ggplot(data = df.power4, 
+       mapping = aes(x = n,
+                     y = power)) +
+  geom_hline(yintercept = seq(0, 1, 0.1),
+             linetype = 2,
+             color = "gray50",
+             size = 0.1) + 
+  geom_smooth(method = "loess",
+              color = "black") +
+  geom_point(shape = 21)
+```
+
+## Session info 
+
+```{r}
+sessionInfo()
+```
+
+
