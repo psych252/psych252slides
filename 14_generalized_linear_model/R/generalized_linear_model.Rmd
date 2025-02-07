@@ -1,7 +1,7 @@
 ---
-title: "Class 21"
+title: "Class 14"
 author: "Tobias Gerstenberg"
-date: "March 1st, 2024"
+date: "February 7th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -28,7 +28,6 @@ install.packages(c("titanic", "effects", "nlme")
 - Assessing model fit. 
 - Testing hypotheses. 
 - Reporting results.
-- Mixed effects logistic regression.
 
 ## Load packages and set plotting theme
 
@@ -38,7 +37,6 @@ library("titanic")    # titanic dataset
 library("kableExtra") # for making nice tables
 library("janitor")    # for cleaning column names
 library("broom")      # for tidying up linear models 
-library("lme4")       # for linear mixed effects models
 library("boot")       # for bootstrapping (also has an inverse logit function)
 library("ggeffects")  # for computing marginal effects 
 library("afex")       # for significance testing of mixed effects models 
@@ -567,80 +565,6 @@ glm(formula = survived ~ 1 + sex + fare,
 
 Notice that the F.ratio reported using `joint_tests()` (201.881) is not quite the same as the deviance value that we get through the likelihood ratio test (233.26). You can read more about why these two can come apart [here](https://stats.stackexchange.com/questions/400101/using-emmeans-with-clmm-to-look-at-joint-effects). 
 
-## Logistic mixed effects model
-
-Just like we can build linear mixed effects models using `lmer()` instead of `lm()`, we can also build a logistic mixed effects regression using `glmer()` instead of `glm()`. 
-
-Let's read in some data: 
-
-```{r}
-# load bdf data set from nlme package
-data(bdf, package = "nlme")
-
-df.language = bdf %>% 
-  clean_names() %>% 
-  filter(repeatgr != 2) %>% 
-  mutate(repeatgr = repeatgr %>% 
-           as.character() %>% 
-           as.numeric())
-
-rm(bdf)
-```
-
-Fit the model, and print out the results: 
-
-```{r}
-fit =  glmer(repeatgr ~ 1 + ses + minority + (1 | school_nr),
-             data = df.language,
-             family = "binomial")
-
-fit %>%
-  summary()
-```
-
-To visualize the results, we can use the `ggeffects` package. 
-
-```{r} 
-ggpredict(model = fit,
-          terms = c("ses [all]", "minority")) %>% 
-  plot()
-```
-
-And for significance testing, we can use the the `joint_tests()` function from the "emmeans" package
-
-```{r}
-glmer(formula = repeatgr ~ 1 + ses + minority + (1 | school_nr),
-      data = df.language,
-      family = "binomial") %>% 
-  joint_tests()
-```
-
-The results show that there was both a significant effect of ses and of minority. 
-
-Note: This post [here](https://stats.stackexchange.com/questions/400101/using-emmeans-with-clmm-to-look-at-joint-effects) says a little more about the relationship of the F.ratio in the `joint_tests()` function, and what a likelihood ratio test yields. In short, it's roughly the same thing. 
-
-If you'd like to compute the likelihood ratio test, a convenient way of doing so is by using the `mixed()` function from the "afex" package.
-
-```{r}
-mixed(formula = repeatgr ~ 1 + ses + minority + (1 | school_nr),
-      family = "binomial",
-      data = df.language,
-      method = "LRT")
-```
-And we can compare that the model comparison approach gives us the same result: 
-
-```{r}
-fit_a =  glmer(repeatgr ~ 1 + ses + minority + (1 | school_nr),
-             data = df.language,
-             family = "binomial")
-
-# dropping ses as a predictor
-fit_c =  glmer(repeatgr ~ 1 +  minority + (1 | school_nr),
-             data = df.language,
-             family = "binomial")
-
-anova(fit_a, fit_c, test = "LRT")
-```
 
 ## Additional information
 
