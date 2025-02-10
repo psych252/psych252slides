@@ -1,14 +1,14 @@
 ---
-title: "Class 14"
+title: "Class 15"
 author: "Tobias Gerstenberg"
-date: "February 9th, 2024"
+date: "February 10th, 2025"
 output:
   bookdown::html_document2:
     toc: true
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=13"]
+    pandoc_args: ["--number-offset=14"]
 ---
 
 # Power analysis
@@ -88,7 +88,9 @@ ggplot(data = tibble(x = c(0, 30)),
                 alpha = 0.5,
                 args = list(mean = mu0,
                             sd = sd0),
-                xlim = c(qnorm(1-alpha, mean = mu0, sd = sd0), 20)) +
+                xlim = c(qnorm(1 - alpha,
+                               mean = mu0,
+                               sd = sd0), 20)) +
   stat_function(fun = "dnorm",
                 geom = "area",
                 size = 1,
@@ -96,11 +98,14 @@ ggplot(data = tibble(x = c(0, 30)),
                 alpha = 0.5,
                 args = list(mean = mu1,
                             sd = sd1),
-                xlim = c(0, c(qnorm(1-alpha, mean = mu0, sd = sd0)))) +
-  geom_vline(xintercept = qnorm(1-alpha, mean = mu0, sd = sd0),
+                xlim = c(0, c(qnorm(1 - alpha,
+                                    mean = mu0,
+                                    sd = sd0)))) +
+  geom_vline(xintercept = qnorm(1 - alpha,
+                                mean = mu0,
+                                sd = sd0),
              size = 1) +
   coord_cartesian(expand = F)
-
 ```
 
 ## Effect sizes
@@ -154,7 +159,8 @@ The `pwr` package has a number of functions that we can use do determine the des
 We can determine what sample size we need for a Binomial test that compares two different proportions like so: 
 
 ```{r}
-pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+pwr.p.test(h = ES.h(p1 = 0.75,
+                    p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
            alternative = "greater")
@@ -167,7 +173,8 @@ To have an 80% chance of detecting a difference between a proportion of `p1 = 0.
 We can use the `plot()` function to illustrate what power we would get for different sample sizes. 
 
 ```{r}
-pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+pwr.p.test(h = ES.h(p1 = 0.75,
+                    p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
            alternative = "greater") %>% 
@@ -177,7 +184,8 @@ pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50),
 Notice that this is a ggplot object, so we could tweak it further if we'd like to, like so: 
 
 ```{r}
-pwr.p.test(h = ES.h(p1 = 0.75, p2 = 0.50), 
+pwr.p.test(h = ES.h(p1 = 0.75,
+                    p2 = 0.50), 
            sig.level = 0.05, 
            power = 0.80, 
            alternative = "greater") %>% 
@@ -229,7 +237,8 @@ help(map)
 As the help function says, `map()` allows us to apply a function to each element of a vector. Here is a simple example: 
 
 ```{r}
-map(.x = 1:3, .f = ~ .x^2)
+map(.x = 1:3,
+    .f = ~ .x^2)
 ```
 
 I've passed the vector of numbers `.x = 1:3` to `map()`, and then applied the anonymous function `.f = ~ .x^2` to each of the elements in that vector. 
@@ -240,16 +249,19 @@ As with many R functions, you can achieve the same outcome in many different way
 
 ```{r, echo=F}
 # omitting arguments, and using . instead of .x
-tmp1 = map(1:3, ~ .^2) 
+tmp1 = map(1:3,
+           ~ .^2) 
 
 # longer form function definition 
-tmp2 = map(1:3, function(x) x^2) 
+tmp2 = map(1:3,
+           function(x) x^2) 
 
 # explicit function definition 
 squared = function(x){
   return(x^2)
 }
-tmp3 = map(1:3, squared)
+tmp3 = map(1:3,
+           squared)
 
 str_c("Is tmp1 identical to tmp2? ", identical(tmp1, tmp2))
 str_c("Is tmp2 identical to tmp3? ", identical(tmp2, tmp3))
@@ -260,18 +272,21 @@ str_c("Is tmp2 identical to tmp3? ", identical(tmp2, tmp3))
 Notice that the output of `map()` is a list. 
 
 ```{r}
-map(.x = 1:3, .f = ~ .x^2)
+map(.x = 1:3,
+    .f = ~ .x^2)
 ```
 The `map()` function has many children that differ in what they output. For example, `map_dbl()` outputs a numeric vector instead of a list. 
 
 ```{r}
-map_dbl(.x = 1:3, .f = ~ .x^2)
+map_dbl(.x = 1:3,
+        .f = ~ .x^2)
 ```
 
 And `map_lgl()` returns logical values. 
 
 ```{r}
-map_lgl(.x = 1:3, .f = ~ .x == 1)
+map_lgl(.x = 1:3,
+        .f = ~ .x == 1)
 ```
 
 We can also return data frames by using either `map_dfr()` which binds data frames by row, or `map_dfc()` which binds data frames by column. Here is an example:
@@ -423,6 +438,7 @@ print(df.data)
 # and back to the original data frame  
 df.data = df.data %>% 
   unnest(cols = data)
+
 print(df.data)
 ```
 
@@ -524,6 +540,7 @@ df.power = df.power %>% # generate random data
                                       n = .y,
                                       p = 0.5,
                                       alternative = "two.sided")))
+
 df.power
 ```
 
@@ -536,6 +553,7 @@ df.power = df.power %>%
   select(simulation, p, index, coef) %>% 
   unnest(cols = coef) %>% 
   select(index, n, simulation, p.value)
+
 df.power
 ```
 
