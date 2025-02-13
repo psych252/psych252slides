@@ -1,5 +1,5 @@
 ---
-title: "Class 14: Solutions"
+title: "Class 15: Solutions"
 author: "Tobias Gerstenberg"
 output:
   bookdown::html_document2:
@@ -7,7 +7,7 @@ output:
     toc_depth: 4
     theme: cosmo
     highlight: tango
-    pandoc_args: ["--number-offset=13"]
+    pandoc_args: ["--number-offset=14"]
 ---
 
 # Power analysis
@@ -115,12 +115,15 @@ b = lm(formula = z ~ x * y,
        data = df.linear) %>% 
   tidy() %>% 
   select(term, estimate, p.value)
+b
 
 # parameter estimate of the residual standard deviation 
 sigma = lm(formula = z ~ x * y,
            data = df.linear) %>% 
   glance() %>% 
   pull(sigma)
+
+sigma
 ```
 
 Run a power analysis to see how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
@@ -145,12 +148,12 @@ fit = lm(formula = z ~ x * y,
 b = fit %>% 
   tidy() %>% 
   pull(estimate)
-
+b
 # extract the residual standard deviation 
 sigma = fit %>% 
   glance() %>% 
   pull(sigma)
-
+sigma
 # number of simulations
 n_simulations = 50
 
@@ -231,6 +234,8 @@ ggplot(data = df.power4,
               color = "black") +
   geom_point(shape = 21)
 ```
+
+Notice how the difference between the true parameter values for the population and the estimated parameter values we got from our very small pilot led to quite different conclusions about what sample size was needed. The assumptions made in the simulations drive the power calculations!   
 
 ## Session info 
 

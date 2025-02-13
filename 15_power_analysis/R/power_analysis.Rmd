@@ -1,7 +1,7 @@
 ---
 title: "Class 15"
 author: "Tobias Gerstenberg"
-date: "February 10th, 2025"
+date: "February 12th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -9,6 +9,8 @@ output:
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=14"]
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Power analysis
@@ -69,21 +71,22 @@ sd1 = 2
 alpha = 0.05
 # alpha = 0.01
 
+
 ggplot(data = tibble(x = c(0, 30)),
        mapping = aes(x = x)) + 
-  stat_function(fun = "dnorm",
-                size = 1,
+  stat_function(fun = dnorm,
+                linewidth = 1,
                 color = "blue",
                 args = list(mean = mu0,
                             sd = sd0)) +
-  stat_function(fun = "dnorm",
-                size = 1,
+  stat_function(fun = dnorm,
+                linewidth = 1,
                 color = "red",
                 args = list(mean = mu1,
                             sd = sd1)) +
-  stat_function(fun = "dnorm",
+  stat_function(fun = dnorm,
                 geom = "area",
-                size = 1,
+                linewidth = 1,
                 fill = "blue",
                 alpha = 0.5,
                 args = list(mean = mu0,
@@ -91,9 +94,9 @@ ggplot(data = tibble(x = c(0, 30)),
                 xlim = c(qnorm(1 - alpha,
                                mean = mu0,
                                sd = sd0), 20)) +
-  stat_function(fun = "dnorm",
+  stat_function(fun = dnorm,
                 geom = "area",
-                size = 1,
+                linewidth = 1,
                 fill = "red",
                 alpha = 0.5,
                 args = list(mean = mu1,
@@ -104,7 +107,7 @@ ggplot(data = tibble(x = c(0, 30)),
   geom_vline(xintercept = qnorm(1 - alpha,
                                 mean = mu0,
                                 sd = sd0),
-             size = 1) +
+             linewidth = 1) +
   coord_cartesian(expand = F)
 ```
 
@@ -190,7 +193,7 @@ pwr.p.test(h = ES.h(p1 = 0.75,
            power = 0.80, 
            alternative = "greater") %>% 
   plot() + 
-  geom_hline(yintercept = 0.5,
+  geom_hline(yintercept = 0.8,
              linetype = 2,
              color = "blue") +
   theme(plot.title = element_text(size = 20))
@@ -446,7 +449,7 @@ And, of course, I can use unnest() to get back to my original data frame.
 
 ##### Combining `nest()` and `map()`
 
-`nest()` and `map()` unfold their power together when it comes to fitting models. For example, consider that you want to fit a separate linear to subests of your data. Here is how you can do that using `nest()` and `map()`. 
+`nest()` and `map()` unfold their power together when it comes to fitting models. For example, consider that you want to fit a separate linear model to subests of your data. Here is how you can do that using `nest()` and `map()`. 
 
 I'll demonstrate via the infamous `mtcars` data set that comes with R. 
 
@@ -455,7 +458,7 @@ mtcars %>%
   head(10)
 ```
 
-What I want to do is to fit separate regression models predicting `mpg` (miles per gallon) as a function of `wt` (the car's weight) for cars with different numbers of cylinders. Here is how that works. 
+What I want to do is to fit separate regression models predicting `mpg` (miles per gallon) as a function of `wt` (the car's weight) for cars with different numbers of cylinders `cyl`. Here is how that works. 
 
 ```{r}
 df.data = mtcars %>%
@@ -466,7 +469,7 @@ df.data = mtcars %>%
                              data = .x)))
 ```
 
-I first grouped by the `cyl` (the number of cylinders), used `nest()` to put the rest of the data into a list column, and then used `mutate()` to run a separate linear model on each data set and saved the modle result into the `fit` column. 
+I first grouped by the `cyl` (the number of cylinders), used `nest()` to put the rest of the data into a list column, and then used `mutate()` to run a separate linear model on each data set and saved the model result into the `fit` column. 
 
 With some more wrangling, I could, for example, extract the coefficients of each model like so: 
 
@@ -579,7 +582,7 @@ ggplot(data = df.plot,
   geom_hline(yintercept = seq(0, 1, 0.1),
              linetype = 2,
              color = "gray50",
-             size = 0.1) + 
+             linewidth = 0.1) + 
   geom_smooth(method = "loess",
               formula = "y ~ x") +
   geom_point()
@@ -704,6 +707,9 @@ The two groups in our sample don't differ significantly from each other.
 ggplot(data = df.ttest,
        mapping = aes(x = name,
                      y = value)) + 
+  geom_point(alpha = 0.3, 
+             position = position_jitter(width = 0.1,
+                                        height = 0)) +
   stat_summary(fun.data = "mean_cl_boot")
 
 # compute a t-test
@@ -819,6 +825,39 @@ pwr.t.test(d = 0.5874251,
 
 Looks pretty similar! 
 
+Lets see what data look like if we were to get additional participants and bring the sample up to n = 47 per group. 
+
+```{r}
+set.seed(1)
+
+# parameters
+n = 47 
+mean1 = 10 
+sd1 = 2
+mean2 = 11
+sd2 = 3
+
+df.ttest = tibble(group1 = rnorm(n = n,
+                                 mean = mean1,
+                                 sd = sd1),
+                  group2 = rnorm(n = n,
+                                 mean = mean2,
+                                 sd = sd2)) %>% 
+  pivot_longer(cols = everything()) %>% 
+  arrange(name)
+
+# visualize the data 
+ggplot(data = df.ttest,
+       mapping = aes(x = name,
+                     y = value)) + 
+  geom_point(alpha = 0.3, 
+             position = position_jitter(width = 0.1,
+                                        height = 0)) +
+  stat_summary(fun.data = "mean_cl_boot")
+```
+
+We notice that the group difference can be detected now because the standard errors on the means are much smaller now with n = 47 per group than they were with n = 10 per group. 
+
 ##### Practice 2 -- Simulation of an interaction effect
 
 Try to run a simulation to determine how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction based on the following pilot data set:  
@@ -859,19 +898,19 @@ Let's estimate the parameters based on our sample:
 
 ```{r}
 # parameter estimates for the coefficients based on the sample 
-b = lm(formula = z ~ x * y,
+b = lm(formula = z ~ 1 + x * y,
    data = df.linear) %>% 
   tidy() %>% 
   select(term, estimate, p.value)
 
 # parameter estimate of the residual standard deviation 
-sigma = lm(formula = z ~ x * y,
+sigma = lm(formula = z ~ 1 + x * y,
            data = df.linear) %>% 
   glance() %>% 
   pull(sigma)
 ```
 
-Run a power analysis to see how many participants you would need to have an 80% of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
+Run a power analysis to see how many participants you would need to have an 80% chance of rejecting the null hypothesis that there is no interaction. Use the parameter estimates (the beta coefficients and the standard deviation of the residuals `sigma`) based on your pilot data to simulate new data. 
 
 Here is the strategy: 
 
