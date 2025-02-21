@@ -1,7 +1,7 @@
 ---
 title: "Class 18"
 author: "Tobias Gerstenberg"
-date: "February 23th, 2024"
+date: "February 20th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -93,7 +93,7 @@ The plot shows the effect of the number of days of sleep deprivation on the aver
 Let's first fit a model the simply combines all the data points. This model ignores the dependence structure in the data (i.e. the fact that we have repeated observations from the same participants). 
 
 ```{r}
-fit.complete = lm(formula = reaction ~ days,
+fit.complete = lm(formula = reaction ~ 1 + days,
                   data = df.sleep)
 
 fit.params = tidy(fit.complete)
@@ -147,7 +147,7 @@ We could also fit separate regressions for each participant. Let's do that.
 df.no_pooling = df.sleep %>% 
   group_by(subject) %>% 
   nest(data = c(days, reaction)) %>% 
-  mutate(fit = map(data, ~ lm(reaction ~ days, data = .)),
+  mutate(fit = map(data, ~ lm(reaction ~ 1 + days, data = .)),
          params = map(fit, tidy)) %>% 
   ungroup() %>% 
   unnest(c(params)) %>% 
@@ -287,7 +287,7 @@ Let's compare the results of the different methods -- complete pooling, no pooli
 
 ```{r, warning=F, message=F}
 # complete pooling
-fit.complete_pooling = lm(formula = reaction ~ days,
+fit.complete_pooling = lm(formula = reaction ~ 1 + days,
                           data = df.sleep)  
 
 df.complete_pooling =  fit.complete_pooling %>% 
@@ -303,7 +303,7 @@ df.no_pooling = df.sleep %>%
   group_by(subject) %>% 
   nest(data = c(days, reaction)) %>% 
   mutate(fit = map(.x = data, 
-                   .f = ~ lm(reaction ~ days, data = .x)),
+                   .f = ~ lm(reaction ~ 1 + days, data = .x)),
          augment = map(.x = fit, 
                        .f = ~ augment(.x))) %>% 
   unnest(c(augment)) %>% 
@@ -477,13 +477,13 @@ anova(fit1, fit2)
 # using the plot() function
 ggpredict(model = fit.random_intercept_slope,
           terms = "days",
-          type = "fe") %>% 
+          type = "fixed") %>% 
   plot()
 
 # using our own ggplot magic
 df.plot = ggpredict(model = fit.random_intercept_slope,
                     terms = "days",
-                    type = "fe")
+                    type = "fixed")
 
 ggplot(data = df.plot,
        mapping = aes(x = x, 
@@ -499,7 +499,7 @@ ggplot(data = df.plot,
 ```{r, message=FALSE, warning=FALSE}
 lmer(formula = reaction ~ 1 + days + (1 + days | subject),
      data = df.sleep) %>% 
-  check_model()
+  performance::check_model()
 ```
 
 ## Simulating a linear mixed effects model
@@ -729,7 +729,7 @@ ggplot(data = df.simpson,
 As we see, overall, there is a positive relationship between `x` and `y`.
 
 ```{r}
-lm(formula = y ~ x,
+lm(formula = y ~ 1 + x,
    data = df.simpson) %>% 
   summary()
 ```

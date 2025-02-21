@@ -1,7 +1,7 @@
 ---
 title: "Class 17"
 author: "Tobias Gerstenberg"
-date: "February 21th, 2024"
+date: "February 20th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -120,7 +120,7 @@ Let's run a linear model, and independent samples t-test on the original data se
 
 ```{r}
 # linear model (assuming independent samples)
-lm(formula = value ~ condition,
+lm(formula = value ~ 1 + condition,
    data = df.original) %>% 
   summary() 
 
@@ -136,7 +136,7 @@ Let's fit a linear mixed effects model with a random intercept for each particip
 
 ```{r}
 # fit a linear mixed effects model 
-lmer(formula = value ~ condition + (1 | participant),
+lmer(formula = value ~ 1 + condition + (1 | participant),
      data = df.original) %>% 
   summary()
 ```
@@ -147,7 +147,7 @@ To test for whether condition is a significant predictor, we need to use our mod
 # fit models
 fit.compact = lmer(formula = value ~ 1 + (1 | participant),
                    data = df.original)
-fit.augmented = lmer(formula = value ~ condition + (1 | participant),
+fit.augmented = lmer(formula = value ~ 1 + condition + (1 | participant),
                      data = df.original)
 
 # compare via Chisq-test
