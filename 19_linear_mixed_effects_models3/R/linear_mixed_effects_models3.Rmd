@@ -1,7 +1,7 @@
 ---
 title: "Class 19"
 author: "Tobias Gerstenberg"
-date: "February 26th, 2024"
+date: "February 24th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -66,12 +66,12 @@ df.reasoning = sk2011.1
 Here is an overview of how to specify different kinds of linear mixed effects models.
 
 ```{r, echo=F}
-tibble(formula = c("`dv ~ x1 + (1 | g)`",
-                   "`dv ~ x1 + (0 + x1 | g)`",
-                   "`dv ~ x1 + (x1 | g)`",
-                   "`dv ~ x1 + (x1 || g)`",
-                   "`dv ~ x1 + (1 | school) + (1 | teacher)`",
-                   "`dv ~ x1 + (1 | school) + (1 | school:teacher)`"),
+tibble(formula = c("`dv ~ 1 + x1 + (1 | g)`",
+                   "`dv ~ 1 + x1 + (0 + x1 | g)`",
+                   "`dv ~ 1 + x1 + (1 + x1 | g)`",
+                   "`dv ~ 1 + x1 + (1 + x1 || g)`",
+                   "`dv ~ 1 + x1 + (1 | school) + (1 | teacher)`",
+                   "`dv ~ 1 _ x1 + (1 | school) + (1 | school:teacher)`"),
        description = c("Random intercept for each level of `g`",
                        "Random slope for each level of `g`",
                        "Correlated random slope and intercept for each level of `g`",
@@ -87,7 +87,7 @@ Note that this `(1 | school/teacher)` is equivalent to `(1 | school) + (1 | teac
 
 ### Between subjects ANOVA
 
-Let's start with a between subjects ANOVA (which means we are in `lm()` world). We'll take a look whether what type of `instruction` participants received made a difference to their `response`. 
+Let's start by viewing these data as though they were obtained from design aligned with a between subjects ANOVA (which means we are in `lm()` world). We'll take a look whether what type of `instruction` participants received made a difference to their `response`. 
 
 First, we use the `aov_ez()` function from the "afex" package to do so. 
 
@@ -103,7 +103,7 @@ Looks like there was no main effect of `instruction` on participants' responses.
 An alternative route for getting at the same test, would be via combining `lm()` with `joint_tests()` (as we've done before in class). 
 
 ```{r}
-lm(formula = response ~ instruction,
+lm(formula = response ~ 1 + instruction,
    data = df.reasoning %>% 
      group_by(id, instruction) %>% 
      summarize(response = mean(response)) %>% 
@@ -111,7 +111,7 @@ lm(formula = response ~ instruction,
   joint_tests()
 ```
 
-The two routes yield the same result. Notice that for the `lm()` approach, I calculated the means for each participant in each condition first (using `group_by()` and `summarize()`). 
+The two routes yield the same result. Notice that (as was noted in the Warning from aov_ez() about aggregating) for the `lm()` approach, I calculated the means for each participant in each condition first (using `group_by()` and `summarize()`). This already treats deviations as error.  
 
 ### Repeated-measures ANOVA
 

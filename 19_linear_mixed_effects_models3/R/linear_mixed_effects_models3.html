@@ -235,7 +235,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -246,7 +246,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -427,7 +427,7 @@ display: none;
 
 <h1 class="title toc-ignore">Class 19</h1>
 <h4 class="author">Tobias Gerstenberg</h4>
-<h4 class="date">February 26th, 2024</h4>
+<h4 class="date">February 24th, 2025</h4>
 
 </div>
 
@@ -507,64 +507,40 @@ display: none;
 <h2><span class="header-section-number">19.4</span> Understanding the lmer() syntax</h2>
 <p>Here is an overview of how to specify different kinds of linear mixed effects models.</p>
 <table>
+<colgroup>
+<col width="38%" />
+<col width="61%" />
+</colgroup>
 <thead>
-<tr>
-<th style="text-align:left;">
-formula
-</th>
-<th style="text-align:left;">
-description
-</th>
+<tr class="header">
+<th align="left">formula</th>
+<th align="left">description</th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (1 | g)</code>
-</td>
-<td style="text-align:left;">
-Random intercept for each level of <code>g</code>
-</td>
+<tr class="odd">
+<td align="left"><code>dv ~ 1 + x1 + (1 &amp;#124; g)</code></td>
+<td align="left">Random intercept for each level of <code>g</code></td>
 </tr>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (0 + x1 | g)</code>
-</td>
-<td style="text-align:left;">
-Random slope for each level of <code>g</code>
-</td>
+<tr class="even">
+<td align="left"><code>dv ~ 1 + x1 + (0 + x1 &amp;#124; g)</code></td>
+<td align="left">Random slope for each level of <code>g</code></td>
 </tr>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (x1 | g)</code>
-</td>
-<td style="text-align:left;">
-Correlated random slope and intercept for each level of <code>g</code>
-</td>
+<tr class="odd">
+<td align="left"><code>dv ~ 1 + x1 + (1 + x1 &amp;#124; g)</code></td>
+<td align="left">Correlated random slope and intercept for each level of <code>g</code></td>
 </tr>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (x1 || g)</code>
-</td>
-<td style="text-align:left;">
-Uncorrelated random slope and intercept for each level of <code>g</code>
-</td>
+<tr class="even">
+<td align="left"><code>dv ~ 1 + x1 + (1 + x1 &amp;#124;&amp;#124; g)</code></td>
+<td align="left">Uncorrelated random slope and intercept for each level of <code>g</code></td>
 </tr>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (1 | school) + (1 | teacher)</code>
-</td>
-<td style="text-align:left;">
-Random intercept for each level of <code>school</code> and for each level of <code>teacher</code> (crossed)
-</td>
+<tr class="odd">
+<td align="left"><code>dv ~ 1 + x1 + (1 &amp;#124; school) + (1 &amp;#124; teacher)</code></td>
+<td align="left">Random intercept for each level of <code>school</code> and for each level of <code>teacher</code> (crossed)</td>
 </tr>
-<tr>
-<td style="text-align:left;">
-<code>dv ~ x1 + (1 | school) + (1 | school:teacher)</code>
-</td>
-<td style="text-align:left;">
-Random intercept for each level of <code>school</code> and for each level of <code>teacher</code> in <code>school</code> (nested)
-</td>
+<tr class="even">
+<td align="left"><code>dv ~ 1 _ x1 + (1 &amp;#124; school) + (1 &amp;#124; school:teacher)</code></td>
+<td align="left">Random intercept for each level of <code>school</code> and for each level of <code>teacher</code> in <code>school</code> (nested)</td>
 </tr>
 </tbody>
 </table>
@@ -574,7 +550,7 @@ Random intercept for each level of <code>school</code> and for each level of <co
 <h2><span class="header-section-number">19.5</span> ANOVA vs. lmer</h2>
 <div id="between-subjects-anova" class="section level3" number="19.5.1">
 <h3><span class="header-section-number">19.5.1</span> Between subjects ANOVA</h3>
-<p>Let’s start with a between subjects ANOVA (which means we are in <code>lm()</code> world). We’ll take a look whether what type of <code>instruction</code> participants received made a difference to their <code>response</code>.</p>
+<p>Let’s start by viewing these data as though they were obtained from design aligned with a between subjects ANOVA (which means we are in <code>lm()</code> world). We’ll take a look whether what type of <code>instruction</code> participants received made a difference to their <code>response</code>.</p>
 <p>First, we use the <code>aov_ez()</code> function from the “afex” package to do so.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">aov_ez</span>(<span class="at">id =</span> <span class="st">&quot;id&quot;</span>,</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>       <span class="at">dv =</span> <span class="st">&quot;response&quot;</span>,</span>
@@ -592,7 +568,7 @@ Response: response
 Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&#39; 0.1 &#39; &#39; 1</code></pre>
 <p>Looks like there was no main effect of <code>instruction</code> on participants’ responses.</p>
 <p>An alternative route for getting at the same test, would be via combining <code>lm()</code> with <code>joint_tests()</code> (as we’ve done before in class).</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">lm</span>(<span class="at">formula =</span> response <span class="sc">~</span> instruction,</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="fu">lm</span>(<span class="at">formula =</span> response <span class="sc">~</span> <span class="dv">1</span> <span class="sc">+</span> instruction,</span>
 <span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>   <span class="at">data =</span> df.reasoning <span class="sc">%&gt;%</span> </span>
 <span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>     <span class="fu">group_by</span>(id, instruction) <span class="sc">%&gt;%</span> </span>
 <span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>     <span class="fu">summarize</span>(<span class="at">response =</span> <span class="fu">mean</span>(response)) <span class="sc">%&gt;%</span> </span>
@@ -600,7 +576,7 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&
 <span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>  <span class="fu">joint_tests</span>()</span></code></pre></div>
 <pre><code> model term  df1 df2 F.ratio p.value
  instruction   1  38   0.307  0.5830</code></pre>
-<p>The two routes yield the same result. Notice that for the <code>lm()</code> approach, I calculated the means for each participant in each condition first (using <code>group_by()</code> and <code>summarize()</code>).</p>
+<p>The two routes yield the same result. Notice that (as was noted in the Warning from aov_ez() about aggregating) for the <code>lm()</code> approach, I calculated the means for each participant in each condition first (using <code>group_by()</code> and <code>summarize()</code>). This already treats deviations as error.</p>
 </div>
 <div id="repeated-measures-anova" class="section level3" number="19.5.2">
 <h3><span class="header-section-number">19.5.2</span> Repeated-measures ANOVA</h3>
@@ -692,13 +668,13 @@ Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;+&
 <h2><span class="header-section-number">19.7</span> Session info</h2>
 <p>Information about this R session including which version of R was used, and what packages were loaded.</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
-<pre><code>R version 4.3.2 (2023-10-31)
-Platform: aarch64-apple-darwin20 (64-bit)
-Running under: macOS Sonoma 14.1.2
+<pre><code>R version 4.4.2 (2024-10-31)
+Platform: aarch64-apple-darwin20
+Running under: macOS Ventura 13.7.4
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -710,42 +686,43 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] lubridate_1.9.3     forcats_1.0.0       stringr_1.5.1      
- [4] dplyr_1.1.4         purrr_1.0.2         readr_2.1.4        
- [7] tidyr_1.3.0         tibble_3.2.1        ggplot2_3.4.4      
-[10] tidyverse_2.0.0     emmeans_1.9.0       ggeffects_1.3.4    
-[13] boot_1.3-28.1       modelr_0.1.11       datarium_0.1.0     
-[16] car_3.1-2           carData_3.0-5       afex_1.3-0         
-[19] lme4_1.1-35.1       Matrix_1.6-4        patchwork_1.2.0    
-[22] broom.mixed_0.2.9.4 janitor_2.2.0       kableExtra_1.3.4   
-[25] knitr_1.45         
+ [1] lubridate_1.9.4     forcats_1.0.0       stringr_1.5.1      
+ [4] dplyr_1.1.4         purrr_1.0.2         readr_2.1.5        
+ [7] tidyr_1.3.1         tibble_3.2.1        ggplot2_3.5.1      
+[10] tidyverse_2.0.0     emmeans_1.10.6      ggeffects_2.0.0    
+[13] boot_1.3-31         modelr_0.1.11       datarium_0.1.0     
+[16] car_3.1-3           carData_3.0-5       afex_1.4-1         
+[19] lme4_1.1-35.5       Matrix_1.7-1        patchwork_1.3.0    
+[22] broom.mixed_0.2.9.6 janitor_2.2.1       kableExtra_1.4.0   
+[25] knitr_1.49         
 
 loaded via a namespace (and not attached):
- [1] tidyselect_1.2.0    viridisLite_0.4.2   fastmap_1.1.1      
- [4] digest_0.6.33       timechange_0.2.0    estimability_1.4.1 
- [7] lifecycle_1.0.4     magrittr_2.0.3      compiler_4.3.2     
-[10] rlang_1.1.2         sass_0.4.8          tools_4.3.2        
-[13] utf8_1.2.4          yaml_2.3.8          plyr_1.8.9         
-[16] xml2_1.3.6          abind_1.4-5         withr_2.5.2        
-[19] numDeriv_2016.8-1.1 grid_4.3.2          fansi_1.0.6        
-[22] xtable_1.8-4        colorspace_2.1-0    future_1.33.1      
-[25] globals_0.16.2      scales_1.3.0        MASS_7.3-60        
-[28] cli_3.6.2           mvtnorm_1.2-4       rmarkdown_2.25     
-[31] generics_0.1.3      rstudioapi_0.15.0   tzdb_0.4.0         
-[34] httr_1.4.7          reshape2_1.4.4      minqa_1.2.6        
-[37] cachem_1.0.8        splines_4.3.2       rvest_1.0.3        
-[40] parallel_4.3.2      vctrs_0.6.5         webshot_0.5.5      
-[43] jsonlite_1.8.8      bookdown_0.37       hms_1.1.3          
-[46] pbkrtest_0.5.2      listenv_0.9.0       systemfonts_1.0.5  
-[49] jquerylib_0.1.4     glue_1.6.2          parallelly_1.36.0  
-[52] nloptr_2.0.3        codetools_0.2-19    stringi_1.8.3      
-[55] gtable_0.3.4        lmerTest_3.1-3      munsell_0.5.0      
-[58] furrr_0.3.1         pillar_1.9.0        htmltools_0.5.7    
-[61] R6_2.5.1            evaluate_0.23       lattice_0.22-5     
-[64] highr_0.10          backports_1.4.1     broom_1.0.5        
-[67] snakecase_0.11.1    bslib_0.6.1         Rcpp_1.0.11        
-[70] svglite_2.1.3       coda_0.19-4         nlme_3.1-164       
-[73] xfun_0.41           pkgconfig_2.0.3    </code></pre>
+ [1] tidyselect_1.2.1    viridisLite_0.4.2   farver_2.1.2       
+ [4] fastmap_1.2.0       TH.data_1.1-3       digest_0.6.37      
+ [7] timechange_0.3.0    estimability_1.5.1  lifecycle_1.0.4    
+[10] survival_3.8-3      magrittr_2.0.3      compiler_4.4.2     
+[13] rlang_1.1.5         sass_0.4.9          tools_4.4.2        
+[16] yaml_2.3.10         plyr_1.8.9          xml2_1.3.6         
+[19] abind_1.4-8         multcomp_1.4-26     withr_3.0.2        
+[22] numDeriv_2016.8-1.1 grid_4.4.2          xtable_1.8-4       
+[25] colorspace_2.1-1    future_1.34.0       globals_0.16.3     
+[28] scales_1.3.0        MASS_7.3-64         insight_1.0.0      
+[31] cli_3.6.3           mvtnorm_1.3-2       rmarkdown_2.29     
+[34] generics_0.1.3      rstudioapi_0.17.1   tzdb_0.4.0         
+[37] reshape2_1.4.4      minqa_1.2.8         cachem_1.1.0       
+[40] splines_4.4.2       parallel_4.4.2      vctrs_0.6.5        
+[43] sandwich_3.1-1      jsonlite_1.8.9      bookdown_0.42      
+[46] hms_1.1.3           pbkrtest_0.5.3      Formula_1.2-5      
+[49] listenv_0.9.1       systemfonts_1.1.0   jquerylib_0.1.4    
+[52] glue_1.8.0          parallelly_1.41.0   nloptr_2.1.1       
+[55] codetools_0.2-20    stringi_1.8.4       gtable_0.3.6       
+[58] lmerTest_3.1-3      munsell_0.5.1       furrr_0.3.1        
+[61] pillar_1.10.1       htmltools_0.5.8.1   R6_2.5.1           
+[64] evaluate_1.0.1      lattice_0.22-6      backports_1.5.0    
+[67] broom_1.0.7         snakecase_0.11.1    bslib_0.8.0        
+[70] Rcpp_1.0.13-1       svglite_2.1.3       coda_0.19-4.1      
+[73] nlme_3.1-166        xfun_0.50           zoo_1.8-12         
+[76] pkgconfig_2.0.3    </code></pre>
 </div>
 </div>
 
