@@ -1,7 +1,7 @@
 ---
 title: "Class 20"
 author: "Tobias Gerstenberg"
-date: "February 28th, 2024"
+date: "February 26th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -503,8 +503,7 @@ include_graphics("figures/two_level.png")
 
 #### Conditional model 
 
-
-##### Cimulate the data
+##### Simulate the data
 
 ```{r}
 set.seed(1)

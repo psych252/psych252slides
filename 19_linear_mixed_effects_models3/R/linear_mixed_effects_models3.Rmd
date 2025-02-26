@@ -163,6 +163,7 @@ lmer(formula = response ~ instruction * validity * plausibility + (1 | id) +
         summarize(response = mean(response))) %>% 
   joint_tests()
 ```
+
 Here, both routes yield the same results. 
 
 ## Additional resources
