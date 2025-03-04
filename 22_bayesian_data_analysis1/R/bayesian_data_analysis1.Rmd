@@ -1,7 +1,7 @@
 ---
 title: "Class 22"
 author: "Tobias Gerstenberg"
-date: "March 4th, 2024"
+date: "March 3rd, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -12,12 +12,9 @@ output:
 ---
 
 ```{r, eval=FALSE, include=FALSE}
-# Note: To get greta to work on my mac, I had to run the following commands 
-# This doesn't seem to be working on my M1 mac ... :/ 
+# Note: I couldn't get the "greta" package to work on my M1 mac ... 
 devtools::install_github("greta-dev/greta")
-greta::install_tensorflow(method = "conda",
-                          version = "1.14.0",
-                          extra_packages = "tensorflow-probability==0.7.0")
+greta::install_greta_deps()
 ```
 
 # Bayesian data analysis 1
@@ -36,7 +33,7 @@ library("knitr")      # for knitting RMarkdown
 library("janitor")    # for cleaning column names
 library("patchwork")  # for figure panels
 library("tidybayes")  # tidying up results from Bayesian models
-library("greta")      # for writing Bayesian models
+# library("greta")      # for writing Bayesian models
 library("gganimate")  # for animations
 library("extraDistr") # additional probability distributions
 library("broom")      # for tidy regression results
