@@ -1,7 +1,7 @@
 ---
 title: "Class 23"
 author: "Tobias Gerstenberg"
-date: "March 6th, 2024"
+date: "March 4th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -262,8 +262,8 @@ So far, we've assumed that the inference has worked out. We can check this by ru
 
 ```{r, fig.height=8, fig.width=10}
 plot(fit.brm_poker,
-     N = 7,
-     ask = F)
+     nvariables = 7,
+     ask = FALSE)
 ```
 
 The posterior distributions (left hand side), and the trace plots of the samples from the posterior (right hand side) look good. 
@@ -331,9 +331,10 @@ Let's visualize the trace plots:
 
 ```{r, fig.height=6, fig.width=12}
 plot(fit.brm_wrong,
-     N = 2, 
+     nvariables = 2, 
      ask = F)
 ```
+The chain plots do not look like fuzzt caterpillers. 
 
 ```{r}
 fit.brm_wrong %>% 
@@ -375,9 +376,10 @@ Let's visualize the trace plots:
 
 ```{r}
 plot(fit.brm_right,
-     N = 2, 
+     nvariables = 2, 
      ask = F)
 ```
+More like fuzzy caterpillers. 
 
 ```{r}
 fit.brm_right %>% 
@@ -450,7 +452,7 @@ fit.brm_poker_prior = brm(formula = balance ~ 0 + Intercept + hand * skill,
                           warmup = 1000,
                           chains = 4,
                           file = "cache/brm_poker_prior",
-                          sample_prior = "only",
+                          sample_prior = "only", #only drawing from prior
                           seed = 1)
 
 # generate prior samples 
@@ -794,7 +796,7 @@ fit.brm_sleep %>%
   summary()
 
 fit.brm_sleep %>% 
-  plot(N = 6)
+  plot(nvariables = 6)
 ```
 
 #### b) Visualize model predictions
@@ -1268,7 +1270,7 @@ fit.brm_polite %>%
   gather_emmeans_draws() %>% 
   ggplot(aes(x = .value,
              y = gender,
-             fill = stat(x > 0))) + 
+             fill = after_stat(x > 0))) + 
   facet_wrap(~ contrast) +
   stat_halfeye(show.legend = F) + 
   geom_vline(xintercept = 0, 
