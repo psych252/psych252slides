@@ -1,7 +1,7 @@
 ---
 title: "Class 24"
 author: "Tobias Gerstenberg"
-date: "March 8th, 2024"
+date: "March 6th, 2025"
 output:
   bookdown::html_document2:
     toc: true
@@ -370,7 +370,7 @@ ggplot(data = tibble(x = c(-3, 3)),
 
 ```{r, fig.height=20, fig.width=8}
 fit.brm_ordinal %>% 
-  plot(N = 9,
+  plot(nvariables = 9,
        variable = "^b_",
        regex = T)
 ```
