@@ -1,7 +1,7 @@
 ---
 title: "Class 3"
 author: "Tobias Gerstenberg"
-date: "January 10, 2025"
+date: "January 8, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -9,6 +9,8 @@ output:
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=2"]
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Visualization 2
@@ -30,7 +32,8 @@ In this lecture, we will lift our `ggplot2` skills to the next level!
 Let's first install the new packages that you might not have yet.  
 
 ```{r, eval=FALSE}
-install.packages(c("gganimate", "gapminder", "ggridges", "devtools", "png", "gifski", "patchwork"))
+install.packages(c("gganimate", "gapminder", "ggridges", 
+                   "devtools", "png", "gifski", "patchwork"))
 ```
 
 Now, let's load the packages that we need for this chapter. 
@@ -173,7 +176,7 @@ include_graphics("figures/normality_judgments.png")
 Another way to get a sense for the distribution of the data is to use box plots.
 
 ```{r}
-ggplot(data = df.diamonds[1:500,],
+ggplot(data = df.diamonds[1:500, ],
        mapping = aes(x = color,
                      y = price)) +
   geom_boxplot()
@@ -606,7 +609,7 @@ p1 = ggplot(data = df.diamonds,
                fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1)
+               linewidth = 1)
 print(p1)
 
 p2 = ggplot(data = df.diamonds,
@@ -617,7 +620,7 @@ p2 = ggplot(data = df.diamonds,
                fill = "lightblue") +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1)
+               linewidth = 1)
 
 ggsave(filename = "figures/diamond_plot.pdf",
        plot = p1,
@@ -625,7 +628,7 @@ ggsave(filename = "figures/diamond_plot.pdf",
        height = 6)
 ```
 
-Here, I'm saving the plot in the `figures` folder and it's name is `diamond_plot.pdf`. I also specify the width and height as the plot in inches (which is the default unit). 
+Here, I'm saving the plot in the `figures` folder and it's name is `diamond_plot.pdf`. I also specify the width and height of the plot in inches (which is the default unit). 
 
 ## Creating figure panels
 
@@ -667,7 +670,7 @@ p3 = ggplot(data = df.diamonds,
                width = 0.85) +
   stat_summary(fun.data = "mean_cl_boot",
                geom = "linerange",
-               size = 1.5) + 
+               linewidth = 1.5) + 
   scale_x_discrete(labels = c("fair", "good", "very\ngood", "premium", "ideal")) +
   labs(title = "Price as a function of cut", 
        subtitle = "Note: The price is in US dollars",
@@ -722,7 +725,7 @@ dim(df.plot_info) # data frame dimensions
 
 I've called the `ggplot_build()` function on the ggplot2 object that we saved as `p`. I've then printed out the data associated with that plot object. The first thing we note about the data frame is how many entries it has, `r nrow(df.plot_info)`. That's good. This means there is one value for each of the 7 x 8 grids. The columns tell us what color was used for the `fill`, the `value` associated with each row, where each row is being displayed (`x` and `y`), etc.   
 
-If a plot looks weird, it's worth taking a look behind the scenes. For example, something we thing we could have tried is the following (in fact, this is what I tried first): 
+If a plot looks weird, it's worth taking a look behind the scenes. For example, something we think we could have tried is the following (in fact, this is what I tried first): 
 
 ```{r}
 p = ggplot(data = df.diamonds,
@@ -781,13 +784,17 @@ This takes a while to run but it's worth the wait. The plot shows the relationsh
 Note how little is required to define the `gganimate`-specific information! The `{frame_time}` variable changes the title for each frame. The `transition_time()` variable is set to `year`, and the kind of transition is set as 'linear' in `ease_aes()`. I've saved the animation as a gif in the figures folder. 
 We won't have time to go into more detail here but I encourage you to play around with `gganimate`. It's fun, looks cool, and (if done well) makes for a great slide in your next presentation! 
 
+Check out how effective the animations are in this talk from the famous Dr. Hans Rosling 
+- [best stats you've ever seen](https://www.youtube.com/watch?v=hVimVzgtD6w)
+
+
 ## Shiny apps
 
 The package [`shiny`](https://shiny.rstudio.com/) makes it relatively easy to create interactive plots that can be hosted online. Here is a [gallery](https://shiny.rstudio.com/gallery/) with some examples. 
 
 ## Defining snippets
 
-Often, we want to create similar plots over and over again. One way to achieve this is by finding the original plot, copy and pasting it, and changing the bits that need changing. Another more flexible and faster way to do this is by using snippets. Snippets are short pieces of code that 
+Often, we want to create similar plots over and over again. One way to achieve this is by finding the original plot, copy and pasting it, and changing the bits that need changing. Another more flexible and faster way to do this is by using snippets. Snippets are another type of short-cut for typing out short pieces of code. 
 
 Here are some snippets I use: 
 

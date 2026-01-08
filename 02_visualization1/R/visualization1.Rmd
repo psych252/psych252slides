@@ -1,7 +1,7 @@
 ---
 title: "Class 2"
 author: "Tobias Gerstenberg"
-date: "January 8, 2025"
+date: "January 6, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -82,6 +82,7 @@ The data sets in Figure \@ref(fig:datasaurus) all share the same summary statist
 
 ### Setting up RStudio
 
+Make some adjustments to the Tools > Global Options
 ```{r, echo=FALSE, fig.cap="General preferences.", out.width="50%"}
 include_graphics("figures/r_preferences_general.png")
 ```
@@ -208,6 +209,7 @@ The **YAML** (*Y*et *A*nother *M*arkdown *L*anguage) header specifies general op
 
 ```
 
+
 Code chunks can have code chunk options which we can set by clicking on the cog symbol on the right. You can also give code chunks a name, so that we can refer to it in text. I've named the one above "another-code-chunk". Make sure to have no white space or underscore in a code chunk name. 
 
 ### Helpful keyboard shortcuts
@@ -274,6 +276,14 @@ ggplot(data = df.diamonds,
 
 Here, we specified that we want to plot `color` on the x-axis, and `price` on the y-axis. As you can see, `ggplot2` has already figured out how to label the axes. However, we still need to specify _how_ to plot it. 
 
+There are three main aspects of data the form the building blocks of much of statistics:   
+Means (or more generally, _central tendency_)
+Variance (or more generally, _dispersion_)
+Correlation (or more generally, _covariance_)
+So, when plotting data, it is often useful to consider whether and how one is visually representing these core building blocks. 
+
+We start with _central tendency_.
+
 ### Bar plot
 
 Let's make a __bar graph__:
@@ -286,7 +296,7 @@ ggplot(data = df.diamonds,
                geom = "bar")
 ```
 
-Neat! Three lines of code produce an almost-publication-ready plot (to be published in the _Proceedings of Unnecessary Diamonds_)! Note how we used a `+` at the end of the first line of code to specify that there will be more. This is a very powerful idea underlying `ggplot2`. We can start simple and keep adding things to the plot step by step.
+Neat! Three lines of code produce an almost-publication-ready plot (to be published in the _Proceedings of Unnecessary Diamonds_)! Note how we used a `+` at the end of the first line of code to specify that there will be more. This is a very powerful idea underlying `ggplot2`. We can start simple and keep adding things to the plot step by step (layer by layer).
 
 We used the `stat_summary()` function to define _what_ we want to plot (the "mean"), and _how_ (as a "bar" chart). Let's take a closer look at that function.
 
@@ -418,7 +428,7 @@ Interestingly, there is no simple relationship between the quality of the cut an
 
 ### Adding error bars
 
-We often don't just want to show the means but also give a sense for how much the data varies. `ggplot2` has some convenient ways of specifying error bars. Let's take a look at how much `price` varies as a function of `clarity` (another variable in our `diamonds` data frame).
+We often don't just want to show the means (_central tendency_) but also give a sense for how much the data varies (_dispersion_). `ggplot2` has some convenient ways of specifying error bars. Let's take a look at how much `price` varies as a function of `clarity` (another variable in our `diamonds` data frame).
 
 ```{r errorbars-normal, fig.cap="Relationship between diamond clarity and price. Error bars indicate 95% bootstrapped confidence intervals."}
 ggplot(data = df.diamonds,
@@ -454,7 +464,7 @@ ggplot(data = df.diamonds,
 Figure \@ref(fig:good-figure) looks good.
 
 ```{r bad-figure, fig.cap='This figure looks bad. Error bars and means are drawn in the incorrect order.'}
-# I've changed the order in which the means and error bars are drawn.
+# I've changed the order in which the layers for the means and error bars are drawn.
 ggplot(df.diamonds,
        aes(x = clarity,
            y = price)) +
@@ -471,7 +481,7 @@ One cool feature about using `stat_summary()` is that we did not have to change 
 
 You may not remember exactly what confidence intervals actually are. Don't worry! We'll have a recap later in class.
 
-Let's take a look at two more principles for plotting data that are extremely helpful: groups and facets. But before, another practice plot. 
+Let's take a look at two more principles for plotting data that are extremely helpful: groups and facets. But before that, another practice plot. 
 
 #### Practice plot 2
 

@@ -131,7 +131,7 @@ ggplot(data = df.diamonds,
                      color = clarity)) +
   stat_summary(fun = "mean",
                geom = "line",
-               size = 2,
+               linewidth = 2,
                position = position_dodge(width = 0.9)) + 
   stat_summary(fun.data = "mean_cl_boot",
                geom = "pointrange",
