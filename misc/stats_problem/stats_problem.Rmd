@@ -1,0 +1,127 @@
+---
+title: "Stats problem"
+author: "Tobi Gerstenberg"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+# Load packages 
+
+```{r, message=F}
+library("knitr")
+library("lme4")
+library("brms")
+library("broom.mixed")
+library("LaplacesDemon")
+library("tidyverse")
+```
+
+# Read data 
+
+```{r}
+df.data = read.csv("data.csv")
+```
+
+# Models 
+
+## Assuming no dependence 
+
+```{r}
+fit.glm = glm(formula = accuracy ~ 0 + trial,
+              data = df.data,
+              family = "binomial")
+```
+
+## Assuming dependence 
+
+```{r}
+fit.glmer = glmer(formula = accuracy ~ 0 + trial + (0 + trial | participant),
+                  data = df.data,
+                  family = "binomial")
+```
+
+## Extract predictions 
+
+```{r}
+df.model = tibble(trial = 0:15)
+
+df.model.independent = fit.glm %>% 
+  augment(newdata = df.model,
+          type.predict = "response")
+
+df.model.dependent = fit.glmer %>% 
+  augment(newdata = df.model,
+          re.form = NA)
+
+df.model = df.model.independent %>% 
+  rename(prediction = .fitted) %>% 
+  mutate(model = "independent") %>%
+  bind_rows(df.model.dependent %>% 
+              mutate(prediction = invlogit(.fitted),
+                     model = "dependent") %>% 
+              select(trial, prediction, model))
+```
+
+# Checking that augment and fixef yield the same results
+
+```{r}
+df.tmp = tibble(trial = 0:15,
+                prediction = invlogit(trial*fixef(fit.glmer))) %>% 
+  left_join(df.model.dependent,
+            by = "trial") %>% 
+  mutate(prediction2 = invlogit(.fitted))
+```
+
+# Visualization
+
+Why is the fitted line for the dependent model so much off from the average accuracy compared to the independent model?
+
+```{r, warning=F, fig.width=10, fig.height=4}
+ggplot(data = df.data,
+       mapping = aes(x = trial,
+                     y = accuracy)) + 
+  geom_line(data = df.model,
+              mapping = aes(y = prediction,
+                            color = model),
+            linewidth = 1) +
+  stat_summary(fun.data = "mean_cl_boot",
+               fill = "gray80",
+               shape = 21,
+               size = 1) + 
+  scale_x_continuous(breaks = 0:15,
+                     labels = 1:16) +
+  scale_y_continuous(breaks = seq(0.4, 1, 0.1),
+                     labels = str_c(seq(40, 100, 10), "%")) +
+  scale_color_brewer(palette = "Set1") +
+  coord_cartesian(ylim = c(0.35, 1)) + 
+  labs( x = "trial", y = "accuracy") + 
+  theme_classic() +
+  theme(panel.grid.major.y = element_line(),
+        text = element_text(size = 24))
+```
+
+
+# Set options 
+
+```{r}
+theme_set(theme_classic() + 
+    theme(text = element_text(size = 24)))
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# suppress grouping warning 
+options(dplyr.summarise.inform = F)
+```
+
+# Session info
+
+```{r, echo=F}
+sessionInfo()
+```

@@ -1,7 +1,7 @@
 ---
 title: "Class 4"
 author: "Tobias Gerstenberg"
-date: "January 13th, 2025"
+date: "January 12th, 2026"
 output: 
   bookdown::html_document2:
     toc: true
@@ -763,7 +763,7 @@ So, I could write the same code like so:
 
 ```{r}
 df.starwars %>% 
-  select(where(function(x) !is.numeric(x))) # selects all columns that are not numeric
+  select(where(fn = function(x) !is.numeric(x))) # selects all columns that are not numeric
 ```
 
 For more details, take a look at the help file for `select()`, and this [this great tutorial](https://suzan.rbind.io/2018/01/dplyr-tutorial-1/) in which I learned about some of the more advanced ways of using `select()`.
@@ -830,7 +830,7 @@ We can also use names to create new columns:
 ```{r}
 df.starwars %>%  
   mutate(across(.cols = c(height, mass, birth_year),
-                .fns = scale,
+                .fns = ~ scale(.),
                 .names = "{.col}_z")) %>% 
   select(name, contains("height"), contains("mass"), contains("birth_year"))
 ```
@@ -842,7 +842,7 @@ We can also apply several functions at the same time.
 ```{r}
 df.starwars %>% 
   mutate(across(.cols = c(height, mass, birth_year),
-                .fns = list(z = scale,
+                .fns = list(z = ~ scale(.),
                             centered = ~ scale(., scale = FALSE)))) %>%
   select(name, contains("height"), contains("mass"), contains("birth_year"))
 ```

@@ -1,0 +1,99 @@
+---
+title: "Title"
+author: "Authors"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 4
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+# Load packages 
+
+```{r, message=F}
+library("knitr")
+library("tidyverse")
+```
+
+# Set options 
+
+```{r}
+theme_set(theme_classic() + 
+    theme(text = element_text(size = 24)))
+
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+
+# suppress grouping warning 
+options(dplyr.summarise.inform = F)
+```
+
+# Set up simulation 
+
+```{r}
+set.seed(1)
+
+m = 10000 
+n = 100 
+look_odd = c(seq(1, n, 2), seq(2, n, 2))
+
+fun.alice = function(data){
+  data %>% 
+    mutate(nheads = cumsum(flip)) %>% 
+    filter(nheads == 2) %>% 
+    pull(index) %>% 
+    min()  
+}
+
+fun.bob = function(data){
+  data %>% 
+    slice(look_odd) %>%
+    mutate(order = 1:n) %>% 
+    mutate(nheads = cumsum(flip)) %>% 
+    filter(nheads == 2) %>% 
+    pull(order) %>% 
+    min()  
+}
+
+df.data = tibble(simulation = 1:m) %>% 
+  rowwise() %>%
+  mutate(sample = list(tibble(index = 1:n,
+                              flip = rbinom(n, size = 1, prob = 0.5)))) %>% 
+  ungroup() %>% 
+  mutate(alice = map_dbl(.x = sample, 
+                         .f = ~ fun.alice(.x)),
+         bob = map_dbl(.x = sample, 
+                       .f = ~ fun.bob(.x)))
+
+df.data %>% 
+  filter(alice != bob) %>% 
+  mutate(bob_better = bob < alice) %>% 
+  summarize(p_bob_better = sum(bob_better) / n())
+```
+# Visualize results 
+
+```{r, fig.width=10, fig.height=6}
+df.plot = df.data %>% 
+  select(-sample) %>% 
+  mutate(difference = bob - alice,
+         winner = case_when(difference > 0 ~ "Bob",
+                            difference < 0 ~ "Alice",
+                            TRUE ~ "Tie"))
+
+ggplot(data = df.plot,
+       mapping = aes(x = 1,
+                     fill = winner)) +
+  geom_bar() +
+  # coord_polar("y", start = 0) +
+  theme_void()
+```
+
+
+# Session info
+
+```{r, echo=F}
+sessionInfo()
+```
