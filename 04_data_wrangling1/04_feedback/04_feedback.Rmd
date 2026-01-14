@@ -64,9 +64,11 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> If the TAs can reposition themselves around the room so they can better see us holding blue notes up for help that would be great. Thank you!
+> we went through the practice way too fast. My typing slowed down not because I was finish, but because I was still thinking by looking through the examples and figuring out what I did wrong. What would be helpful is after we go through the solution for the practice, leaving it up for a while to compare where I went wrong. For example, in practice 2, I didn't put a space in between the names, height. I looked back at my syntax and realized I need that space. So, just slowing down to see the solution.
 
-> I liked that there were more instructions before the practice
+> Really helpful! Could you please remind us what the shortcuts are as you use them? I'm grateful to learn them but need reminders.
+
+> I appreciate having the instructors code the examples and giving us space to try things on our own. I think group coding might also be helpful for examples that are a little more complicated. I am roughly familiar with R, but I think if I had less familiarity the groundwork information would have felt very fast because with my base it felt a little fast
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -77,4 +79,4 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- make sure that TAs walk around so that they can see whether students have questions / need help with coding 
+- go through the solutions of the practice examples more slowly

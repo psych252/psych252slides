@@ -51,16 +51,23 @@ df.starwars %>%
 
 The standard deviation is `NA` for many groups since the group size is 1. 
 
-Who is the tallest member of each species? What eye color do they have? The `top_n()` function or the `row_number()` function (in combination with `filter()`) will be useful here. 
+Who is the tallest member of each species? What eye color do they have? The `slice_max()` function (or the `row_number()` function in combination with `filter()`) will be useful here. 
 
 ```{r summarize_practice2}
 df.starwars %>% 
-  arrange(species, desc(height)) %>% 
+  select(name, species, height, eye_color) %>% 
   group_by(species) %>%
-  # top_n(1, wt = height) %>% # you can either use this, or filter() in the next row
-  filter(row_number() == 1) %>%
-  ungroup() %>% 
-  select(species, name, eye_color)
+  slice_max(n = 1, order_by = height) %>% 
+  arrange(name)
+
+# or 
+
+df.starwars %>% 
+  select(name, species, height, eye_color) %>% 
+  group_by(species) %>%
+  arrange(desc(height)) %>% 
+  filter(row_number() == 1) %>% 
+  arrange(name)
 ```
 
 ## Practice 2 

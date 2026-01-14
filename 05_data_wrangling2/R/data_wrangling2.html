@@ -11,7 +11,7 @@
 
 <meta name="author" content="Tobias Gerstenberg" />
 
-<meta name="date" content="2025-01-15" />
+<meta name="date" content="2026-01-14" />
 
 <title>Class 5</title>
 
@@ -235,8 +235,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -247,7 +248,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -428,7 +429,7 @@ display: none;
 
 <h1 class="title toc-ignore">Class 5</h1>
 <h4 class="author">Tobias Gerstenberg</h4>
-<h4 class="date">January 15, 2025</h4>
+<h4 class="date">January 14, 2026</h4>
 
 </div>
 
@@ -591,12 +592,12 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 13           3       20
 14           3       53
 15           3       73</code></pre>
+<p>I’ve generated some random data using the repeat function <code>rep()</code> for making a <code>participant</code> column, and the <code>sample()</code> function to randomly choose values from a range between 0 and 100 with replacement. (We will learn more about these functions later when we look into how to simulate data.)</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>df.summarize <span class="sc">%&gt;%</span>   </span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>  <span class="fu">group_by</span>(participant) <span class="sc">%&gt;%</span> <span class="co"># group by participants</span></span>
 <span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">judgment_zscored =</span> <span class="fu">scale</span>(judgment)) <span class="sc">%&gt;%</span> <span class="co"># z-score data of individual participants</span></span>
-<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> <span class="co"># ungroup the data frame</span></span>
-<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>  <span class="fu">head</span>(<span class="at">n =</span> <span class="dv">10</span>) <span class="co"># print the top 10 rows </span></span></code></pre></div>
-<pre><code># A tibble: 10 × 3
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="co"># ungroup the data frame</span></span></code></pre></div>
+<pre><code># A tibble: 15 × 3
    participant judgment judgment_zscored[,1]
          &lt;int&gt;    &lt;int&gt;                &lt;dbl&gt;
  1           1       67               0.671 
@@ -608,8 +609,13 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
  7           2       13              -1.45  
  8           2       81               1.30  
  9           2       58               0.372 
-10           2       50               0.0485</code></pre>
-<p>First, I’ve generated some random data using the repeat function <code>rep()</code> for making a <code>participant</code> column, and the <code>sample()</code> function to randomly choose values from a range between 0 and 100 with replacement. (We will learn more about these functions later when we look into how to simulate data.) I’ve then grouped the data by participant, and used the scale function to z-score the data.</p>
+10           2       50               0.0485
+11           3       96               1.03  
+12           3       84               0.631 
+13           3       20              -1.52  
+14           3       53              -0.409 
+15           3       73               0.262 </code></pre>
+<p>Then, I’ve then grouped the data by participant, and used the scale function to z-score the data.</p>
 <blockquote>
 <p><strong>TIP</strong>: Don’t forget to <code>ungroup()</code> your data frame. Otherwise, any subsequent operations are applied per group.</p>
 </blockquote>
@@ -680,7 +686,7 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <h4><span class="header-section-number">5.4.1.1</span> Practice 1</h4>
 <p>Find out what the average <code>height</code> and <code>mass</code> (as well as the standard deviation) is from different <code>species</code> in different <code>homeworld</code>s. Why is the standard deviation <code>NA</code> for many groups?</p>
 <div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" tabindex="-1"></a><span class="co"># write your code here </span></span></code></pre></div>
-<p>Who is the tallest member of each species? What eye color do they have? The <code>top_n()</code> function or the <code>row_number()</code> function (in combination with <code>filter()</code>) will be useful here.</p>
+<p>Who is the tallest member of each species? What eye color do they have? The <code>slice_max()</code> function (or the <code>row_number()</code> function in combination with <code>filter()</code>) will be useful here.</p>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># write your code here </span></span></code></pre></div>
 </div>
 </div>
@@ -716,7 +722,7 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>Here, I’ve generated data from two participants with three observations. This data frame is not tidy since each row contains more than a single observation. Data frames that have one row per participant but many observations are called <em>wide</em> data frames.</p>
 <p>We can make it tidy using the <code>pivot_longer()</code> function.</p>
 <div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a>df.reshape.long <span class="ot">=</span> df.reshape <span class="sc">%&gt;%</span> </span>
-<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span>participant,</span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">contains</span>(<span class="st">&quot;observation&quot;</span>),</span>
 <span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a>               <span class="at">names_to =</span> <span class="st">&quot;index&quot;</span>,</span>
 <span id="cb26-4"><a href="#cb26-4" tabindex="-1"></a>               <span class="at">values_to =</span> <span class="st">&quot;rating&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb26-5"><a href="#cb26-5" tabindex="-1"></a>  <span class="fu">arrange</span>(participant) <span class="sc">%&gt;%</span> </span>
@@ -734,7 +740,7 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <p>The <code>pivot_longer()</code> function takes at least four arguments:</p>
 <ol style="list-style-type: decimal">
 <li>the data which I’ve passed to it via the pipe <code>%&gt;%</code></li>
-<li>a specification for which columns we want to gather – here I’ve specified that we want to gather the values from all columns except the <code>participant</code> column</li>
+<li>a specification for which columns we want to gather – here I’ve specified that we want to gather the values from all columns that contain the string “observation”</li>
 <li>a <code>names_to</code> argument which specifies the name of the column which will contain the column names of the original data frame</li>
 <li>a <code>values_to</code> argument which specifies the name of the column which will contain the values that were spread across different columns in the original data frame</li>
 </ol>
@@ -947,8 +953,14 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 <span id="cb50-5"><a href="#cb50-5" tabindex="-1"></a>  <span class="at">height =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">5</span>),</span>
 <span id="cb50-6"><a href="#cb50-6" tabindex="-1"></a>  <span class="at">width =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">5</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>),</span>
 <span id="cb50-7"><a href="#cb50-7" tabindex="-1"></a>  <span class="at">n_dots =</span> <span class="fu">c</span>(<span class="dv">12</span>, <span class="dv">15</span>, <span class="dv">5</span>, <span class="dv">13</span>, <span class="dv">7</span>),</span>
-<span id="cb50-8"><a href="#cb50-8" tabindex="-1"></a>  <span class="at">color =</span> <span class="fu">c</span>(<span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>, <span class="st">&quot;white&quot;</span>, <span class="st">&quot;red&quot;</span>, <span class="st">&quot;black&quot;</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb50-9"><a href="#cb50-9" tabindex="-1"></a>  <span class="fu">print</span>()</span></code></pre></div>
+<span id="cb50-8"><a href="#cb50-8" tabindex="-1"></a>  <span class="at">color =</span> <span class="fu">c</span>(<span class="st">&quot;green&quot;</span>, <span class="st">&quot;blue&quot;</span>, <span class="st">&quot;white&quot;</span>, <span class="st">&quot;red&quot;</span>, <span class="st">&quot;black&quot;</span>))</span>
+<span id="cb50-9"><a href="#cb50-9" tabindex="-1"></a></span>
+<span id="cb50-10"><a href="#cb50-10" tabindex="-1"></a><span class="co"># data frame with participants&#39; responses </span></span>
+<span id="cb50-11"><a href="#cb50-11" tabindex="-1"></a>df.responses <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">participant =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">each =</span> <span class="dv">5</span>),</span>
+<span id="cb50-12"><a href="#cb50-12" tabindex="-1"></a>  <span class="at">index =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">3</span>), </span>
+<span id="cb50-13"><a href="#cb50-13" tabindex="-1"></a>  <span class="at">response =</span> <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span>, <span class="at">size =</span> <span class="dv">15</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)) <span class="co"># randomly sample 15 values from 0 to 100</span></span>
+<span id="cb50-14"><a href="#cb50-14" tabindex="-1"></a>  </span>
+<span id="cb50-15"><a href="#cb50-15" tabindex="-1"></a>df.stimuli</span></code></pre></div>
 <pre><code># A tibble: 5 × 5
   index height width n_dots color
   &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;
@@ -957,11 +969,7 @@ Let’s say we wanted to get a quick sense for how tall starwars characters from
 3     3      1     2      5 white
 4     4      4     3     13 red  
 5     5      5     1      7 black</code></pre>
-<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a><span class="co"># data frame with participants&#39; responses </span></span>
-<span id="cb52-2"><a href="#cb52-2" tabindex="-1"></a>df.responses <span class="ot">=</span> <span class="fu">tibble</span>(<span class="at">participant =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, <span class="at">each =</span> <span class="dv">5</span>),</span>
-<span id="cb52-3"><a href="#cb52-3" tabindex="-1"></a>  <span class="at">index =</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">3</span>), </span>
-<span id="cb52-4"><a href="#cb52-4" tabindex="-1"></a>  <span class="at">response =</span> <span class="fu">sample</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">100</span>, <span class="at">size =</span> <span class="dv">15</span>, <span class="at">replace =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span> <span class="co"># randomly sample 15 values from 0 to 100</span></span>
-<span id="cb52-5"><a href="#cb52-5" tabindex="-1"></a>  <span class="fu">print</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" tabindex="-1"></a>df.responses</span></code></pre></div>
 <pre><code># A tibble: 15 × 3
    participant index response
          &lt;int&gt; &lt;int&gt;    &lt;int&gt;
@@ -1300,13 +1308,13 @@ $ rating              &lt;dbl&gt; 4.8, 6.3, 7.7, 7.8, 8.6, 7.7, 8.1, 8.2, 7.5, 6
 </div>
 <div id="session-info" class="section level2" number="5.8">
 <h2><span class="header-section-number">5.8</span> Session info</h2>
-<pre><code>R version 4.4.2 (2024-10-31)
+<pre><code>R version 4.5.2 (2025-10-31)
 Platform: aarch64-apple-darwin20
-Running under: macOS Sequoia 15.2
+Running under: macOS Tahoe 26.2
 
 Matrix products: default
-BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
-LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
 [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
@@ -1318,22 +1326,23 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] lubridate_1.9.3 forcats_1.0.0   stringr_1.5.1   dplyr_1.1.4    
- [5] purrr_1.0.2     readr_2.1.5     tidyr_1.3.1     tibble_3.2.1   
- [9] ggplot2_3.5.1   tidyverse_2.0.0 knitr_1.49     
+ [1] lubridate_1.9.4 forcats_1.0.0   stringr_1.6.0   dplyr_1.1.4    
+ [5] purrr_1.2.0     readr_2.1.5     tidyr_1.3.1     tibble_3.3.0   
+ [9] ggplot2_4.0.0   tidyverse_2.0.0 knitr_1.51     
 
 loaded via a namespace (and not attached):
- [1] bit_4.0.5         gtable_0.3.5      jsonlite_1.8.8    crayon_1.5.3     
- [5] compiler_4.4.2    tidyselect_1.2.1  parallel_4.4.2    jquerylib_0.1.4  
- [9] scales_1.3.0      yaml_2.3.10       fastmap_1.2.0     R6_2.5.1         
-[13] generics_0.1.3    bookdown_0.42     munsell_0.5.1     bslib_0.7.0      
-[17] pillar_1.9.0      tzdb_0.4.0        rlang_1.1.4       utf8_1.2.4       
-[21] stringi_1.8.4     cachem_1.1.0      xfun_0.49         sass_0.4.9       
-[25] bit64_4.0.5       timechange_0.3.0  cli_3.6.3         withr_3.0.2      
-[29] magrittr_2.0.3    digest_0.6.36     grid_4.4.2        vroom_1.6.5      
-[33] rstudioapi_0.16.0 hms_1.1.3         lifecycle_1.0.4   vctrs_0.6.5      
-[37] evaluate_0.24.0   glue_1.8.0        fansi_1.0.6       colorspace_2.1-0 
-[41] rmarkdown_2.29    tools_4.4.2       pkgconfig_2.0.3   htmltools_0.5.8.1</code></pre>
+ [1] bit_4.6.0          gtable_0.3.6       jsonlite_2.0.0     crayon_1.5.3      
+ [5] compiler_4.5.2     tidyselect_1.2.1   parallel_4.5.2     jquerylib_0.1.4   
+ [9] scales_1.4.0       yaml_2.3.10        fastmap_1.2.0      R6_2.6.1          
+[13] generics_0.1.4     bookdown_0.46      bslib_0.9.0        pillar_1.11.1     
+[17] RColorBrewer_1.1-3 tzdb_0.5.0         rlang_1.1.6        utf8_1.2.6        
+[21] stringi_1.8.7      cachem_1.1.0       xfun_0.54          sass_0.4.10       
+[25] S7_0.2.0           bit64_4.6.0-1      otel_0.2.0         timechange_0.3.0  
+[29] cli_3.6.5          withr_3.0.2        magrittr_2.0.4     digest_0.6.38     
+[33] grid_4.5.2         vroom_1.6.5        rstudioapi_0.17.1  hms_1.1.3         
+[37] lifecycle_1.0.4    vctrs_0.6.5        evaluate_1.0.5     glue_1.8.0        
+[41] farver_2.1.2       rmarkdown_2.30     tools_4.5.2        pkgconfig_2.0.3   
+[45] htmltools_0.5.8.1 </code></pre>
 </div>
 </div>
 
