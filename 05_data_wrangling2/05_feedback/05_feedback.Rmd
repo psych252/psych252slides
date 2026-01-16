@@ -64,18 +64,8 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> 	wish we had spent more time on the more complex stuff later in class like pivoting, etc. that stuff is generally a lot less intuitive than simple stuff like adding new columns. I mean, hopefully we won't have to waste our time tidying data and we can learn actually statistics in this class so it won't matter... but ¯\_(ツ)_/¯
-
-> Really would like another wrangling class just focusing on making data tidy/combining dataframes.
-
-> breakout rooms where we work on code chunks are great!
-
-> I finally got the hang of a practice problem and was able to contribute and reproduce the code on my own!! Woohoo!!!!
-
-> Most things are improved by chinchillas. If an opportunity arises, they would be much appreciated.
-
-> I'm nervous about how much I actually have learned and worried that I'm in worse shape than I think I am. I understand the material in the class but not sure how well I can replicate the code from scratch, or come up with what I need to do myself.
-
+> Music to my ears when Prof. Tobi said he would the solutions from the practice problems to canvas. That will be helpful for stepping through on my own time.
+> I still think the pace was a little too fast for seeing the solutions after we stepped through them. What I did appreciate is the stepping through the solution out loud.
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
@@ -86,8 +76,6 @@ read_csv("data/What did you like about today's class- What could be improved nex
 
 # What to do next time
 
-- didn't have enough time to go through pivoting and joining data frames in detail 
-- students still felt that the class was a little fast 
-- maybe consider having a fifth class on visualization/wrangling?! 
+- take more time still to go through solutions together
 
 
