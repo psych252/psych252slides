@@ -1,7 +1,7 @@
 ---
 title: "Class 7"
 author: "Tobias Gerstenberg"
-date: "January 21st, 2025"
+date: "January 19, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -94,6 +94,8 @@ df.data = tibble(trial = 1:n,
                  rating = sample(x = 1:10,
                                  size = n,
                                  replace = T))
+
+df.data
 ```
 
 Sample a given number of rows. 
@@ -832,7 +834,7 @@ df.camp %>%
   summarize(prob_basketball = basketball/(basketball + chess))
 ```
 
-The reason this doesn't work is because none of our kids is exactly 175cm tall. Instead, we need to filter kids that are within a certain height range. 
+The reason this doesn't work is because none of our kids is exactly 175.000cm tall. Instead, we need to filter kids that are within a certain height range. 
 
 ```{r}
 tmp.height = 175
