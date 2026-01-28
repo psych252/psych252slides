@@ -1,7 +1,7 @@
 ---
 title: "Class 9"
 author: "Tobias Gerstenberg"
-date: "January 29th, 2024"
+date: "January 26th, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -374,6 +374,7 @@ ggplot(data = tibble(x = c(2.73, 4.73)),
 
 
 # quantile function 
+
 df.paths = tibble(x = c(rep(c(0.025, 0.975), each = 2),
                         -Inf, 0.025, -Inf, 0.975),
                   y = c(2.9, q_low,

@@ -1,7 +1,7 @@
 ---
 title: "Class 10"
 author: "Tobias Gerstenberg"
-date: "January 29th, 2025"
+date: "January 28th, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -473,9 +473,9 @@ F-distribution with a red line indicating the calculated F-statistic.
 ```{r}
 ggplot(data = tibble(x = c(0, 10)),
        mapping = aes(x = x)) +
-  stat_function(fun = "df",
-                args = list(df1 = pa-pc,
-                            df2 = n-pa),
+  stat_function(fun = ~df(.,
+                          df1 = pa-pc,
+                          df2 = n-pa),
                 size = 1) +
   geom_vline(xintercept = f,
              color = "red",
