@@ -64,11 +64,10 @@ ggplot(data = df.happy,
 
 # What did you like? What can be improved? 
 
-> The explanations of concepts and examples are very clear and widely accessible to students with varying stats and programming background. I appreciate the focus on developing both intuition and practical skills, in contrast to many other stats class that seem to prioritize one or the other.
+> Loved the correlation game
 
-> The phase was a tad too fast. Also I really really appreciate the jokes and analogies! (I really hope they continue) That's the only way I can get through all these STATS :(
+> I really appreciated the additional resources for plotting!
 
-> Please standardize grading among TAs. maybe TAs can proactively walk around during section and offer help. Please write in plain speak what the equations are - helpful to have them in English
 
 ```{r echo=FALSE, message=FALSE}
 read_csv("data/What did you like about today's class- What could be improved next time-.csv",
