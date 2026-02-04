@@ -1,7 +1,7 @@
 ---
 title: "Class 13"
 author: "Tobias Gerstenberg"
-date: "February 4th, 2025"
+date: "February 4th, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -153,7 +153,7 @@ Here is a linear contrast that assumes that there is a linear relationship betwe
 df.poker = df.poker %>% 
   mutate(hand_contrast = factor(hand,
                                 levels = c("bad", "neutral", "good"),
-                                labels = c(-1, 0, 1)), #these are structured as point along a line
+                                labels = c(-1, 0, 1)), 
          hand_contrast = hand_contrast %>% 
            as.character() %>% 
            as.numeric())
