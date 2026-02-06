@@ -1,7 +1,7 @@
 ---
 title: "Class 14"
 author: "Tobias Gerstenberg"
-date: "February 7th, 2025"
+date: "February 5th, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -132,7 +132,7 @@ ggplot(data = df.titanic,
 Much better! Note that we've changed the interpretation of our dependent variable. We are now predicting the _probability that a person survived_ based on their fare. The model now only predicts values between 0 and 1. To achieve this, we apply a logit transform to the outcome variable like so: 
 
 $$
-\ln(\frac{\pi_i}{1-\pi_i}) = b_0 + b_1 \cdot X_i + e_i
+\ln(\frac{\pi_i}{1-\pi_i}) = b_0 + b_1 \cdot X_i
 $$
 where $\pi_i$ is the probability of passenger $i$ having survived. Importantly, this affects our interpretation of the model parameters. They are now defined in log-odds, and can apply an inverse logit transformation to turn this back into a probability: 
 
