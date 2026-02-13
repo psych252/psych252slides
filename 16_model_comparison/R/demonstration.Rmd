@@ -1,7 +1,7 @@
 ---
-title: "Class 15"
+title: "Class 16"
 author: "Tobias Gerstenberg"
-date: "February 12th, 2024"
+date: "February 13th, 2026"
 output:
   bookdown::html_document2:
     toc: true
@@ -68,8 +68,8 @@ ggplot(data = df.data,
 ```{r}
 df.cross = df.data %>% 
   # crossv_loo() %>%
-  crossv_mc(n = 50, test = 0.5) %>%
-  # crossv_kfold(k = 3) %>%
+  # crossv_mc(n = 50, test = 0.5) %>%
+  crossv_kfold(k = 3) %>%
   mutate(model_simple = map(.x = train,
                             .f = ~ lm(y ~ 1 + x,
                                       data = .x)),
