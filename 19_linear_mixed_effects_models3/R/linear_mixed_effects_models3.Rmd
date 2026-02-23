@@ -1,7 +1,7 @@
 ---
 title: "Class 19"
 author: "Tobias Gerstenberg"
-date: "February 24th, 2025"
+date: "February 22, 2026"
 output:
   bookdown::html_document2:
     toc: true
