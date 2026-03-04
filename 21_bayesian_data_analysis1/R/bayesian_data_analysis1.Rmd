@@ -5,15 +5,17 @@ output:
   bookdown::html_document2:
     toc: true
     toc_depth: 4
+    chunk_output_type: inline
     theme: cosmo
     highlight: tango
     pandoc_args: ["--number-offset=20"]
 ---
 
 ```{r, eval=FALSE, include=FALSE}
-# Note: I couldn't get the "greta" package to work on my M1 mac ... 
-devtools::install_github("greta-dev/greta")
-greta::install_greta_deps()
+# Install greta this way:
+install.packages("greta",
+                 repos = c("https://greta-dev.r-universe.dev",
+                           "https://cloud.r-project.org"))
 ```
 
 # Bayesian data analysis 1
@@ -32,7 +34,7 @@ library("knitr")      # for knitting RMarkdown
 library("janitor")    # for cleaning column names
 library("patchwork")  # for figure panels
 library("tidybayes")  # tidying up results from Bayesian models
-# library("greta")      # for writing Bayesian models
+library("greta")      # for writing Bayesian models
 library("gganimate")  # for animations
 library("extraDistr") # additional probability distributions
 library("broom")      # for tidy regression results
@@ -351,7 +353,7 @@ ggplot(data = df.attitude,
 
 #### Fit the model
 
-```{r, eval=FALSE}
+```{r}
 set.seed(1)
 
 # variables & priors
@@ -371,14 +373,14 @@ m = model(b0, b1, sd)
 
 Visualize the model as graph: 
 
-```{r, eval=FALSE}
+```{r}
 # plotting
 plot(m)
 ```
 
 Draw samples from the posterior distribution: 
 
-```{r, message=FALSE, cache=TRUE, eval=FALSE}
+```{r, message=FALSE, cache=TRUE}
 set.seed(1)
 
 # sampling
@@ -393,28 +395,28 @@ df.draws = tidy_draws(draws) %>%
 
 These are the priors I used for the intercept, regression weights, and the standard deviation of the Gaussian likelihood function:  
 
-```{r, eval=FALSE}
+```{r}
 # Gaussian
 ggplot(tibble(x = c(-30, 30)),
        aes(x = x)) +
-  stat_function(fun = "dnorm", 
-                size = 2,
-                args = list(sd = 10))
+  stat_function(fun = ~ dnorm(x = .,
+                              sd = 10), 
+                linewidth = 2)
 
 # Cauchy
 ggplot(tibble(x = c(0, 30)),
        aes(x = x)) +
-  stat_function(fun = "dcauchy", 
-                size = 2,
-                args = list(location = 0,
-                            scale = 3))
+  stat_function(fun = ~ dcauchy(x = .,
+                                location = 0,
+                                scale = 3), 
+                linewidth = 2)
 ```
 
 #### Visualize the posteriors
 
 This is what the posterior looks like for the three parameters in the model: 
 
-```{r, eval=FALSE}
+```{r}
 df.draws %>% 
   select(draw:sd) %>% 
   pivot_longer(cols = -draw,
@@ -440,7 +442,7 @@ df.draws %>%
 
 #### Credible interval vs. confidence interval
 
-```{r, eval=FALSE}
+```{r}
 fit.lm %>% 
   tidy(conf.int = T) %>% 
   ggplot(mapping = aes(y = term,
@@ -456,7 +458,7 @@ fit.lm %>%
 
 Let's take some samples from the posterior to visualize the model predictions: 
 
-```{r, eval=FALSE}
+```{r}
 ggplot(data = df.attitude,
        mapping = aes(x = complaints, 
                      y = rating)) + 
@@ -473,7 +475,7 @@ ggplot(data = df.attitude,
 
 Let's make an animation that illustrates what predicted data sets (based on samples from the posterior) would look like: 
 
-```{r, message=FALSE, eval=FALSE}
+```{r message=FALSE, eval=FALSE}
 p = df.draws %>% 
   slice_sample(n = 10) %>%  
   mutate(complaints = list(seq(min(df.attitude$complaints),
@@ -492,11 +494,9 @@ p = df.draws %>%
   transition_manual(draw)
 
 animate(p,
-        nframes = 60,
         width = 800,
         height = 600,
-        res = 96,
-        type = "cairo")
+        res = 96)
 
 # anim_save("posterior_predictive.gif")
 ```
@@ -526,11 +526,9 @@ p = tibble(b0 = rnorm(sample_size, mean = 0, sd = 10),
   transition_manual(draw)
 
 animate(p,
-        nframes = 60,
         width = 800,
         height = 600,
-        res = 96,
-        type = "cairo")
+        res = 96)
 
 # anim_save("prior_predictive.gif")
 ```

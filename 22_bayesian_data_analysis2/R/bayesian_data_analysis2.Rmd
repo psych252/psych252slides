@@ -437,7 +437,7 @@ p = ggplot(data = df.predictive_samples,
          shape = guide_legend(override.aes = list(alpha = 1, fill = "black"))) + 
   transition_manual(.draw)
 
-animate(p, nframes = 120, width = 800, height = 600, res = 96, type = "cairo")
+animate(p, width = 800, height = 600, res = 96, type = "cairo")
 ```
 
 ##### Prior predictive check
