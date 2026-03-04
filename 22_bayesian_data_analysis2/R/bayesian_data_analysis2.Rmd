@@ -1297,6 +1297,7 @@ fit.brm_polite %>%
 - [Visual MCMC diagnostics](https://cran.r-project.org/web/packages/bayesplot/vignettes/visual-mcmc-diagnostics.html#general-mcmc-diagnostics)
 - [Visualization of different MCMC algorithms](https://chi-feng.github.io/mcmc-demo/)
 - [Article describing the different inference algorithms](https://elevanth.org/blog/2017/11/28/build-a-better-markov-chain/)
+- [Learn stan with brms (part 1)](https://solomonkurz.netlify.app/blog/2025-07-07-learn-stan-with-brms-part-i/), [Learn stan with brms (part 2)](https://solomonkurz.netlify.app/blog/2025-07-13-learn-stan-with-brms-part-ii/) 
 
 ## Session info
 
