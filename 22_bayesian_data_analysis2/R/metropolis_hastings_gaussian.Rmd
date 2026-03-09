@@ -1,0 +1,140 @@
+---
+title: "Approximating a Gaussian Distribution via Metropolis-Hastings"
+author: "AI Assistant"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(ggplot2)
+```
+
+## Introduction
+
+The Metropolis-Hastings (MH) algorithm is a Markov Chain Monte Carlo (MCMC) method for obtaining a sequence of random samples from a probability distribution from which direct sampling is difficult. This sequence can be used to approximate the distribution or to compute an integral (e.g., an expected value).
+
+In this document, we illustrate the algorithm by using it to sample from a standard Gaussian (Normal) distribution, $\mathcal{N}(0, 1)$. While we can easily sample from a Gaussian directly using `rnorm()`, applying MH to this known distribution is a great way to understand how the algorithm works.
+
+## Target Distribution
+
+The target distribution is the standard normal distribution. Its unnormalized probability density function is proportional to:
+
+$$ P(x) \propto \exp\left(-\frac{1}{2}x^2\right) $$
+
+We define a function that returns this unnormalized density.
+
+```{r target}
+target_density <- function(x) {
+  exp(-0.5 * x^2)
+}
+```
+
+## The Metropolis-Hastings Algorithm
+
+We will use a symmetric random walk proposal distribution, specifically a Normal distribution centered at the current state: $q(x' | x) = \mathcal{N}(x, \sigma^2)$.
+
+Because the proposal distribution is symmetric (i.e., $q(x' | x) = q(x | x')$), the acceptance ratio simplifies to:
+
+$$ \alpha = \min\left(1, \frac{P(x')}{P(x)}\right) $$
+
+Here is the implementation of the algorithm:
+
+```{r mh-algo}
+metropolis_hastings <- function(n_iter, start_value, proposal_sd) {
+  # Initialize vector to store samples
+  samples <- numeric(n_iter)
+  samples[1] <- start_value
+  
+  # Counter for accepted proposals
+  accepted <- 0
+  
+  for (i in 2:n_iter) {
+    current_x <- samples[i - 1]
+    
+    # 1. Propose a new state from the proposal distribution
+    proposed_x <- rnorm(1, mean = current_x, sd = proposal_sd)
+    
+    # 2. Calculate the acceptance ratio
+    # (Using the unnormalized target density)
+    p_current <- target_density(current_x)
+    p_proposed <- target_density(proposed_x)
+    
+    # We take the minimum of 1 and the ratio
+    ratio <- p_proposed / p_current
+    
+    # 3. Accept or reject the proposal
+    if (runif(1) < ratio) {
+      samples[i] <- proposed_x
+      accepted <- accepted + 1
+    } else {
+      samples[i] <- current_x
+    }
+  }
+  
+  message(sprintf("Acceptance rate: %.2f%%", (accepted / (n_iter - 1)) * 100))
+  return(samples)
+}
+```
+
+## Running the Algorithm
+
+Let's run the algorithm for 10,000 iterations. We will start at an arbitrary value (e.g., `x = 5`) to observe how the chain converges to the target distribution, and we will use a proposal standard deviation of `1`.
+
+```{r run-algo}
+set.seed(42) # For reproducibility
+n_iterations <- 10000
+start_val <- 5.0
+prop_sd <- 1.0
+
+# Generate samples
+samples <- metropolis_hastings(n_iter = n_iterations, 
+                               start_value = start_val, 
+                               proposal_sd = prop_sd)
+
+# Create a data frame for plotting
+df_samples <- data.frame(
+  iteration = 1:n_iterations,
+  value = samples
+)
+```
+
+## Diagnostics and Results
+
+### Trace Plot
+
+A trace plot shows the sampled values over iterations. It helps us visualize the "mixing" of the chain and determine if it has converged to the stationary distribution. Notice how the chain quickly moves from the starting value of `5` towards the high-probability region around `0`.
+
+```{r trace-plot}
+ggplot(df_samples, aes(x = iteration, y = value)) +
+  geom_line(color = "steelblue", alpha = 0.8) +
+  labs(title = "Trace Plot of MCMC Samples",
+       x = "Iteration",
+       y = "Sample Value") +
+  theme_minimal()
+```
+
+### Histogram vs. Target Density
+
+To see if our samples successfully approximate the target distribution, we plot a histogram of the samples (discarding the first 1000 iterations as "burn-in") and overlay the true probability density function of the standard normal distribution.
+
+```{r histogram}
+# Discard the first 1000 samples as burn-in
+burn_in <- 1000
+samples_kept <- df_samples$value[(burn_in + 1):n_iterations]
+df_kept <- data.frame(value = samples_kept)
+
+ggplot(df_kept, aes(x = value)) +
+  # Histogram of MCMC samples
+  geom_histogram(aes(y = ..density..), bins = 50, fill = "lightblue", color = "white", alpha = 0.7) +
+  # True Standard Normal Density
+  stat_function(fun = dnorm, args = list(mean = 0, sd = 1), 
+                color = "red", linewidth = 1.2, linetype = "dashed") +
+  labs(title = "Approximated vs. True Gaussian Distribution",
+       subtitle = paste("Red dashed line: True N(0,1) density\nHistogram: MH Samples (after", burn_in, "burn-in iterations)"),
+       x = "Value",
+       y = "Density") +
+  theme_minimal()
+```
+
+As we can see, the histogram of the samples closely matches the theoretical density of the Gaussian distribution, demonstrating that the Metropolis-Hastings algorithm successfully approximated the target distribution.
